@@ -37,7 +37,7 @@ const Index = () => {
           alt="Horse Inventory"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-black/40" />
+        <div className="absolute inset-0 bg-black/20" />
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center px-4">
             <img
