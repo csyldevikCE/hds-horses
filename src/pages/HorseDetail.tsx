@@ -1,9 +1,8 @@
-import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { sampleHorses } from '@/data/sampleHorses';
 import { HorseGallery } from '@/components/HorseGallery';
-import { MediaUpload } from '@/components/MediaUpload';
 import { ShareHorse } from '@/components/ShareHorse';
+import { EditHorseForm } from '@/components/EditHorseForm';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -12,7 +11,6 @@ import { ArrowLeft, MapPin, Calendar, Heart, CheckCircle, Edit, Share2, Trophy }
 const HorseDetail = () => {
   const { id } = useParams();
   const horse = sampleHorses.find(h => h.id === id);
-  const [isEditMode, setIsEditMode] = useState(false);
 
   if (!horse) {
     return (
@@ -57,15 +55,12 @@ const HorseDetail = () => {
                 Share
               </Button>
             </ShareHorse>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsEditMode(!isEditMode)}
-              className="hover-scale"
-            >
-              <Edit className="h-4 w-4 mr-2" />
-              {isEditMode ? 'Done' : 'Edit Media'}
-            </Button>
+            <EditHorseForm horse={horse}>
+              <Button variant="outline" size="sm" className="hover-scale">
+                <Edit className="h-4 w-4 mr-2" />
+                Edit Horse
+              </Button>
+            </EditHorseForm>
             <Badge className={getStatusColor(horse.status)}>
               {horse.status}
             </Badge>
@@ -236,12 +231,6 @@ const HorseDetail = () => {
               </CardContent>
             </Card>
 
-            {/* Media Upload */}
-            {isEditMode && (
-              <div className="animate-fade-in">
-                <MediaUpload onMediaAdd={(files) => console.log('New media files:', files)} />
-              </div>
-            )}
 
             {/* Location & Date */}
             <Card className="shadow-card">
