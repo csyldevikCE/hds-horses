@@ -30,7 +30,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gradient-hero">
       {/* Hero Section */}
-      <div className="relative h-96 overflow-hidden">
+      <div className="relative h-64 md:h-96 overflow-hidden">
         <img
           src={heroImage}
           alt="Horse Inventory"
@@ -38,12 +38,12 @@ const Index = () => {
         />
         <div className="absolute inset-0 bg-black/40" />
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center text-white">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <HorseIcon className="h-12 w-12" />
-              <h1 className="text-5xl font-bold">Horse Inventory</h1>
+          <div className="text-center text-white px-4">
+            <div className="flex items-center justify-center gap-2 md:gap-3 mb-4">
+              <HorseIcon className="h-8 w-8 md:h-12 md:w-12" />
+              <h1 className="text-3xl md:text-5xl font-bold">Horse Inventory</h1>
             </div>
-            <p className="text-xl text-white/90 max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto">
               Manage your equine collection with detailed profiles, sales materials, and comprehensive information
             </p>
           </div>
@@ -120,18 +120,19 @@ const Index = () => {
         </Card>
 
         {/* Results Header */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-foreground">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+          <h2 className="text-xl md:text-2xl font-bold text-foreground">
             {filteredHorses.length} {filteredHorses.length === 1 ? 'Horse' : 'Horses'} Found
           </h2>
-          <div className="flex items-center gap-3">
-            <Badge variant="secondary" className="text-sm">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
+            <Badge variant="secondary" className="text-xs md:text-sm">
               Total Inventory: {sampleHorses.length}
             </Badge>
             <CreateHorseForm>
-              <Button variant="warm" className="gap-2">
+              <Button variant="warm" className="gap-2 w-full sm:w-auto">
                 <Plus className="h-4 w-4" />
-                Create New Horse
+                <span className="hidden sm:inline">Create New Horse</span>
+                <span className="sm:hidden">Create Horse</span>
               </Button>
             </CreateHorseForm>
           </div>
