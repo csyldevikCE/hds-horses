@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Horse } from '@/types/horse';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Play, Pause } from 'lucide-react';
 
 interface HorseGalleryProps {
   horse: Horse;
@@ -11,6 +11,7 @@ interface HorseGalleryProps {
 export const HorseGallery = ({ horse }: HorseGalleryProps) => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [selectedVideoIndex, setSelectedVideoIndex] = useState(0);
 
   const nextImage = () => {
     setSelectedImageIndex((prev) => 
@@ -96,6 +97,77 @@ export const HorseGallery = ({ horse }: HorseGalleryProps) => {
                 />
               </button>
             ))}
+          </div>
+        )}
+
+        {/* Video Section */}
+        {horse.videos && horse.videos.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold">Videos</h3>
+            
+            {/* Main Video Player */}
+            <Card className="overflow-hidden">
+              <div className="relative">
+                <video
+                  key={horse.videos[selectedVideoIndex]?.id}
+                  controls
+                  className="w-full h-64 md:h-96 object-cover"
+                  poster={horse.videos[selectedVideoIndex]?.thumbnail}
+                >
+                  <source src={horse.videos[selectedVideoIndex]?.url} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+                
+                {/* Video Counter */}
+                {horse.videos.length > 1 && (
+                  <div className="absolute bottom-2 right-2 bg-background/80 px-2 py-1 rounded text-sm">
+                    {selectedVideoIndex + 1} / {horse.videos.length}
+                  </div>
+                )}
+              </div>
+              
+              {horse.videos[selectedVideoIndex]?.caption && (
+                <div className="p-3 bg-muted/50">
+                  <p className="text-sm text-muted-foreground">
+                    {horse.videos[selectedVideoIndex].caption}
+                  </p>
+                </div>
+              )}
+            </Card>
+
+            {/* Video Thumbnails */}
+            {horse.videos.length > 1 && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                {horse.videos.map((video, index) => (
+                  <button
+                    key={video.id}
+                    onClick={() => setSelectedVideoIndex(index)}
+                    className={`relative overflow-hidden rounded-lg border-2 transition-all ${
+                      index === selectedVideoIndex 
+                        ? 'border-horse-brown shadow-md' 
+                        : 'border-transparent hover:border-border'
+                    }`}
+                  >
+                    <div className="relative">
+                      {video.thumbnail ? (
+                        <img
+                          src={video.thumbnail}
+                          alt={video.caption || `Video ${index + 1}`}
+                          className="w-full h-16 object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-16 bg-muted flex items-center justify-center">
+                          <Play className="h-6 w-6 text-muted-foreground" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                        <Play className="h-4 w-4 text-white" />
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>

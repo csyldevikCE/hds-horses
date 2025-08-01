@@ -55,6 +55,20 @@ export const sampleHorses: Horse[] = [
         notes: 'Completed Preliminary level course'
       }
     ],
+    videos: [
+      {
+        id: 'v1',
+        url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+        caption: 'Thunder training session - dressage routine',
+        thumbnail: 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80'
+      },
+      {
+        id: 'v2',
+        url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4',
+        caption: 'Thunder jumping practice',
+        thumbnail: 'https://images.unsplash.com/photo-1574081280899-e3dadd6d41d7?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&h=200&q=80'
+      }
+    ],
     images: [
       {
         id: '1-1',
@@ -107,6 +121,13 @@ export const sampleHorses: Horse[] = [
         discipline: 'Western Pleasure',
         placement: '1st Place',
         notes: 'Champion Arabian Western Pleasure'
+      }
+    ],
+    videos: [
+      {
+        id: 'v3',
+        url: 'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
+        caption: 'Belle trail riding demonstration'
       }
     ],
     images: [
