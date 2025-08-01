@@ -3,6 +3,7 @@ import { sampleHorses } from '@/data/sampleHorses';
 import { HorseGallery } from '@/components/HorseGallery';
 import { ShareHorse } from '@/components/ShareHorse';
 import { EditHorseForm } from '@/components/EditHorseForm';
+import { YoutubeManager } from '@/components/YoutubeManager';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -248,6 +249,12 @@ const HorseDetail = () => {
               </CardContent>
             </Card>
           </div>
+        </div>
+
+        {/* YouTube Management Section */}
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold">YouTube Management</h2>
+          <YoutubeManager horse={horse} />
         </div>
       </div>
     </div>
