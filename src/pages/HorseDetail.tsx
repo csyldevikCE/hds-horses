@@ -62,6 +62,7 @@ const HorseDetail = () => {
                 Edit Horse
               </Button>
             </EditHorseForm>
+            <YoutubeManager horse={horse} />
             <Badge className={getStatusColor(horse.status)}>
               {horse.status}
             </Badge>
@@ -249,12 +250,6 @@ const HorseDetail = () => {
               </CardContent>
             </Card>
           </div>
-        </div>
-
-        {/* YouTube Management Section */}
-        <div className="space-y-6">
-          <h2 className="text-2xl font-bold">YouTube Management</h2>
-          <YoutubeManager horse={horse} />
         </div>
       </div>
     </div>
