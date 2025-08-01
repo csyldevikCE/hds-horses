@@ -1,14 +1,17 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { sampleHorses } from '@/data/sampleHorses';
 import { HorseGallery } from '@/components/HorseGallery';
+import { MediaUpload } from '@/components/MediaUpload';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, MapPin, Calendar, Heart, CheckCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Heart, CheckCircle, Edit } from 'lucide-react';
 
 const HorseDetail = () => {
   const { id } = useParams();
   const horse = sampleHorses.find(h => h.id === id);
+  const [isEditMode, setIsEditMode] = useState(false);
 
   if (!horse) {
     return (
@@ -46,9 +49,20 @@ const HorseDetail = () => {
             <h1 className="text-3xl font-bold text-foreground">{horse.name}</h1>
             <p className="text-muted-foreground">{horse.breed} • {horse.age} years old</p>
           </div>
-          <Badge className={getStatusColor(horse.status)}>
-            {horse.status}
-          </Badge>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsEditMode(!isEditMode)}
+              className="hover-scale"
+            >
+              <Edit className="h-4 w-4 mr-2" />
+              {isEditMode ? 'Done' : 'Edit Media'}
+            </Button>
+            <Badge className={getStatusColor(horse.status)}>
+              {horse.status}
+            </Badge>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
@@ -174,6 +188,13 @@ const HorseDetail = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Media Upload */}
+            {isEditMode && (
+              <div className="animate-fade-in">
+                <MediaUpload onMediaAdd={(files) => console.log('New media files:', files)} />
+              </div>
+            )}
 
             {/* Location & Date */}
             <Card className="shadow-card">
