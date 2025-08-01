@@ -7,7 +7,7 @@ import { ShareHorse } from '@/components/ShareHorse';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, MapPin, Calendar, Heart, CheckCircle, Edit, Share2 } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Heart, CheckCircle, Edit, Share2, Trophy } from 'lucide-react';
 
 const HorseDetail = () => {
   const { id } = useParams();
@@ -171,6 +171,46 @@ const HorseDetail = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Competition Results */}
+            {horse.competitions && horse.competitions.length > 0 && (
+              <Card className="shadow-card">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Trophy className="h-5 w-5 text-yellow-600" />
+                    Competition Results
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {horse.competitions.map((competition) => (
+                    <div key={competition.id} className="border-l-4 border-primary/20 pl-4 py-2">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <div>
+                          <h4 className="font-semibold text-foreground">{competition.event}</h4>
+                          <p className="text-sm text-muted-foreground">{competition.discipline}</p>
+                        </div>
+                        <div className="text-right">
+                          <Badge 
+                            variant={competition.placement.includes('1st') ? 'default' : 'secondary'}
+                            className={competition.placement.includes('1st') ? 'bg-yellow-600 hover:bg-yellow-700' : ''}
+                          >
+                            {competition.placement}
+                          </Badge>
+                          <p className="text-xs text-muted-foreground mt-1">
+                            {new Date(competition.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      {competition.notes && (
+                        <p className="text-sm text-muted-foreground mt-2 italic">
+                          {competition.notes}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Health */}
             <Card className="shadow-card">

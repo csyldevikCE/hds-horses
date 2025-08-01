@@ -29,6 +29,32 @@ export const sampleHorses: Horse[] = [
       level: 'Advanced',
       disciplines: ['Dressage', 'Show Jumping', 'Cross Country']
     },
+    competitions: [
+      {
+        id: 'comp-1-1',
+        event: 'Regional Dressage Championship',
+        date: '2024-06-15',
+        discipline: 'Dressage',
+        placement: '1st Place',
+        notes: 'Scored 76.8% in Grand Prix level'
+      },
+      {
+        id: 'comp-1-2',
+        event: 'Summer Classic Show Jumping',
+        date: '2024-05-20',
+        discipline: 'Show Jumping',
+        placement: '2nd Place',
+        notes: 'Clear round in 1.30m class'
+      },
+      {
+        id: 'comp-1-3',
+        event: 'Spring Cross Country Event',
+        date: '2024-04-10',
+        discipline: 'Cross Country',
+        placement: '3rd Place',
+        notes: 'Completed Preliminary level course'
+      }
+    ],
     images: [
       {
         id: '1-1',
@@ -65,6 +91,24 @@ export const sampleHorses: Horse[] = [
       level: 'Intermediate',
       disciplines: ['Endurance', 'Western Pleasure', 'Trail']
     },
+    competitions: [
+      {
+        id: 'comp-2-1',
+        event: 'Desert Endurance Ride',
+        date: '2024-05-30',
+        discipline: 'Endurance',
+        placement: '5th Place',
+        notes: 'Completed 50-mile course in excellent condition'
+      },
+      {
+        id: 'comp-2-2',
+        event: 'Arabian Horse Show',
+        date: '2024-04-15',
+        discipline: 'Western Pleasure',
+        placement: '1st Place',
+        notes: 'Champion Arabian Western Pleasure'
+      }
+    ],
     images: [
       {
         id: '2-1',
@@ -101,6 +145,24 @@ export const sampleHorses: Horse[] = [
       level: 'Intermediate',
       disciplines: ['Western Pleasure', 'Reining', 'Trail', 'Ranch Work']
     },
+    competitions: [
+      {
+        id: 'comp-3-1',
+        event: 'Quarter Horse Congress',
+        date: '2024-03-20',
+        discipline: 'Western Pleasure',
+        placement: '3rd Place',
+        notes: 'Amateur Western Pleasure class'
+      },
+      {
+        id: 'comp-3-2',
+        event: 'Ranch Horse Challenge',
+        date: '2024-02-10',
+        discipline: 'Ranch Work',
+        placement: '2nd Place',
+        notes: 'Excellent cattle work and trail obstacles'
+      }
+    ],
     images: [
       {
         id: '3-1',

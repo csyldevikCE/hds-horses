@@ -23,6 +23,14 @@ export interface Horse {
     level: string;
     disciplines: string[];
   };
+  competitions?: {
+    id: string;
+    event: string;
+    date: string;
+    discipline: string;
+    placement: string;
+    notes?: string;
+  }[];
   images: {
     id: string;
     url: string;
