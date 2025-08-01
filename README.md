@@ -1,73 +1,169 @@
-# Welcome to your Lovable project
+# Stable Story Hub
 
-## Project info
+A comprehensive horse management application built with React, TypeScript, and Supabase. Manage your horse inventory, track health records, competitions, and more with a beautiful, modern interface.
 
-**URL**: https://lovable.dev/projects/cbe27a92-bc29-416f-952f-0af9ede14a0c
+## Features
 
-## How can I edit this code?
+- 🐎 **Horse Management** - Complete CRUD operations for horse profiles
+- 🔐 **Authentication** - Secure user authentication with Supabase Auth
+- 📊 **Health Tracking** - Vaccination records, vet checks, and health status
+- 🏆 **Competition History** - Track performance and achievements
+- 📸 **Media Management** - Upload and organize horse photos and videos
+- 🎨 **Modern UI** - Beautiful interface built with shadcn/ui and Tailwind CSS
+- 📱 **Responsive Design** - Works perfectly on desktop and mobile
+- 🔒 **Row Level Security** - Data protection with Supabase RLS
+- ⚡ **Real-time Updates** - Instant data synchronization
 
-There are several ways of editing your application.
+## Tech Stack
 
-**Use Lovable**
+- **Frontend**: React 18, TypeScript, Vite
+- **UI Components**: shadcn/ui, Tailwind CSS
+- **Backend**: Supabase (PostgreSQL, Auth, Storage)
+- **State Management**: TanStack Query (React Query)
+- **Routing**: React Router DOM
+- **Forms**: React Hook Form with Zod validation
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/cbe27a92-bc29-416f-952f-0af9ede14a0c) and start prompting.
+## Getting Started
 
-Changes made via Lovable will be committed automatically to this repo.
+### Prerequisites
 
-**Use your preferred IDE**
+- Node.js 18+
+- npm, yarn, or pnpm
+- Supabase account
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Installation
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. **Clone the repository:**
+```bash
+git clone <repository-url>
+cd hds-horses
+```
 
-Follow these steps:
+2. **Install dependencies:**
+```bash
+npm install
+```
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+3. **Set up Supabase:**
+   - Follow the [Supabase Setup Guide](./SUPABASE_SETUP.md)
+   - Create a `.env` file with your Supabase credentials:
+```env
+VITE_SUPABASE_URL=your_project_url_here
+VITE_SUPABASE_ANON_KEY=your_anon_key_here
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+4. **Start the development server:**
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+5. **Open your browser and navigate to `http://localhost:5173`**
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Database Schema
 
-**Use GitHub Codespaces**
+The application uses the following main tables:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- **horses** - Main horse profiles with all basic information
+- **horse_images** - Horse photos with captions and primary image flags
+- **horse_videos** - Horse videos with thumbnails and captions
+- **competitions** - Competition history and results
 
-## What technologies are used for this project?
+All tables are protected with Row Level Security (RLS) to ensure users can only access their own data.
 
-This project is built with:
+## Available Scripts
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run build:dev` - Build for development
+- `npm run preview` - Preview production build
+- `npm run lint` - Run ESLint
 
-## How can I deploy this project?
+## Project Structure
 
-Simply open [Lovable](https://lovable.dev/projects/cbe27a92-bc29-416f-952f-0af9ede14a0c) and click on Share -> Publish.
+```
+src/
+├── components/          # Reusable UI components
+│   ├── ui/             # shadcn/ui components
+│   ├── CreateHorseForm.tsx
+│   ├── EditHorseForm.tsx
+│   ├── HorseCard.tsx
+│   ├── HorseGallery.tsx
+│   ├── MediaUpload.tsx
+│   ├── ShareHorse.tsx
+│   ├── UserProfile.tsx
+│   └── ProtectedRoute.tsx
+├── contexts/           # React contexts
+│   └── AuthContext.tsx
+├── hooks/              # Custom React hooks
+├── lib/                # Utility functions and Supabase config
+├── pages/              # Page components
+│   ├── Index.tsx
+│   ├── HorseDetail.tsx
+│   ├── Login.tsx
+│   ├── Signup.tsx
+│   ├── ForgotPassword.tsx
+│   └── NotFound.tsx
+├── services/           # API services
+│   └── horseService.ts
+├── types/              # TypeScript type definitions
+│   └── horse.ts
+└── assets/             # Static assets
+```
 
-## Can I connect a custom domain to my Lovable project?
+## Key Features
 
-Yes, you can!
+### Authentication
+- Email/password authentication
+- Password reset functionality
+- Protected routes
+- User session management
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Horse Management
+- Create, read, update, delete horse profiles
+- Comprehensive horse information tracking
+- Health record management
+- Training and competition history
+- Media upload and management
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+### Data Security
+- Row Level Security (RLS) policies
+- User-specific data isolation
+- Secure API endpoints
+- Environment variable protection
+
+## Deployment
+
+### Vercel (Recommended)
+
+1. Push your code to GitHub
+2. Connect your repository to Vercel
+3. Add environment variables in Vercel dashboard
+4. Deploy automatically
+
+### Other Platforms
+
+Build the project and deploy the `dist` folder:
+
+```bash
+npm run build
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## Support
+
+If you encounter any issues:
+
+1. Check the [Supabase Setup Guide](./SUPABASE_SETUP.md)
+2. Ensure your environment variables are correctly set
+3. Verify your database schema is properly configured
+4. Check the browser console for error messages
+
+## License
+
+This project is licensed under the MIT License.

@@ -1,99 +1,106 @@
-import { useState } from 'react';
-import { Horse } from '@/types/horse';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Share2, MessageCircle, Mail, Image, Video, Copy, CheckCircle } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useAuth } from '@/contexts/AuthContext'
+import { shareService } from '@/services/shareService'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { useToast } from '@/hooks/use-toast'
+import { Share2, Copy, Clock, Trash2, ExternalLink, Loader2 } from 'lucide-react'
 
 interface ShareHorseProps {
-  horse: Horse;
-  children?: React.ReactNode;
+  horse: { id: string; name: string }
+  children: React.ReactNode
 }
 
 export const ShareHorse = ({ horse, children }: ShareHorseProps) => {
-  const [selectedMedia, setSelectedMedia] = useState<string[]>([]);
-  const [customMessage, setCustomMessage] = useState(
-    `Check out this amazing horse! ${horse.name} - ${horse.breed}, ${horse.age} years old. Perfect for ${horse.training.disciplines.join(', ')}. ${horse.price ? `Price: $${horse.price.toLocaleString()}` : ''}`
-  );
-  const [recipientEmail, setRecipientEmail] = useState('');
-  const [copied, setCopied] = useState(false);
-  const { toast } = useToast();
+  const [open, setOpen] = useState(false)
+  const [copied, setCopied] = useState<string | null>(null)
+  const [recipientName, setRecipientName] = useState('')
+  const { user } = useAuth()
+  const { toast } = useToast()
+  const queryClient = useQueryClient()
 
-  const shareableLink = `${window.location.origin}/horse/${horse.id}`;
+  // Get existing share links for this horse
+  const { data: shareLinks = [], isLoading } = useQuery({
+    queryKey: ['share-links', user?.id],
+    queryFn: () => shareService.getUserShareLinks(user?.id || ''),
+    enabled: !!user?.id && open,
+  })
 
-  const handleMediaToggle = (mediaUrl: string) => {
-    setSelectedMedia(prev => 
-      prev.includes(mediaUrl) 
-        ? prev.filter(url => url !== mediaUrl)
-        : [...prev, mediaUrl]
-    );
-  };
+  const horseShareLinks = shareLinks.filter(link => link.horse_id === horse.id)
 
-  const handleWhatsAppShare = () => {
-    const message = encodeURIComponent(`${customMessage}\n\nView details: ${shareableLink}`);
-    const whatsappUrl = `https://wa.me/?text=${message}`;
-    window.open(whatsappUrl, '_blank');
-    toast({
-      title: "Opening WhatsApp",
-      description: "WhatsApp will open with your message ready to send.",
-    });
-  };
-
-  const handleEmailShare = () => {
-    const subject = encodeURIComponent(`${horse.name} - Horse for Sale`);
-    const body = encodeURIComponent(`${customMessage}\n\nView full details and photos: ${shareableLink}\n\n--- Horse Details ---\nName: ${horse.name}\nBreed: ${horse.breed}\nAge: ${horse.age} years\nGender: ${horse.gender}\nColor: ${horse.color}\nHeight: ${horse.height}\nTraining: ${horse.training.level}\nDisciplines: ${horse.training.disciplines.join(', ')}\nStatus: ${horse.status}\n${horse.price ? `Price: $${horse.price.toLocaleString()}` : ''}\n\nLocation: ${horse.location}`);
-    
-    const emailUrl = recipientEmail 
-      ? `mailto:${recipientEmail}?subject=${subject}&body=${body}`
-      : `mailto:?subject=${subject}&body=${body}`;
-    
-    window.open(emailUrl);
-    toast({
-      title: "Opening Email",
-      description: "Your email client will open with the message ready to send.",
-    });
-  };
-
-  const copyToClipboard = async () => {
-    try {
-      await navigator.clipboard.writeText(`${customMessage}\n\n${shareableLink}`);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+  // Create new share link
+  const createShareLinkMutation = useMutation({
+    mutationFn: () => shareService.createShareLink(horse.id, user?.id || '', recipientName),
+    onSuccess: (newShareLink) => {
+      queryClient.invalidateQueries({ queryKey: ['share-links', user?.id] })
+      setRecipientName('') // Reset form
       toast({
-        title: "Copied to clipboard",
-        description: "Horse details and link copied to clipboard.",
-      });
-    } catch (err) {
+        title: "Share link created!",
+        description: `Share link for ${recipientName} is now active for 12 hours.`,
+      })
+    },
+    onError: (error) => {
+      toast({
+        title: "Error creating share link",
+        description: "Failed to create share link. Please try again.",
+        variant: "destructive",
+      })
+    },
+  })
+
+  // Delete share link
+  const deleteShareLinkMutation = useMutation({
+    mutationFn: ({ shareLinkId }: { shareLinkId: string }) => 
+      shareService.deleteShareLink(shareLinkId, user?.id || ''),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['share-links', user?.id] })
+      toast({
+        title: "Share link deleted",
+        description: "The share link has been removed.",
+      })
+    },
+    onError: (error) => {
+      toast({
+        title: "Error deleting share link",
+        description: "Failed to delete share link. Please try again.",
+        variant: "destructive",
+      })
+    },
+  })
+
+  const copyToClipboard = async (text: string, linkId: string) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      setCopied(linkId)
+      toast({
+        title: "Link copied!",
+        description: "Share link copied to clipboard.",
+      })
+      setTimeout(() => setCopied(null), 2000)
+    } catch (error) {
       toast({
         title: "Failed to copy",
-        description: "Please try copying the link manually.",
+        description: "Please copy the link manually.",
         variant: "destructive",
-      });
+      })
     }
-  };
+  }
 
-  const mockMediaFiles = [
-    { url: horse.images[0]?.url || '', type: 'image', name: `${horse.name}_profile.jpg` },
-    { url: horse.images[1]?.url || '', type: 'image', name: `${horse.name}_side.jpg` },
-    { url: horse.images[2]?.url || '', type: 'image', name: `${horse.name}_action.jpg` },
-    { url: '/mock-video.mp4', type: 'video', name: `${horse.name}_training.mp4` },
-  ];
+  const getShareUrl = (token: string) => {
+    return `${window.location.origin}/shared/${token}`
+  }
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        {children || (
-          <Button variant="outline" className="gap-2">
-            <Share2 className="h-4 w-4" />
-            Share
-          </Button>
-        )}
+        {children}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Share2 className="h-5 w-5" />
@@ -102,96 +109,164 @@ export const ShareHorse = ({ horse, children }: ShareHorseProps) => {
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Custom Message */}
-          <div className="space-y-2">
-            <Label htmlFor="message">Custom Message</Label>
-            <Textarea
-              id="message"
-              value={customMessage}
-              onChange={(e) => setCustomMessage(e.target.value)}
-              rows={4}
-              className="resize-none"
-            />
-          </div>
-
-          {/* Media Selection */}
-          <div className="space-y-3">
-            <Label>Select Media to Include</Label>
-            <div className="grid grid-cols-2 gap-3">
-              {mockMediaFiles.map((media, index) => (
-                <Card 
-                  key={index} 
-                  className={`cursor-pointer transition-all hover:shadow-md ${
-                    selectedMedia.includes(media.url) ? 'ring-2 ring-primary' : ''
-                  }`}
-                  onClick={() => handleMediaToggle(media.url)}
-                >
-                  <CardContent className="p-3">
-                    <div className="flex items-center gap-3">
-                      {media.type === 'image' ? (
-                        <Image className="h-8 w-8 text-muted-foreground" />
-                      ) : (
-                        <Video className="h-8 w-8 text-muted-foreground" />
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{media.name}</p>
-                        <p className="text-xs text-muted-foreground capitalize">{media.type}</p>
-                      </div>
-                      {selectedMedia.includes(media.url) && (
-                        <CheckCircle className="h-5 w-5 text-primary" />
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Selected media will be referenced in your message. Recipients can view all media via the shared link.
-            </p>
-          </div>
-
-          {/* Email Recipient (Optional) */}
-          <div className="space-y-2">
-            <Label htmlFor="email">Email Recipient (Optional)</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="recipient@example.com"
-              value={recipientEmail}
-              onChange={(e) => setRecipientEmail(e.target.value)}
-            />
-          </div>
-
-          {/* Share Actions */}
-          <div className="flex flex-col gap-3">
-            <div className="grid grid-cols-2 gap-3">
-              <Button onClick={handleWhatsAppShare} className="gap-2" variant="outline">
-                <MessageCircle className="h-4 w-4" />
-                Share via WhatsApp
+          {/* Create New Share Link */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Create Share Link</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Create a temporary link to share {horse.name} with clients. The link will be active for 12 hours.
+              </p>
+              
+              <div className="space-y-2">
+                <Label htmlFor="recipient-name">Recipient Name</Label>
+                <Input
+                  id="recipient-name"
+                  placeholder="Enter client's name"
+                  value={recipientName}
+                  onChange={(e) => setRecipientName(e.target.value)}
+                  required
+                />
+              </div>
+              
+              <Button 
+                onClick={() => createShareLinkMutation.mutate()}
+                disabled={createShareLinkMutation.isPending || !recipientName.trim()}
+                className="w-full"
+              >
+                {createShareLinkMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Creating...
+                  </>
+                ) : (
+                  <>
+                    <Share2 className="mr-2 h-4 w-4" />
+                    Create Share Link
+                  </>
+                )}
               </Button>
-              <Button onClick={handleEmailShare} className="gap-2" variant="outline">
-                <Mail className="h-4 w-4" />
-                Share via Email
-              </Button>
-            </div>
-            
-            <Button onClick={copyToClipboard} variant="secondary" className="gap-2">
-              {copied ? (
-                <CheckCircle className="h-4 w-4 text-green-600" />
+            </CardContent>
+          </Card>
+
+          {/* Existing Share Links */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Active Share Links</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin" />
+                </div>
+              ) : horseShareLinks.length === 0 ? (
+                <p className="text-center text-muted-foreground py-8">
+                  No active share links for this horse.
+                </p>
               ) : (
-                <Copy className="h-4 w-4" />
-              )}
-              {copied ? 'Copied!' : 'Copy to Clipboard'}
-            </Button>
-          </div>
+                <div className="space-y-4">
+                  {horseShareLinks.map((shareLink) => {
+                    const isExpired = shareService.getShareLinkStatus(shareLink.expires_at) === 'expired'
+                    const timeRemaining = shareService.getTimeRemaining(shareLink.expires_at)
+                    const shareUrl = getShareUrl(shareLink.token)
 
-          {/* Share Link Preview */}
-          <div className="bg-muted p-3 rounded-lg">
-            <Label className="text-xs text-muted-foreground">Share Link</Label>
-            <p className="text-sm font-mono break-all">{shareableLink}</p>
-          </div>
+                    return (
+                      <div key={shareLink.id} className="border rounded-lg p-4 space-y-3">
+                        <div className="flex items-center justify-between">
+                                                     <div className="flex items-center gap-2">
+                             <Badge 
+                               variant={isExpired ? "destructive" : "default"}
+                               className="flex items-center gap-1"
+                             >
+                               <Clock className="h-3 w-3" />
+                               {isExpired ? 'Expired' : 'Active'}
+                             </Badge>
+                             <span className="text-sm text-muted-foreground">
+                               For: {shareLink.recipient_name}
+                             </span>
+                             <span className="text-sm text-muted-foreground">
+                               • Created {new Date(shareLink.created_at).toLocaleDateString()}
+                             </span>
+                           </div>
+                          
+                          {!isExpired && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => deleteShareLinkMutation.mutate({ shareLinkId: shareLink.id })}
+                              disabled={deleteShareLinkMutation.isPending}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Input
+                              value={shareUrl}
+                              readOnly
+                              className="text-sm"
+                            />
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => copyToClipboard(shareUrl, shareLink.id)}
+                              disabled={copied === shareLink.id}
+                            >
+                              {copied === shareLink.id ? (
+                                'Copied!'
+                              ) : (
+                                <Copy className="h-4 w-4" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => window.open(shareUrl, '_blank')}
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          
+                          <p className="text-xs text-muted-foreground">
+                            {isExpired ? 'This link has expired' : timeRemaining}
+                          </p>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Info */}
+          <Card>
+            <CardHeader>
+              <CardTitle>What's Shared?</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2 text-sm">
+                <p className="text-muted-foreground">
+                  The shared view includes:
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+                  <li>Images and videos</li>
+                  <li>Basic information (name, breed, age, gender, color, height)</li>
+                  <li>Description</li>
+                  <li>Pedigree information</li>
+                  <li>Training level and disciplines</li>
+                </ul>
+                <p className="text-muted-foreground mt-3">
+                  <strong>Not included:</strong> Price, health records, competition history, location, or contact information.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}

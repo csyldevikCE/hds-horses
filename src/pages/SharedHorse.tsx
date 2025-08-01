@@ -1,61 +1,88 @@
-import { useParams, Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { horseService } from '@/services/horseService';
-import { HorseGallery } from '@/components/HorseGallery';
-import { ShareHorse } from '@/components/ShareHorse';
-import { EditHorseForm } from '@/components/EditHorseForm';
-import { YoutubeManager } from '@/components/YoutubeManager';
-import { MediaUpload } from '@/components/MediaUpload';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, MapPin, Calendar, Heart, CheckCircle, Edit, Share2, Trophy, Loader2 } from 'lucide-react';
-import logo from '@/assets/logo.png';
+import { useParams } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { shareService } from '@/services/shareService'
+import { HorseGallery } from '@/components/HorseGallery'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { ArrowLeft, Heart, Clock, AlertTriangle, Loader2, Trophy } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import logo from '@/assets/logo.png'
 
-const HorseDetail = () => {
-  const { id } = useParams();
+const SharedHorse = () => {
+  const { token } = useParams()
 
   const { data: horse, isLoading, error } = useQuery({
-    queryKey: ['horse', id],
-    queryFn: () => horseService.getHorse(id!),
-    enabled: !!id,
-  });
+    queryKey: ['shared-horse', token],
+    queryFn: () => shareService.getSharedHorse(token!),
+    enabled: !!token,
+  })
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <h1 className="text-2xl font-bold mb-4">Loading horse...</h1>
+          <h1 className="text-2xl font-bold mb-2">Loading horse information...</h1>
         </div>
       </div>
-    );
+    )
   }
 
-  if (error || !horse) {
+  if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Horse not found</h1>
-          <p className="text-muted-foreground mb-4">
-            The horse you're looking for doesn't exist or you don't have permission to view it.
-          </p>
-          <Link to="/">
-            <Button>Return to Inventory</Button>
-          </Link>
-        </div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-4">
+            <div className="flex justify-center">
+              <img src={logo} alt="Stable Story Hub Logo" className="w-32 h-auto" />
+            </div>
+            <div className="text-center">
+              <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold mb-2">Link Not Available</h1>
+              <p className="text-muted-foreground">
+                {error.message === 'Share link has expired' 
+                  ? 'This share link has expired. Please contact the owner for a new link.'
+                  : 'This share link is invalid or no longer available.'
+                }
+              </p>
+            </div>
+          </CardHeader>
+          <CardContent className="text-center">
+            <Button asChild>
+              <Link to="/">Return to Home</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
-    );
+    )
   }
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'Available': return 'bg-stable-green text-cream';
-      case 'Sold': return 'bg-destructive';
-      case 'Reserved': return 'bg-hay-gold text-horse-brown';
-      default: return 'bg-muted';
-    }
-  };
+  if (!horse) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50 p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-4">
+            <div className="flex justify-center">
+              <img src={logo} alt="Stable Story Hub Logo" className="w-32 h-auto" />
+            </div>
+            <div className="text-center">
+              <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+              <h1 className="text-2xl font-bold mb-2">Horse Not Found</h1>
+              <p className="text-muted-foreground">
+                The horse you're looking for doesn't exist or has been removed.
+              </p>
+            </div>
+          </CardHeader>
+          <CardContent className="text-center">
+            <Button asChild>
+              <Link to="/">Return to Home</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -71,55 +98,18 @@ const HorseDetail = () => {
           </div>
         </div>
       </div>
-      
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <Link to="/">
-            <Button variant="outline" size="icon" className="border-border hover:bg-muted">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold text-foreground">{horse.name}</h1>
-            <p className="text-muted-foreground">{horse.breed} • {horse.age} years old</p>
-          </div>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <ShareHorse horse={horse}>
-                <Button variant="outline" size="sm" className="gap-2 hover-scale">
-                  <Share2 className="h-4 w-4" />
-                  <span className="hidden xs:inline">Share</span>
-                </Button>
-              </ShareHorse>
-              <EditHorseForm horse={horse}>
-                <Button variant="outline" size="sm" className="hover-scale">
-                  <Edit className="h-4 w-4 mr-2" />
-                  <span className="hidden xs:inline">Edit Horse</span>
-                </Button>
-              </EditHorseForm>
-              <YoutubeManager horse={horse} />
-            </div>
-            <Badge className={getStatusColor(horse.status)}>
-              {horse.status}
-            </Badge>
-          </div>
-        </div>
 
+      <div className="container mx-auto px-4 py-8">
+        {/* Horse Name - spans full width above content */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground">{horse.name}</h1>
+          <p className="text-muted-foreground">{horse.breed} • {horse.age} years old</p>
+        </div>
+        
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Gallery */}
           <div className="space-y-6">
             <HorseGallery horse={horse} />
-            
-            {/* Media Upload */}
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle>Add Media</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <MediaUpload horseId={horse.id} />
-              </CardContent>
-            </Card>
           </div>
 
           {/* Details */}
@@ -146,21 +136,7 @@ const HorseDetail = () => {
                     <span className="text-muted-foreground">Height:</span>
                     <p className="font-medium">{horse.height}</p>
                   </div>
-                  {horse.weight && (
-                    <div>
-                      <span className="text-muted-foreground">Weight:</span>
-                      <p className="font-medium">{horse.weight} lbs</p>
-                    </div>
-                  )}
                 </div>
-                
-                {horse.price && (
-                  <div className="pt-4 border-t border-border">
-                    <span className="text-lg font-bold text-horse-brown">
-                      ${horse.price.toLocaleString()}
-                    </span>
-                  </div>
-                )}
               </CardContent>
             </Card>
 
@@ -352,50 +328,12 @@ const HorseDetail = () => {
               </Card>
             )}
 
-            {/* Health */}
-            <Card className="shadow-card">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-stable-green" />
-                  Health Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className={`h-4 w-4 ${horse.health.vaccinations ? 'text-stable-green' : 'text-muted-foreground'}`} />
-                  <span className="text-sm">Current Vaccinations</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className={`h-4 w-4 ${horse.health.coggins ? 'text-stable-green' : 'text-muted-foreground'}`} />
-                  <span className="text-sm">Current Coggins Test</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Last Vet Check:</span>
-                  <p className="font-medium">{new Date(horse.health.lastVetCheck).toLocaleDateString()}</p>
-                </div>
-              </CardContent>
-            </Card>
 
-            {/* Location & Date */}
-            <Card className="shadow-card">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <MapPin className="h-4 w-4" />
-                    {horse.location}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    Added {new Date(horse.dateAdded).toLocaleDateString()}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default HorseDetail;
+export default SharedHorse 

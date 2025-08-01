@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
+import { horseService } from '@/services/horseService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Plus, Zap as HorseIcon } from 'lucide-react';
+import { Plus, Zap as HorseIcon, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface CreateHorseFormProps {
@@ -17,6 +20,8 @@ interface CreateHorseFormProps {
 export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -43,16 +48,27 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Mock creation - in real app, this would save to database
-    toast({
-      title: "Horse created successfully!",
-      description: `${formData.name} has been added to your inventory.`,
-    });
-    
-    // Reset form and close dialog
+  const createHorseMutation = useMutation({
+    mutationFn: (horseData: any) => horseService.createHorse(horseData, user?.id || ''),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['horses', user?.id] });
+      toast({
+        title: "Horse created successfully!",
+        description: `${formData.name} has been added to your inventory.`,
+      });
+      setOpen(false);
+      resetForm();
+    },
+    onError: (error) => {
+      toast({
+        title: "Error creating horse",
+        description: "There was an error creating the horse. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const resetForm = () => {
     setFormData({
       name: '',
       breed: '',
@@ -73,7 +89,51 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
       coggins: false,
       lastVetCheck: ''
     });
-    setOpen(false);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to create a horse.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const horseData = {
+      name: formData.name,
+      breed: formData.breed,
+      age: parseInt(formData.age),
+      color: formData.color,
+      gender: formData.gender as 'Stallion' | 'Mare' | 'Gelding',
+      height: formData.height,
+      weight: formData.weight ? parseInt(formData.weight) : undefined,
+      price: formData.price ? parseFloat(formData.price) : undefined,
+      status: formData.status as 'Available' | 'Sold' | 'Reserved' | 'Not for Sale',
+      description: formData.description,
+      pedigree: formData.sire || formData.dam ? {
+        sire: formData.sire,
+        dam: formData.dam
+      } : undefined,
+      health: {
+        vaccinations: formData.vaccinations,
+        coggins: formData.coggins,
+        lastVetCheck: formData.lastVetCheck
+      },
+      training: {
+        level: formData.trainingLevel,
+        disciplines: formData.disciplines.split(',').map(d => d.trim()).filter(d => d)
+      },
+      location: formData.location,
+      images: [],
+      videos: [],
+      competitions: []
+    };
+
+    createHorseMutation.mutate(horseData);
   };
 
   return (
@@ -305,11 +365,27 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
           </Card>
 
           <div className="flex gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => setOpen(false)}
+              disabled={createHorseMutation.isPending}
+            >
               Cancel
             </Button>
-            <Button type="submit" className="bg-gradient-warm">
-              Create Horse
+            <Button 
+              type="submit" 
+              className="bg-gradient-warm"
+              disabled={createHorseMutation.isPending}
+            >
+              {createHorseMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                'Create Horse'
+              )}
             </Button>
           </div>
         </form>

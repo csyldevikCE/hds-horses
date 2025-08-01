@@ -1,24 +1,34 @@
-import { useState } from 'react';
-import { sampleHorses } from '@/data/sampleHorses';
+import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/AuthContext';
+import { horseService } from '@/services/horseService';
 import { HorseCard } from '@/components/HorseCard';
 import { CreateHorseForm } from '@/components/CreateHorseForm';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, Zap as HorseIcon, Plus } from 'lucide-react';
-import heroImage from '@/assets/hero-horse.jpg';
+import { Search, Filter, Zap as HorseIcon, Plus, Loader2 } from 'lucide-react';
 import logo from '@/assets/logo.png';
+import UserProfile from '@/components/UserProfile';
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBreed, setSelectedBreed] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
+  
+  const { user } = useAuth();
 
-  const breeds = [...new Set(sampleHorses.map(horse => horse.breed))];
-  const statuses = [...new Set(sampleHorses.map(horse => horse.status))];
+  const { data: horses = [], isLoading, error } = useQuery({
+    queryKey: ['horses', user?.id],
+    queryFn: () => horseService.getHorses(user?.id || ''),
+    enabled: !!user?.id,
+  });
 
-  const filteredHorses = sampleHorses.filter(horse => {
+  const breeds = [...new Set(horses.map(horse => horse.breed))];
+  const statuses = [...new Set(horses.map(horse => horse.status))];
+
+  const filteredHorses = horses.filter(horse => {
     const matchesSearch = horse.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          horse.breed.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          horse.color.toLowerCase().includes(searchTerm.toLowerCase());
@@ -30,14 +40,13 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-hero">
+      {/* Header with User Profile */}
+      <div className="absolute top-4 right-4 z-10">
+        <UserProfile />
+      </div>
+
       {/* Hero Section */}
-      <div className="relative h-64 md:h-96 overflow-hidden">
-        <img
-          src={heroImage}
-          alt="Horse Inventory"
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-black/20" />
+      <div className="relative h-64 md:h-96 overflow-hidden bg-black">
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="text-center px-4">
             <img
@@ -125,7 +134,7 @@ const Index = () => {
           </h2>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
             <Badge variant="secondary" className="text-xs md:text-sm">
-              Total Inventory: {sampleHorses.length}
+              Total Inventory: {horses.length}
             </Badge>
             <CreateHorseForm>
               <Button variant="warm" className="gap-2 w-full sm:w-auto">
@@ -138,7 +147,24 @@ const Index = () => {
         </div>
 
         {/* Horse Grid */}
-        {filteredHorses.length > 0 ? (
+        {isLoading ? (
+          <Card className="shadow-card">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Loader2 className="h-16 w-16 text-muted-foreground mb-4 animate-spin" />
+              <h3 className="text-xl font-semibold mb-2">Loading horses...</h3>
+            </CardContent>
+          </Card>
+        ) : error ? (
+          <Card className="shadow-card">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <HorseIcon className="h-16 w-16 text-muted-foreground mb-4" />
+              <h3 className="text-xl font-semibold mb-2">Error loading horses</h3>
+              <p className="text-muted-foreground text-center max-w-md">
+                There was an error loading your horses. Please try again.
+              </p>
+            </CardContent>
+          </Card>
+        ) : filteredHorses.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filteredHorses.map(horse => (
               <div key={horse.id} className="animate-fade-in">
@@ -152,7 +178,10 @@ const Index = () => {
               <HorseIcon className="h-16 w-16 text-muted-foreground mb-4" />
               <h3 className="text-xl font-semibold mb-2">No horses found</h3>
               <p className="text-muted-foreground text-center max-w-md">
-                Try adjusting your search terms or filters to find the horses you're looking for.
+                {horses.length === 0 
+                  ? "You haven't added any horses yet. Create your first horse to get started!"
+                  : "Try adjusting your search terms or filters to find the horses you're looking for."
+                }
               </p>
             </CardContent>
           </Card>

@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Horse } from '@/types/horse';
+import { SharedHorseData } from '@/services/shareService';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, X, Play, Pause } from 'lucide-react';
 
 interface HorseGalleryProps {
-  horse: Horse;
+  horse: Horse | SharedHorseData;
 }
 
 export const HorseGallery = ({ horse }: HorseGalleryProps) => {
@@ -27,6 +28,21 @@ export const HorseGallery = ({ horse }: HorseGalleryProps) => {
 
   const selectedImage = horse.images[selectedImageIndex];
 
+  // If no images, show placeholder
+  if (horse.images.length === 0) {
+    return (
+      <Card className="overflow-hidden">
+        <div className="h-96 flex items-center justify-center bg-muted">
+          <div className="text-center">
+            <div className="text-6xl mb-4">🐎</div>
+            <p className="text-muted-foreground">No images uploaded yet</p>
+            <p className="text-sm text-muted-foreground">Upload some photos to see them here</p>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <>
       <div className="space-y-4">
@@ -38,7 +54,19 @@ export const HorseGallery = ({ horse }: HorseGalleryProps) => {
               alt={selectedImage?.caption || horse.name}
               className="w-full h-96 object-cover cursor-pointer"
               onClick={() => setIsFullscreen(true)}
+              onError={(e) => {
+                console.error('Image failed to load:', selectedImage?.url);
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.nextElementSibling?.classList.remove('hidden');
+              }}
             />
+            <div className="hidden w-full h-96 flex items-center justify-center bg-muted">
+              <div className="text-center">
+                <div className="text-4xl mb-2">🖼️</div>
+                <p className="text-muted-foreground">Image failed to load</p>
+                <p className="text-sm text-muted-foreground">URL: {selectedImage?.url}</p>
+              </div>
+            </div>
             
             {/* Navigation Arrows */}
             {horse.images.length > 1 && (
@@ -111,8 +139,9 @@ export const HorseGallery = ({ horse }: HorseGalleryProps) => {
                 <video
                   key={horse.videos[selectedVideoIndex]?.id}
                   controls
-                  className="w-full h-64 md:h-96 object-cover"
+                  className="w-full h-64 md:h-96 object-cover bg-black"
                   poster={horse.videos[selectedVideoIndex]?.thumbnail}
+                  preload="metadata"
                 >
                   <source src={horse.videos[selectedVideoIndex]?.url} type="video/mp4" />
                   Your browser does not support the video tag.
@@ -156,8 +185,8 @@ export const HorseGallery = ({ horse }: HorseGalleryProps) => {
                           className="w-full h-16 object-cover"
                         />
                       ) : (
-                        <div className="w-full h-16 bg-muted flex items-center justify-center">
-                          <Play className="h-6 w-6 text-muted-foreground" />
+                        <div className="w-full h-16 bg-black flex items-center justify-center">
+                          <Play className="h-6 w-6 text-white" />
                         </div>
                       )}
                       <div className="absolute inset-0 bg-black/20 flex items-center justify-center">

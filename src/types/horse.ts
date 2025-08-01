@@ -13,6 +13,18 @@ export interface Horse {
   pedigree?: {
     sire: string;
     dam: string;
+    sireSire?: string;
+    sireDam?: string;
+    damSire?: string;
+    damDam?: string;
+    sireSireSire?: string;
+    sireSireDam?: string;
+    sireDamSire?: string;
+    sireDamDam?: string;
+    damSireSire?: string;
+    damSireDam?: string;
+    damDamSire?: string;
+    damDamDam?: string;
   };
   health: {
     vaccinations: boolean;
@@ -30,6 +42,7 @@ export interface Horse {
     discipline: string;
     placement: string;
     notes?: string;
+    equipeLink?: string;
   }[];
   images: {
     id: string;

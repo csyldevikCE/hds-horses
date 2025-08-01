@@ -10,7 +10,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MediaUpload } from '@/components/MediaUpload';
 import { useToast } from '@/hooks/use-toast';
-import { Edit, Plus, Trash2 } from 'lucide-react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { horseService } from '@/services/horseService';
+import { Edit, Plus, Trash2, Loader2 } from 'lucide-react';
 
 interface EditHorseFormProps {
   horse: Horse;
@@ -20,6 +22,7 @@ interface EditHorseFormProps {
 export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const [formData, setFormData] = useState({
     // Basic Information
@@ -40,6 +43,18 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
     // Pedigree
     sire: horse.pedigree?.sire || '',
     dam: horse.pedigree?.dam || '',
+    sireSire: horse.pedigree?.sireSire || '',
+    sireDam: horse.pedigree?.sireDam || '',
+    damSire: horse.pedigree?.damSire || '',
+    damDam: horse.pedigree?.damDam || '',
+    sireSireSire: horse.pedigree?.sireSireSire || '',
+    sireSireDam: horse.pedigree?.sireSireDam || '',
+    sireDamSire: horse.pedigree?.sireDamSire || '',
+    sireDamDam: horse.pedigree?.sireDamDam || '',
+    damSireSire: horse.pedigree?.damSireSire || '',
+    damSireDam: horse.pedigree?.damSireDam || '',
+    damDamSire: horse.pedigree?.damDamSire || '',
+    damDamDam: horse.pedigree?.damDamDam || '',
     
     // Training
     trainingLevel: horse.training.level,
@@ -67,7 +82,8 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
       date: '',
       discipline: '',
       placement: '',
-      notes: ''
+      notes: '',
+      equipeLink: ''
     };
     setCompetitions([...competitions, newCompetition]);
   };
@@ -82,19 +98,72 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
     ));
   };
 
+  // Update horse mutation
+  const updateHorseMutation = useMutation({
+    mutationFn: async () => {
+      const updatedHorse: Partial<Horse> = {
+        name: formData.name,
+        breed: formData.breed,
+        age: parseInt(formData.age),
+        color: formData.color,
+        gender: formData.gender as 'Stallion' | 'Mare' | 'Gelding',
+        height: formData.height,
+        weight: formData.weight ? parseInt(formData.weight) : undefined,
+        price: formData.price ? parseFloat(formData.price) : undefined,
+        status: formData.status as 'Available' | 'Sold' | 'Reserved' | 'Not for Sale',
+        description: formData.description,
+        pedigree: formData.sire || formData.dam ? {
+          sire: formData.sire,
+          dam: formData.dam,
+          sireSire: formData.sireSire || undefined,
+          sireDam: formData.sireDam || undefined,
+          damSire: formData.damSire || undefined,
+          damDam: formData.damDam || undefined,
+          sireSireSire: formData.sireSireSire || undefined,
+          sireSireDam: formData.sireSireDam || undefined,
+          sireDamSire: formData.sireDamSire || undefined,
+          sireDamDam: formData.sireDamDam || undefined,
+          damSireSire: formData.damSireSire || undefined,
+          damSireDam: formData.damSireDam || undefined,
+          damDamSire: formData.damDamSire || undefined,
+          damDamDam: formData.damDamDam || undefined
+        } : undefined,
+        health: {
+          vaccinations: formData.vaccinations,
+          coggins: formData.coggins,
+          lastVetCheck: formData.lastVetCheck
+        },
+        training: {
+          level: formData.trainingLevel,
+          disciplines: formData.disciplines.split(',').map(d => d.trim()).filter(d => d)
+        },
+        location: formData.location,
+        competitions: competitions
+      };
+
+      return horseService.updateHorse(horse.id, updatedHorse);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['horse', horse.id] });
+      queryClient.invalidateQueries({ queryKey: ['horses'] });
+      toast({
+        title: "Horse Updated",
+        description: `${formData.name} has been successfully updated.`,
+      });
+      setOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update horse. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Here you would typically send the data to your backend
-    console.log('Updated horse data:', formData);
-    console.log('Updated competitions:', competitions);
-    
-    toast({
-      title: "Horse Updated",
-      description: `${formData.name} has been successfully updated.`,
-    });
-    
-    setOpen(false);
+    updateHorseMutation.mutate();
   };
 
   return (
@@ -254,23 +323,149 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
             <CardHeader>
               <CardTitle>Pedigree</CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="sire">Sire</Label>
-                <Input
-                  id="sire"
-                  value={formData.sire}
-                  onChange={(e) => handleInputChange('sire', e.target.value)}
-                />
+            <CardContent className="space-y-6">
+              {/* Generation 2 - Parents */}
+              <div>
+                <h4 className="font-medium mb-3">Parents</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="sire">Sire</Label>
+                    <Input
+                      id="sire"
+                      value={formData.sire}
+                      onChange={(e) => handleInputChange('sire', e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="dam">Dam</Label>
+                    <Input
+                      id="dam"
+                      value={formData.dam}
+                      onChange={(e) => handleInputChange('dam', e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="dam">Dam</Label>
-                <Input
-                  id="dam"
-                  value={formData.dam}
-                  onChange={(e) => handleInputChange('dam', e.target.value)}
-                />
+
+              {/* Generation 3 - Grandparents */}
+              <div>
+                <h4 className="font-medium mb-3">Grandparents</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="sireSire">Sire's Sire</Label>
+                    <Input
+                      id="sireSire"
+                      value={formData.sireSire}
+                      onChange={(e) => handleInputChange('sireSire', e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="sireDam">Sire's Dam</Label>
+                    <Input
+                      id="sireDam"
+                      value={formData.sireDam}
+                      onChange={(e) => handleInputChange('sireDam', e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="damSire">Dam's Sire</Label>
+                    <Input
+                      id="damSire"
+                      value={formData.damSire}
+                      onChange={(e) => handleInputChange('damSire', e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="damDam">Dam's Dam</Label>
+                    <Input
+                      id="damDam"
+                      value={formData.damDam}
+                      onChange={(e) => handleInputChange('damDam', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Generation 4 - Great Grandparents */}
+              <div>
+                <h4 className="font-medium mb-3">Great Grandparents</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="sireSireSire">Sire's Sire's Sire</Label>
+                    <Input
+                      id="sireSireSire"
+                      value={formData.sireSireSire}
+                      onChange={(e) => handleInputChange('sireSireSire', e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="sireSireDam">Sire's Sire's Dam</Label>
+                    <Input
+                      id="sireSireDam"
+                      value={formData.sireSireDam}
+                      onChange={(e) => handleInputChange('sireSireDam', e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="sireDamSire">Sire's Dam's Sire</Label>
+                    <Input
+                      id="sireDamSire"
+                      value={formData.sireDamSire}
+                      onChange={(e) => handleInputChange('sireDamSire', e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="sireDamDam">Sire's Dam's Dam</Label>
+                    <Input
+                      id="sireDamDam"
+                      value={formData.sireDamDam}
+                      onChange={(e) => handleInputChange('sireDamDam', e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="damSireSire">Dam's Sire's Sire</Label>
+                    <Input
+                      id="damSireSire"
+                      value={formData.damSireSire}
+                      onChange={(e) => handleInputChange('damSireSire', e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="damSireDam">Dam's Sire's Dam</Label>
+                    <Input
+                      id="damSireDam"
+                      value={formData.damSireDam}
+                      onChange={(e) => handleInputChange('damSireDam', e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="damDamSire">Dam's Dam's Sire</Label>
+                    <Input
+                      id="damDamSire"
+                      value={formData.damDamSire}
+                      onChange={(e) => handleInputChange('damDamSire', e.target.value)}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="damDamDam">Dam's Dam's Dam</Label>
+                    <Input
+                      id="damDamDam"
+                      value={formData.damDamDam}
+                      onChange={(e) => handleInputChange('damDamDam', e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -420,6 +615,17 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
                             rows={2}
                           />
                         </div>
+                        
+                        <div className="space-y-2 md:col-span-2">
+                          <Label htmlFor={`equipeLink-${competition.id}`}>Equipe Link (optional)</Label>
+                          <Input
+                            id={`equipeLink-${competition.id}`}
+                            type="url"
+                            value={competition.equipeLink || ''}
+                            onChange={(e) => updateCompetition(competition.id, 'equipeLink', e.target.value)}
+                            placeholder="https://equipe.com/result/..."
+                          />
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
@@ -434,7 +640,10 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
               <CardTitle>Media</CardTitle>
             </CardHeader>
             <CardContent>
-              <MediaUpload onMediaAdd={(files) => console.log('Updated media files:', files)} />
+              <MediaUpload 
+                horseId={horse.id}
+                onMediaAdd={(files) => console.log('Updated media files:', files)} 
+              />
             </CardContent>
           </Card>
 
@@ -442,8 +651,15 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit">
-              Update Horse
+            <Button type="submit" disabled={updateHorseMutation.isPending}>
+              {updateHorseMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                'Update Horse'
+              )}
             </Button>
           </div>
         </form>
