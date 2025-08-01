@@ -10,7 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MediaUpload } from '@/components/MediaUpload';
 import { useToast } from '@/hooks/use-toast';
-import { Edit } from 'lucide-react';
+import { Edit, Plus, Trash2 } from 'lucide-react';
 
 interface EditHorseFormProps {
   horse: Horse;
@@ -51,6 +51,8 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
     lastVetCheck: horse.health.lastVetCheck,
   });
 
+  const [competitions, setCompetitions] = useState(horse.competitions || []);
+
   const handleInputChange = (name: string, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
@@ -58,11 +60,34 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
     }));
   };
 
+  const addCompetition = () => {
+    const newCompetition = {
+      id: Date.now().toString(),
+      event: '',
+      date: '',
+      discipline: '',
+      placement: '',
+      notes: ''
+    };
+    setCompetitions([...competitions, newCompetition]);
+  };
+
+  const removeCompetition = (id: string) => {
+    setCompetitions(competitions.filter(comp => comp.id !== id));
+  };
+
+  const updateCompetition = (id: string, field: string, value: string) => {
+    setCompetitions(competitions.map(comp => 
+      comp.id === id ? { ...comp, [field]: value } : comp
+    ));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Here you would typically send the data to your backend
     console.log('Updated horse data:', formData);
+    console.log('Updated competitions:', competitions);
     
     toast({
       title: "Horse Updated",
@@ -313,6 +338,93 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
                   required
                 />
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Competition Results */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                Competition Results
+                <Button type="button" variant="outline" size="sm" onClick={addCompetition}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Competition
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {competitions.length === 0 ? (
+                <p className="text-muted-foreground text-center py-4">No competition results added yet.</p>
+              ) : (
+                competitions.map((competition) => (
+                  <Card key={competition.id} className="relative">
+                    <CardContent className="pt-6">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="absolute top-2 right-2"
+                        onClick={() => removeCompetition(competition.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pr-12">
+                        <div className="space-y-2">
+                          <Label htmlFor={`event-${competition.id}`}>Event</Label>
+                          <Input
+                            id={`event-${competition.id}`}
+                            value={competition.event}
+                            onChange={(e) => updateCompetition(competition.id, 'event', e.target.value)}
+                            placeholder="e.g., Kentucky Derby"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor={`date-${competition.id}`}>Date</Label>
+                          <Input
+                            id={`date-${competition.id}`}
+                            type="date"
+                            value={competition.date}
+                            onChange={(e) => updateCompetition(competition.id, 'date', e.target.value)}
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor={`discipline-${competition.id}`}>Discipline</Label>
+                          <Input
+                            id={`discipline-${competition.id}`}
+                            value={competition.discipline}
+                            onChange={(e) => updateCompetition(competition.id, 'discipline', e.target.value)}
+                            placeholder="e.g., Dressage, Jumping"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor={`placement-${competition.id}`}>Placement</Label>
+                          <Input
+                            id={`placement-${competition.id}`}
+                            value={competition.placement}
+                            onChange={(e) => updateCompetition(competition.id, 'placement', e.target.value)}
+                            placeholder="e.g., 1st Place, 2nd Place"
+                          />
+                        </div>
+                        
+                        <div className="space-y-2 md:col-span-2">
+                          <Label htmlFor={`notes-${competition.id}`}>Notes (optional)</Label>
+                          <Textarea
+                            id={`notes-${competition.id}`}
+                            value={competition.notes || ''}
+                            onChange={(e) => updateCompetition(competition.id, 'notes', e.target.value)}
+                            placeholder="Additional notes about this competition"
+                            rows={2}
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </CardContent>
           </Card>
 
