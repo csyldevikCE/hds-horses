@@ -49,20 +49,22 @@ const HorseDetail = () => {
             <h1 className="text-3xl font-bold text-foreground">{horse.name}</h1>
             <p className="text-muted-foreground">{horse.breed} • {horse.age} years old</p>
           </div>
-          <div className="flex items-center gap-2">
-            <ShareHorse horse={horse}>
-              <Button variant="outline" size="sm" className="gap-2 hover-scale">
-                <Share2 className="h-4 w-4" />
-                Share
-              </Button>
-            </ShareHorse>
-            <EditHorseForm horse={horse}>
-              <Button variant="outline" size="sm" className="hover-scale">
-                <Edit className="h-4 w-4 mr-2" />
-                Edit Horse
-              </Button>
-            </EditHorseForm>
-            <YoutubeManager horse={horse} />
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <ShareHorse horse={horse}>
+                <Button variant="outline" size="sm" className="gap-2 hover-scale">
+                  <Share2 className="h-4 w-4" />
+                  <span className="hidden xs:inline">Share</span>
+                </Button>
+              </ShareHorse>
+              <EditHorseForm horse={horse}>
+                <Button variant="outline" size="sm" className="hover-scale">
+                  <Edit className="h-4 w-4 mr-2" />
+                  <span className="hidden xs:inline">Edit Horse</span>
+                </Button>
+              </EditHorseForm>
+              <YoutubeManager horse={horse} />
+            </div>
             <Badge className={getStatusColor(horse.status)}>
               {horse.status}
             </Badge>
