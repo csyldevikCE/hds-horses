@@ -3,10 +3,11 @@ import { useParams, Link } from 'react-router-dom';
 import { sampleHorses } from '@/data/sampleHorses';
 import { HorseGallery } from '@/components/HorseGallery';
 import { MediaUpload } from '@/components/MediaUpload';
+import { ShareHorse } from '@/components/ShareHorse';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, MapPin, Calendar, Heart, CheckCircle, Edit } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Heart, CheckCircle, Edit, Share2 } from 'lucide-react';
 
 const HorseDetail = () => {
   const { id } = useParams();
@@ -50,6 +51,12 @@ const HorseDetail = () => {
             <p className="text-muted-foreground">{horse.breed} • {horse.age} years old</p>
           </div>
           <div className="flex items-center gap-2">
+            <ShareHorse horse={horse}>
+              <Button variant="outline" size="sm" className="gap-2 hover-scale">
+                <Share2 className="h-4 w-4" />
+                Share
+              </Button>
+            </ShareHorse>
             <Button
               variant="outline"
               size="sm"
