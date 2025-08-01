@@ -141,9 +141,9 @@ export const YoutubeManager = ({ horse, onUpdate }: YoutubeManagerProps) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
+        <Button variant="outline" size="sm" className="gap-2 hover-scale">
           <Youtube className="h-4 w-4" />
-          YouTube Manager
+          <span className="hidden xs:inline">YouTube Manager</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
