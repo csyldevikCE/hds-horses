@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { sampleHorses } from '@/data/sampleHorses';
 import { HorseCard } from '@/components/HorseCard';
+import { CreateHorseForm } from '@/components/CreateHorseForm';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, Filter, Zap as HorseIcon } from 'lucide-react';
+import { Search, Filter, Zap as HorseIcon, Plus } from 'lucide-react';
 import heroImage from '@/assets/hero-horse.jpg';
 
 const Index = () => {
@@ -123,9 +124,17 @@ const Index = () => {
           <h2 className="text-2xl font-bold text-foreground">
             {filteredHorses.length} {filteredHorses.length === 1 ? 'Horse' : 'Horses'} Found
           </h2>
-          <Badge variant="secondary" className="text-sm">
-            Total Inventory: {sampleHorses.length}
-          </Badge>
+          <div className="flex items-center gap-3">
+            <Badge variant="secondary" className="text-sm">
+              Total Inventory: {sampleHorses.length}
+            </Badge>
+            <CreateHorseForm>
+              <Button variant="warm" className="gap-2">
+                <Plus className="h-4 w-4" />
+                Create New Horse
+              </Button>
+            </CreateHorseForm>
+          </div>
         </div>
 
         {/* Horse Grid */}
