@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Search, Filter, Zap as HorseIcon, Plus } from 'lucide-react';
 import heroImage from '@/assets/hero-horse.jpg';
+import logo from '@/assets/logo.png';
 
 const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -38,14 +39,12 @@ const Index = () => {
         />
         <div className="absolute inset-0 bg-black/40" />
         <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center text-white px-4">
-            <div className="flex items-center justify-center gap-2 md:gap-3 mb-4">
-              <HorseIcon className="h-8 w-8 md:h-12 md:w-12" />
-              <h1 className="text-3xl md:text-5xl font-bold">Horse Inventory</h1>
-            </div>
-            <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto">
-              Manage your equine collection with detailed profiles, sales materials, and comprehensive information
-            </p>
+          <div className="text-center px-4">
+            <img
+              src={logo}
+              alt="Horse Inventory Logo"
+              className="w-48 md:w-64 lg:w-80 mx-auto"
+            />
           </div>
         </div>
       </div>
