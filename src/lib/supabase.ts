@@ -430,6 +430,44 @@ export interface Database {
           updated_at?: string
         }
       }
+      invitations: {
+        Row: {
+          id: string
+          organization_id: string
+          token: string
+          email: string
+          role: 'admin' | 'read_only'
+          invited_by: string
+          expires_at: string
+          used_at: string | null
+          used_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          token: string
+          email: string
+          role: 'admin' | 'read_only'
+          invited_by: string
+          expires_at: string
+          used_at?: string | null
+          used_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          token?: string
+          email?: string
+          role?: 'admin' | 'read_only'
+          invited_by?: string
+          expires_at?: string
+          used_at?: string | null
+          used_by?: string | null
+          created_at?: string
+        }
+      }
     }
   }
 } 

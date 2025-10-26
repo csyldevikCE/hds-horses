@@ -1,6 +1,16 @@
-# Inviting Users to Your Organization (Manual Process)
+# Inviting Users to Your Organization
 
-The "Invite User" button in the Organization tab currently shows a placeholder. Here's how to manually add users to your organization until the full invitation system is implemented.
+> ⚠️ **DEPRECATED**: The manual process below is no longer needed!
+>
+> An automated invitation system has been implemented. See **INVITATION_SYSTEM_SETUP.md** for the new system.
+>
+> The "Invite User" button in the Organization tab now generates shareable invitation links automatically.
+
+---
+
+## Old Manual Process (Keep for Reference)
+
+**Note**: This manual workaround is only needed if the invitation system is not working. Otherwise, use the automated invitation feature.
 
 ## Option 1: Manual Database Update (Current Workaround)
 

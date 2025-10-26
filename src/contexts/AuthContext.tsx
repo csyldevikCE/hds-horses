@@ -11,7 +11,14 @@ interface AuthContextType {
   userRole: UserRole | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<{ error: any }>
-  signUp: (email: string, password: string, organizationName: string) => Promise<{ error: any }>
+  signUp: (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    organizationName: string | null,
+    inviteToken?: string
+  ) => Promise<{ error: any }>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<{ error: any }>
   refreshOrganization: () => Promise<void>
@@ -199,7 +206,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return { error }
   }
 
-  const signUp = async (email: string, password: string, organizationName: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    firstName: string,
+    lastName: string,
+    organizationName: string | null,
+    inviteToken?: string
+  ) => {
     // Step 1: Create the user account
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
@@ -211,38 +225,110 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
 
     try {
-      // Step 2: Create the organization
-      const { data: orgData, error: orgError } = await supabase
-        .from('organizations')
-        .insert({
-          name: organizationName,
-          created_by: authData.user.id,
-        })
-        .select()
-        .single()
-
-      if (orgError || !orgData) {
-        return { error: orgError || new Error('Failed to create organization') }
-      }
-
-      // Step 3: Create organization membership with admin role
-      const { error: membershipError } = await supabase
-        .from('organization_users')
-        .insert({
-          organization_id: orgData.id,
-          user_id: authData.user.id,
-          role: 'admin',
-          invited_by: authData.user.id,
+      // Step 2: Create/update the user profile with first and last name
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: authData.user.id,
+          first_name: firstName,
+          last_name: lastName,
         })
 
-      if (membershipError) {
-        return { error: membershipError }
+      if (profileError) {
+        console.error('Failed to create profile:', profileError)
+        // Don't fail signup if profile creation fails, just log it
       }
 
-      // Refresh organization data
-      await fetchOrganizationData(authData.user.id)
+      // Step 3: Handle invitation or create new organization
+      if (inviteToken) {
+        // Invitation-based signup
+        // Load the invitation
+        const { data: invitation, error: inviteError } = await supabase
+          .from('invitations')
+          .select('*')
+          .eq('token', inviteToken)
+          .is('used_at', null)
+          .single()
 
-      return { error: null }
+        if (inviteError || !invitation) {
+          return { error: inviteError || new Error('Invalid or expired invitation') }
+        }
+
+        // Verify invitation hasn't expired
+        if (new Date(invitation.expires_at) < new Date()) {
+          return { error: new Error('This invitation has expired') }
+        }
+
+        // Add user to the organization with the role from invitation
+        const { error: membershipError } = await supabase
+          .from('organization_users')
+          .insert({
+            organization_id: invitation.organization_id,
+            user_id: authData.user.id,
+            role: invitation.role,
+            invited_by: invitation.invited_by,
+          })
+
+        if (membershipError) {
+          return { error: membershipError }
+        }
+
+        // Mark invitation as used
+        const { error: updateInviteError } = await supabase
+          .from('invitations')
+          .update({
+            used_at: new Date().toISOString(),
+            used_by: authData.user.id,
+          })
+          .eq('id', invitation.id)
+
+        if (updateInviteError) {
+          console.error('Failed to mark invitation as used:', updateInviteError)
+          // Don't fail signup if this fails
+        }
+
+        // Refresh organization data
+        await fetchOrganizationData(authData.user.id)
+
+        return { error: null }
+      } else {
+        // Regular signup - create new organization
+        if (!organizationName) {
+          return { error: new Error('Organization name is required') }
+        }
+
+        const { data: orgData, error: orgError } = await supabase
+          .from('organizations')
+          .insert({
+            name: organizationName,
+            created_by: authData.user.id,
+          })
+          .select()
+          .single()
+
+        if (orgError || !orgData) {
+          return { error: orgError || new Error('Failed to create organization') }
+        }
+
+        // Create organization membership with admin role
+        const { error: membershipError } = await supabase
+          .from('organization_users')
+          .insert({
+            organization_id: orgData.id,
+            user_id: authData.user.id,
+            role: 'admin',
+            invited_by: authData.user.id,
+          })
+
+        if (membershipError) {
+          return { error: membershipError }
+        }
+
+        // Refresh organization data
+        await fetchOrganizationData(authData.user.id)
+
+        return { error: null }
+      }
     } catch (error) {
       return { error }
     }

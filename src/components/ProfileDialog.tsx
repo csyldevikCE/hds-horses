@@ -191,13 +191,24 @@ export const ProfileDialog = ({ children }: ProfileDialogProps) => {
     }
   }
 
-  // Invite user
+  // Invite user - Generate invitation link
   const handleInviteUser = async () => {
     if (!organization?.id || !user?.id) return
     if (!inviteEmail.trim()) {
       toast({
         title: 'Error',
         description: 'Please enter an email address',
+        variant: 'destructive'
+      })
+      return
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(inviteEmail)) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a valid email address',
         variant: 'destructive'
       })
       return
@@ -215,6 +226,7 @@ export const ProfileDialog = ({ children }: ProfileDialogProps) => {
           description: 'Maximum 2 admins per organization',
           variant: 'destructive'
         })
+        setIsInviting(false)
         return
       }
 
@@ -224,26 +236,49 @@ export const ProfileDialog = ({ children }: ProfileDialogProps) => {
           description: 'Maximum 2 read-only users per organization',
           variant: 'destructive'
         })
+        setIsInviting(false)
         return
       }
 
-      // In a real app, you would:
-      // 1. Create user account via Supabase Auth API or send invite email
-      // 2. Add them to organization_users table
-      // For now, we'll show a message
+      // Generate unique invitation token
+      const token = crypto.randomUUID()
+      const expiresAt = new Date()
+      expiresAt.setDate(expiresAt.getDate() + 7) // Expires in 7 days
+
+      // Create invitation record
+      const { error } = await supabase
+        .from('invitations')
+        .insert({
+          organization_id: organization.id,
+          token,
+          email: inviteEmail,
+          role: inviteRole,
+          invited_by: user.id,
+          expires_at: expiresAt.toISOString()
+        })
+
+      if (error) throw error
+
+      // Generate invitation link
+      const inviteLink = `${window.location.origin}/signup?invite=${token}`
+
+      // Copy to clipboard
+      await navigator.clipboard.writeText(inviteLink)
 
       toast({
-        title: 'Invite Sent',
-        description: `Invitation sent to ${inviteEmail} as ${inviteRole}`,
+        title: 'Invitation Link Created!',
+        description: `Link copied to clipboard! Share it with ${inviteEmail}. They'll join as ${inviteRole === 'admin' ? 'Administrator' : 'Read-Only user'}. Link expires in 7 days.`,
+        duration: 8000,
       })
 
       setInviteEmail('')
+      setInviteRole('read_only')
       setIsInviteDialogOpen(false)
-      loadMembers()
     } catch (error: any) {
+      console.error('Invitation error:', error)
       toast({
         title: 'Error',
-        description: error.message,
+        description: error.message || 'Failed to create invitation',
         variant: 'destructive'
       })
     } finally {

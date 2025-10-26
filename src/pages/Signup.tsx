@@ -1,36 +1,88 @@
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useToast } from '@/hooks/use-toast'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Eye, EyeOff, Loader2, Users } from 'lucide-react'
 import logo from '@/assets/logo.png'
 
 const Signup = () => {
+  const [searchParams] = useSearchParams()
+  const inviteToken = searchParams.get('invite')
+
   const [organizationName, setOrganizationName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [invitation, setInvitation] = useState<any>(null)
+  const [loadingInvitation, setLoadingInvitation] = useState(false)
 
   const { signUp } = useAuth()
   const navigate = useNavigate()
   const { toast } = useToast()
+
+  // Load invitation if token exists
+  useEffect(() => {
+    if (inviteToken) {
+      loadInvitation()
+    }
+  }, [inviteToken])
+
+  const loadInvitation = async () => {
+    setLoadingInvitation(true)
+    try {
+      const { data, error } = await supabase
+        .from('invitations')
+        .select(`
+          *,
+          organizations (
+            name
+          )
+        `)
+        .eq('token', inviteToken)
+        .is('used_at', null)
+        .single()
+
+      if (error || !data) {
+        setError('Invalid or already used invitation link')
+        setLoadingInvitation(false)
+        return
+      }
+
+      // Check if invitation is expired
+      if (new Date(data.expires_at) < new Date()) {
+        setError('This invitation has expired')
+        setLoadingInvitation(false)
+        return
+      }
+
+      setInvitation(data)
+      setEmail(data.email) // Pre-fill email from invitation
+    } catch (err) {
+      setError('Failed to load invitation')
+    } finally {
+      setLoadingInvitation(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError('')
 
-    // Validate organization name
-    if (!organizationName.trim()) {
+    // Validate organization name only if not using invitation
+    if (!invitation && !organizationName.trim()) {
       setError('Organization name is required')
       setLoading(false)
       return
@@ -51,15 +103,23 @@ const Signup = () => {
     }
 
     try {
-      const { error } = await signUp(email, password, organizationName.trim())
+      const orgName = invitation ? null : organizationName.trim()
+      const { error } = await signUp(email, password, firstName, lastName, orgName, inviteToken || undefined)
 
       if (error) {
         setError(error.message)
       } else {
-        toast({
-          title: "Account created!",
-          description: "Your organization has been set up. You can now log in.",
-        })
+        if (invitation) {
+          toast({
+            title: "Account created!",
+            description: `Welcome to ${invitation.organizations.name}! You can now log in.`,
+          })
+        } else {
+          toast({
+            title: "Account created!",
+            description: "Your organization has been set up. You can now log in.",
+          })
+        }
         navigate('/login')
       }
     } catch (err) {
@@ -85,7 +145,7 @@ const Signup = () => {
           <div className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Create account</CardTitle>
             <CardDescription className="text-center">
-              Set up your organization to start managing horses
+              {invitation ? 'Join your team and start collaborating' : 'Set up your organization to start managing horses'}
             </CardDescription>
           </div>
         </CardHeader>
@@ -97,18 +157,61 @@ const Signup = () => {
               </Alert>
             )}
 
-            <div className="space-y-2">
-              <Label htmlFor="organizationName">Organization Name</Label>
-              <Input
-                id="organizationName"
-                type="text"
-                placeholder="e.g., Sunset Stables"
-                value={organizationName}
-                onChange={(e) => setOrganizationName(e.target.value)}
-                required
-                disabled={loading}
-              />
-              <p className="text-xs text-gray-500">This will be your stable or farm name</p>
+            {!invitation && (
+              <div className="space-y-2">
+                <Label htmlFor="organizationName">Organization Name</Label>
+                <Input
+                  id="organizationName"
+                  type="text"
+                  placeholder="e.g., Sunset Stables"
+                  value={organizationName}
+                  onChange={(e) => setOrganizationName(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+                <p className="text-xs text-gray-500">This will be your stable or farm name</p>
+              </div>
+            )}
+
+            {invitation && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <Users className="h-5 w-5 text-blue-600" />
+                  <p className="font-medium text-blue-900">
+                    You're invited to join {invitation.organizations.name}
+                  </p>
+                </div>
+                <p className="text-sm text-blue-700">
+                  Create your account to join this organization as {invitation.role === 'admin' ? 'an administrator' : 'a member'}.
+                </p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="firstName">First Name</Label>
+                <Input
+                  id="firstName"
+                  type="text"
+                  placeholder="First name"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lastName">Last Name</Label>
+                <Input
+                  id="lastName"
+                  type="text"
+                  placeholder="Last name"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -120,8 +223,11 @@ const Signup = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={loading}
+                disabled={loading || !!invitation}
               />
+              {invitation && (
+                <p className="text-xs text-gray-500">Email pre-filled from invitation</p>
+              )}
             </div>
             
             <div className="space-y-2">
