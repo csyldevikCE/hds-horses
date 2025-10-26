@@ -20,7 +20,7 @@ interface CreateHorseFormProps {
 export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, organization } = useAuth();
   const queryClient = useQueryClient();
   
   const [formData, setFormData] = useState({
@@ -51,7 +51,8 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
   const createHorseMutation = useMutation({
     mutationFn: (horseData: any) => horseService.createHorse(horseData, user?.id || ''),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['horses', user?.id] });
+      // Invalidate horses list with CORRECT organization ID
+      queryClient.invalidateQueries({ queryKey: ['horses', organization?.id] });
       toast({
         title: "Horse created successfully!",
         description: `${formData.name} has been added to your inventory.`,

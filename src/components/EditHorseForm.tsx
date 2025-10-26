@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MediaUpload } from '@/components/MediaUpload';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { horseService } from '@/services/horseService';
 import { Edit, Plus, Trash2, Loader2 } from 'lucide-react';
@@ -22,6 +23,7 @@ interface EditHorseFormProps {
 export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const { organization } = useAuth();
   const queryClient = useQueryClient();
   
   const [formData, setFormData] = useState({
@@ -144,8 +146,10 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
       return horseService.updateHorse(horse.id, updatedHorse);
     },
     onSuccess: () => {
+      // Invalidate specific horse detail
       queryClient.invalidateQueries({ queryKey: ['horse', horse.id] });
-      queryClient.invalidateQueries({ queryKey: ['horses'] });
+      // Invalidate horses list with CORRECT organization ID
+      queryClient.invalidateQueries({ queryKey: ['horses', organization?.id] });
       toast({
         title: "Horse Updated",
         description: `${formData.name} has been successfully updated.`,

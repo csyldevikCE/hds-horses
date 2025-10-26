@@ -54,10 +54,10 @@ export const MediaUpload = ({ onMediaAdd, horseId }: MediaUploadProps) => {
             });
           }
           
-          // Invalidate and refetch horse data
+          // Invalidate specific horse data
           await queryClient.invalidateQueries({ queryKey: ['horse', horseId] });
-          await queryClient.invalidateQueries({ queryKey: ['horses'] });
-          
+          // Note: horses list will refetch naturally when user navigates back (staleTime handles this)
+
           toast({
             title: "File uploaded successfully!",
             description: `${uploadedFile.name} has been uploaded and added to the horse.`,

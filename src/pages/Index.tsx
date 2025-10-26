@@ -16,13 +16,13 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBreed, setSelectedBreed] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
-  
-  const { user } = useAuth();
+
+  const { user, organization } = useAuth();
 
   const { data: horses = [], isLoading, error } = useQuery({
-    queryKey: ['horses', user?.id],
-    queryFn: () => horseService.getHorses(user?.id || ''),
-    enabled: !!user?.id,
+    queryKey: ['horses', organization?.id],
+    queryFn: () => horseService.getHorses(organization?.id || ''),
+    enabled: !!organization?.id,
   });
 
   const breeds = [...new Set(horses.map(horse => horse.breed))];
@@ -59,6 +59,25 @@ const Index = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
+        {/* No Organization Message */}
+        {!organization && (
+          <Card className="mb-8 shadow-card border-yellow-200 bg-yellow-50">
+            <CardContent className="p-6">
+              <div className="flex items-start gap-3">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-yellow-900 mb-2">No Organization Found</h3>
+                  <p className="text-sm text-yellow-800 mb-4">
+                    You need to be part of an organization to manage horses. This might be because you signed up before the organization feature was added.
+                  </p>
+                  <p className="text-sm text-yellow-800">
+                    Please sign out and create a new account to set up your organization, or contact support for assistance.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Search and Filters */}
         <Card className="mb-8 shadow-card">
           <CardContent className="p-6">

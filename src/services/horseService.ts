@@ -92,7 +92,11 @@ const mapHorseRowToHorse = async (row: HorseRow): Promise<Horse> => {
 }
 
 // Convert Horse interface to database insert
-const mapHorseToInsert = (horse: Omit<Horse, 'id' | 'dateAdded'>, userId: string): HorseInsert => {
+const mapHorseToInsert = (
+  horse: Omit<Horse, 'id' | 'dateAdded'>,
+  userId: string,
+  organizationId: string
+): HorseInsert => {
   return {
     name: horse.name,
     breed: horse.breed,
@@ -125,17 +129,18 @@ const mapHorseToInsert = (horse: Omit<Horse, 'id' | 'dateAdded'>, userId: string
     training_disciplines: horse.training.disciplines,
     location: horse.location,
     date_added: new Date().toISOString().split('T')[0],
-    user_id: userId
+    user_id: userId,
+    organization_id: organizationId,
   }
 }
 
 export const horseService = {
-  // Get all horses for the current user
-  async getHorses(userId: string): Promise<Horse[]> {
+  // Get all horses for the organization (RLS will enforce access)
+  async getHorses(organizationId: string): Promise<Horse[]> {
     const { data, error } = await supabase
       .from('horses')
       .select('*')
-      .eq('user_id', userId)
+      .eq('organization_id', organizationId)
       .order('created_at', { ascending: false })
 
     if (error) throw error
@@ -161,8 +166,12 @@ export const horseService = {
   },
 
   // Create a new horse
-  async createHorse(horse: Omit<Horse, 'id' | 'dateAdded'>, userId: string): Promise<Horse> {
-    const horseData = mapHorseToInsert(horse, userId)
+  async createHorse(
+    horse: Omit<Horse, 'id' | 'dateAdded'>,
+    userId: string,
+    organizationId: string
+  ): Promise<Horse> {
+    const horseData = mapHorseToInsert(horse, userId, organizationId)
 
     const { data, error } = await supabase
       .from('horses')

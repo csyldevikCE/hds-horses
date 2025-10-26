@@ -11,6 +11,7 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import logo from '@/assets/logo.png'
 
 const Signup = () => {
+  const [organizationName, setOrganizationName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -18,7 +19,7 @@ const Signup = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  
+
   const { signUp } = useAuth()
   const navigate = useNavigate()
   const { toast } = useToast()
@@ -27,6 +28,13 @@ const Signup = () => {
     e.preventDefault()
     setLoading(true)
     setError('')
+
+    // Validate organization name
+    if (!organizationName.trim()) {
+      setError('Organization name is required')
+      setLoading(false)
+      return
+    }
 
     // Validate passwords match
     if (password !== confirmPassword) {
@@ -43,14 +51,14 @@ const Signup = () => {
     }
 
     try {
-      const { error } = await signUp(email, password)
-      
+      const { error } = await signUp(email, password, organizationName.trim())
+
       if (error) {
         setError(error.message)
       } else {
         toast({
           title: "Account created!",
-          description: "Please check your email to verify your account.",
+          description: "Your organization has been set up. You can now log in.",
         })
         navigate('/login')
       }
@@ -77,7 +85,7 @@ const Signup = () => {
           <div className="space-y-1">
             <CardTitle className="text-2xl font-bold text-center">Create account</CardTitle>
             <CardDescription className="text-center">
-              Join Stable Story Hub to manage your horses
+              Set up your organization to start managing horses
             </CardDescription>
           </div>
         </CardHeader>
@@ -88,7 +96,21 @@ const Signup = () => {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
-            
+
+            <div className="space-y-2">
+              <Label htmlFor="organizationName">Organization Name</Label>
+              <Input
+                id="organizationName"
+                type="text"
+                placeholder="e.g., Sunset Stables"
+                value={organizationName}
+                onChange={(e) => setOrganizationName(e.target.value)}
+                required
+                disabled={loading}
+              />
+              <p className="text-xs text-gray-500">This will be your stable or farm name</p>
+            </div>
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input

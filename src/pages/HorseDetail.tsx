@@ -6,6 +6,9 @@ import { ShareHorse } from '@/components/ShareHorse';
 import { EditHorseForm } from '@/components/EditHorseForm';
 import { YoutubeManager } from '@/components/YoutubeManager';
 import { MediaUpload } from '@/components/MediaUpload';
+import { PedigreeTree } from '@/components/PedigreeTree';
+import { XRayUpload } from '@/components/XRayUpload';
+import { XRayList } from '@/components/XRayList';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -181,98 +184,10 @@ const HorseDetail = () => {
                   <CardTitle>Pedigree</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-4 gap-2 text-xs">
-                    {/* Generation 1 */}
-                    <div className="col-span-4 p-2 bg-muted/20 rounded border">
-                      <div className="font-semibold text-center">{horse.name}</div>
-                    </div>
-                    
-                    {/* Generation 2 */}
-                    <div className="col-span-2 p-2 bg-muted/10 rounded border">
-                      <div className="text-muted-foreground text-xs">Sire</div>
-                      <div className="font-medium">{horse.pedigree.sire}</div>
-                    </div>
-                    <div className="col-span-2 p-2 bg-muted/10 rounded border">
-                      <div className="text-muted-foreground text-xs">Dam</div>
-                      <div className="font-medium">{horse.pedigree.dam}</div>
-                    </div>
-                    
-                    {/* Generation 3 */}
-                    {horse.pedigree.sireSire && (
-                      <div className="p-1 bg-muted/5 rounded border text-center">
-                        <div className="text-muted-foreground text-xs">Sire's Sire</div>
-                        <div className="font-medium text-xs">{horse.pedigree.sireSire}</div>
-                      </div>
-                    )}
-                    {horse.pedigree.sireDam && (
-                      <div className="p-1 bg-muted/5 rounded border text-center">
-                        <div className="text-muted-foreground text-xs">Sire's Dam</div>
-                        <div className="font-medium text-xs">{horse.pedigree.sireDam}</div>
-                      </div>
-                    )}
-                    {horse.pedigree.damSire && (
-                      <div className="p-1 bg-muted/5 rounded border text-center">
-                        <div className="text-muted-foreground text-xs">Dam's Sire</div>
-                        <div className="font-medium text-xs">{horse.pedigree.damSire}</div>
-                      </div>
-                    )}
-                    {horse.pedigree.damDam && (
-                      <div className="p-1 bg-muted/5 rounded border text-center">
-                        <div className="text-muted-foreground text-xs">Dam's Dam</div>
-                        <div className="font-medium text-xs">{horse.pedigree.damDam}</div>
-                      </div>
-                    )}
-                    
-                    {/* Generation 4 - Only show if we have data */}
-                    {horse.pedigree.sireSireSire && (
-                      <div className="p-1 bg-muted/5 rounded border text-center">
-                        <div className="text-muted-foreground text-xs">SSS</div>
-                        <div className="font-medium text-xs">{horse.pedigree.sireSireSire}</div>
-                      </div>
-                    )}
-                    {horse.pedigree.sireSireDam && (
-                      <div className="p-1 bg-muted/5 rounded border text-center">
-                        <div className="text-muted-foreground text-xs">SSD</div>
-                        <div className="font-medium text-xs">{horse.pedigree.sireSireDam}</div>
-                      </div>
-                    )}
-                    {horse.pedigree.sireDamSire && (
-                      <div className="p-1 bg-muted/5 rounded border text-center">
-                        <div className="text-muted-foreground text-xs">SDS</div>
-                        <div className="font-medium text-xs">{horse.pedigree.sireDamSire}</div>
-                      </div>
-                    )}
-                    {horse.pedigree.sireDamDam && (
-                      <div className="p-1 bg-muted/5 rounded border text-center">
-                        <div className="text-muted-foreground text-xs">SDD</div>
-                        <div className="font-medium text-xs">{horse.pedigree.sireDamDam}</div>
-                      </div>
-                    )}
-                    {horse.pedigree.damSireSire && (
-                      <div className="p-1 bg-muted/5 rounded border text-center">
-                        <div className="text-muted-foreground text-xs">DSS</div>
-                        <div className="font-medium text-xs">{horse.pedigree.damSireSire}</div>
-                      </div>
-                    )}
-                    {horse.pedigree.damSireDam && (
-                      <div className="p-1 bg-muted/5 rounded border text-center">
-                        <div className="text-muted-foreground text-xs">DSD</div>
-                        <div className="font-medium text-xs">{horse.pedigree.damSireDam}</div>
-                      </div>
-                    )}
-                    {horse.pedigree.damDamSire && (
-                      <div className="p-1 bg-muted/5 rounded border text-center">
-                        <div className="text-muted-foreground text-xs">DDS</div>
-                        <div className="font-medium text-xs">{horse.pedigree.damDamSire}</div>
-                      </div>
-                    )}
-                    {horse.pedigree.damDamDam && (
-                      <div className="p-1 bg-muted/5 rounded border text-center">
-                        <div className="text-muted-foreground text-xs">DDD</div>
-                        <div className="font-medium text-xs">{horse.pedigree.damDamDam}</div>
-                      </div>
-                    )}
-                  </div>
+                  <PedigreeTree
+                    horseName={horse.name}
+                    pedigree={horse.pedigree}
+                  />
                 </CardContent>
               </Card>
             )}
@@ -373,6 +288,19 @@ const HorseDetail = () => {
                   <span className="text-muted-foreground">Last Vet Check:</span>
                   <p className="font-medium">{new Date(horse.health.lastVetCheck).toLocaleDateString()}</p>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* X-Rays */}
+            <Card className="shadow-card">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>X-Rays</CardTitle>
+                  <XRayUpload horseId={horse.id} />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <XRayList horseId={horse.id} />
               </CardContent>
             </Card>
 
