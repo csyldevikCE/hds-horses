@@ -12,6 +12,7 @@ import HorseDetail from "./pages/HorseDetail";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
+import AuthCallback from "./pages/AuthCallback";
 import SharedHorse from "./pages/SharedHorse";
 import NotFound from "./pages/NotFound";
 
@@ -53,6 +54,7 @@ const App = () => (
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/shared/:token" element={<SharedHorse />} />
 
               {/* Protected routes */}
