@@ -16,6 +16,12 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   },
 })
 
+// Helper function to calculate age from birth year
+export const calculateAge = (birthYear: number): number => {
+  const currentYear = new Date().getFullYear()
+  return currentYear - birthYear
+}
+
 // Database types for multi-tenant organization system
 export interface Database {
   public: {
@@ -103,7 +109,7 @@ export interface Database {
           id: string
           name: string
           breed: string
-          age: number
+          birth_year: number
           color: string
           gender: 'Stallion' | 'Mare' | 'Gelding'
           height: string
@@ -141,7 +147,7 @@ export interface Database {
           id?: string
           name: string
           breed: string
-          age: number
+          birth_year: number
           color: string
           gender: 'Stallion' | 'Mare' | 'Gelding'
           height: string
@@ -179,7 +185,7 @@ export interface Database {
           id?: string
           name?: string
           breed?: string
-          age?: number
+          birth_year?: number
           color?: string
           gender?: 'Stallion' | 'Mare' | 'Gelding'
           height?: string

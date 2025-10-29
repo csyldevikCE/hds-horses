@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase'
+import { supabase, calculateAge } from '@/lib/supabase'
 import { Horse } from '@/types/horse'
 import { Database } from '@/lib/supabase'
 
@@ -32,7 +32,8 @@ const mapHorseRowToHorse = async (row: HorseRow): Promise<Horse> => {
     id: row.id,
     name: row.name,
     breed: row.breed,
-    age: row.age,
+    age: calculateAge(row.birth_year),
+    birthYear: row.birth_year,
     color: row.color,
     gender: row.gender,
     height: row.height,
@@ -100,7 +101,7 @@ const mapHorseToInsert = (
   return {
     name: horse.name,
     breed: horse.breed,
-    age: horse.age,
+    birth_year: horse.birthYear,
     color: horse.color,
     gender: horse.gender,
     height: horse.height,
@@ -240,7 +241,7 @@ export const horseService = {
     const updateData: HorseUpdate = {
       name: updates.name,
       breed: updates.breed,
-      age: updates.age,
+      birth_year: updates.birthYear,
       color: updates.color,
       gender: updates.gender,
       height: updates.height,

@@ -2,7 +2,8 @@ export interface Horse {
   id: string;
   name: string;
   breed: string;
-  age: number;
+  age: number; // Calculated from birthYear
+  birthYear: number; // Year of birth (e.g., 2018)
   color: string;
   gender: 'Stallion' | 'Mare' | 'Gelding';
   height: string; // e.g., "16.2 hands"

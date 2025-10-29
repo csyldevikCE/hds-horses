@@ -30,7 +30,7 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
     // Basic Information
     name: horse.name,
     breed: horse.breed,
-    age: horse.age.toString(),
+    birthYear: horse.birthYear.toString(),
     color: horse.color,
     gender: horse.gender,
     height: horse.height,
@@ -106,7 +106,7 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
       const updatedHorse: Partial<Horse> = {
         name: formData.name,
         breed: formData.breed,
-        age: parseInt(formData.age),
+        birthYear: parseInt(formData.birthYear),
         color: formData.color,
         gender: formData.gender as 'Stallion' | 'Mare' | 'Gelding',
         height: formData.height,
@@ -211,12 +211,14 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="age">Age</Label>
+                <Label htmlFor="birthYear">Year of Birth</Label>
                 <Input
-                  id="age"
+                  id="birthYear"
                   type="number"
-                  value={formData.age}
-                  onChange={(e) => handleInputChange('age', e.target.value)}
+                  min="1900"
+                  max={new Date().getFullYear()}
+                  value={formData.birthYear}
+                  onChange={(e) => handleInputChange('birthYear', e.target.value)}
                   required
                 />
               </div>

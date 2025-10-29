@@ -26,7 +26,7 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
   const [formData, setFormData] = useState({
     name: '',
     breed: '',
-    age: '',
+    birthYear: '',
     color: '',
     gender: '',
     height: '',
@@ -73,7 +73,7 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
     setFormData({
       name: '',
       breed: '',
-      age: '',
+      birthYear: '',
       color: '',
       gender: '',
       height: '',
@@ -107,7 +107,7 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
     const horseData = {
       name: formData.name,
       breed: formData.breed,
-      age: parseInt(formData.age),
+      birthYear: parseInt(formData.birthYear),
       color: formData.color,
       gender: formData.gender as 'Stallion' | 'Mare' | 'Gelding',
       height: formData.height,
@@ -175,12 +175,15 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="age">Age *</Label>
+                  <Label htmlFor="birthYear">Year of Birth *</Label>
                   <Input
-                    id="age"
+                    id="birthYear"
                     type="number"
-                    value={formData.age}
-                    onChange={(e) => handleInputChange('age', e.target.value)}
+                    min="1900"
+                    max={new Date().getFullYear()}
+                    placeholder={`e.g., ${new Date().getFullYear() - 5}`}
+                    value={formData.birthYear}
+                    onChange={(e) => handleInputChange('birthYear', e.target.value)}
                     required
                   />
                 </div>
