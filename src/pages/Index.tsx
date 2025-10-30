@@ -53,12 +53,12 @@ const Index = () => {
           <div className="flex h-16 items-center justify-between">
             {/* Logo */}
             <div className="flex items-center gap-3">
-              <img src={logo} alt="HDS Logo" className="h-10 w-auto" />
-              <div className="hidden sm:block">
-                <h1 className="text-lg font-bold text-foreground">
+              <img src={logo} alt="HDS Logo" className="h-8 sm:h-10 w-auto" />
+              <div>
+                <h1 className="text-sm sm:text-lg font-bold text-foreground">
                   {organization?.name || 'Horse Management'}
                 </h1>
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground hidden sm:block">
                   {horses.length} {horses.length === 1 ? 'horse' : 'horses'} in stable
                 </p>
               </div>
