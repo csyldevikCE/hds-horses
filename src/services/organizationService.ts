@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { Organization, OrganizationUser, UserWithRole, UserRole } from '@/types/organization';
+import { createInvitation } from './invitationService';
 
 /**
  * Get organization by ID
@@ -125,8 +126,7 @@ export const countUsersByRole = async (
 
 /**
  * Invite a new user to the organization
- * Note: This creates a pending invitation. The user must sign up separately.
- * In production, this would send an email invitation.
+ * Creates an invitation record and sends an email to the user
  */
 export const inviteUserToOrganization = async (
   organizationId: string,
@@ -145,17 +145,22 @@ export const inviteUserToOrganization = async (
     return { success: false, error: 'Maximum number of read-only users (2) reached' };
   }
 
-  // In a real implementation, you would:
-  // 1. Send an email invitation with a unique token
-  // 2. Store the invitation in a separate 'invitations' table
-  // 3. When the user signs up with that email, automatically add them to the org
+  // Get organization name for email
+  const organization = await getOrganizationById(organizationId);
+  if (!organization) {
+    return { success: false, error: 'Organization not found' };
+  }
 
-  // For now, we'll return success but note that the actual user addition
-  // needs to happen during the signup process or manually
-  return {
-    success: true,
-    error: undefined,
-  };
+  // Create invitation and send email
+  const result = await createInvitation(
+    organizationId,
+    email,
+    role,
+    invitedBy,
+    organization.name
+  );
+
+  return result;
 };
 
 /**

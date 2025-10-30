@@ -13,7 +13,8 @@ import logo from '@/assets/logo.png'
 
 const Signup = () => {
   const [searchParams] = useSearchParams()
-  const inviteToken = searchParams.get('invite')
+  // Support both 'invite' and 'invitation' parameters for backward compatibility
+  const inviteToken = searchParams.get('invitation') || searchParams.get('invite')
 
   const [organizationName, setOrganizationName] = useState('')
   const [email, setEmail] = useState('')
