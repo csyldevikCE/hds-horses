@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Plus, Loader2, Horse, TrendingUp, Users, Calendar } from 'lucide-react';
+import { Search, Plus, Loader2, Zap as Horse, TrendingUp, Users, Calendar } from 'lucide-react';
 import logo from '@/assets/logo.png';
 import UserProfile from '@/components/UserProfile';
 import { isAdmin } from '@/types/organization';
