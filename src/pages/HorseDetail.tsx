@@ -7,7 +7,6 @@ import { isAdmin } from '@/types/organization';
 import { HorseGallery } from '@/components/HorseGallery';
 import { ShareHorse } from '@/components/ShareHorse';
 import { EditHorseForm } from '@/components/EditHorseForm';
-import { YoutubeManager } from '@/components/YoutubeManager';
 import { MediaUpload } from '@/components/MediaUpload';
 import { PedigreeTree } from '@/components/PedigreeTree';
 import { XRayUpload } from '@/components/XRayUpload';
@@ -97,7 +96,6 @@ const HorseDetail = () => {
                     <span className="hidden sm:inline">Edit</span>
                   </Button>
                 </EditHorseForm>
-                <YoutubeManager horse={horse} />
               </div>
             )}
           </div>
