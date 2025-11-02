@@ -210,10 +210,10 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="height">Height (hands)</Label>
+                  <Label htmlFor="height">Height (cm)</Label>
                   <Input
                     id="height"
-                    placeholder="e.g., 16.2"
+                    placeholder="e.g., 165"
                     value={formData.height}
                     onChange={(e) => handleInputChange('height', e.target.value)}
                   />

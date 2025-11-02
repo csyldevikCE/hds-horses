@@ -356,7 +356,7 @@ const SharedHorse = () => {
                   </div>
                   <div>
                     <span className="text-muted-foreground">Height:</span>
-                    <p className="font-medium">{horse.height}</p>
+                    <p className="font-medium">{horse.height} cm</p>
                   </div>
                   {horse.price !== undefined && (
                     <div>

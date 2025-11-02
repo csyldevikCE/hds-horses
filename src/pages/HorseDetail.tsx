@@ -62,7 +62,8 @@ const HorseDetail = () => {
       case 'Available': return 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20';
       case 'Sold': return 'bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20';
       case 'Reserved': return 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20';
-      default: return 'bg-muted border-border';
+      case 'Not for Sale': return 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20';
+      default: return 'bg-muted text-foreground border-border';
     }
   };
 
@@ -178,7 +179,7 @@ const HorseDetail = () => {
                   </div>
                   <div>
                     <p className="text-xs text-muted-foreground">Height</p>
-                    <p className="font-semibold">{horse.height}</p>
+                    <p className="font-semibold">{horse.height} cm</p>
                   </div>
                 </CardContent>
               </Card>

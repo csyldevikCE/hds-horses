@@ -6,7 +6,7 @@ export interface Horse {
   birthYear: number; // Year of birth (e.g., 2018)
   color: string;
   gender: 'Stallion' | 'Mare' | 'Gelding';
-  height: string; // e.g., "16.2 hands"
+  height: string; // e.g., "165 cm"
   weight?: number;
   price?: number;
   status: 'Available' | 'Sold' | 'Reserved' | 'Not for Sale';

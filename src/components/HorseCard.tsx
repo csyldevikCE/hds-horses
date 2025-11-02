@@ -17,7 +17,8 @@ export const HorseCard = ({ horse }: HorseCardProps) => {
       case 'Available': return 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20';
       case 'Sold': return 'bg-gray-500/10 text-gray-700 dark:text-gray-400 border-gray-500/20';
       case 'Reserved': return 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20';
-      default: return 'bg-muted border-border';
+      case 'Not for Sale': return 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20';
+      default: return 'bg-muted text-foreground border-border';
     }
   };
 
@@ -86,7 +87,7 @@ export const HorseCard = ({ horse }: HorseCardProps) => {
           </div>
           <div className="flex items-center gap-1.5 text-muted-foreground">
             <Ruler className="h-3.5 w-3.5 flex-shrink-0" />
-            <span className="truncate">{horse.height}</span>
+            <span className="truncate">{horse.height} cm</span>
           </div>
         </div>
 
