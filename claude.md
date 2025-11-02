@@ -185,7 +185,8 @@ isReadOnly(role): boolean
 - 4-generation pedigree visualization
 - Image gallery with primary photo selection
 - YouTube video integration
-- Competition history tracking
+- Competition results with external links (Equipe, USEF, FEI)
+- X-ray records management
 
 ### 2. Organization & Team Management
 - Profile dialog with two tabs: Profile and Organization
@@ -231,6 +232,7 @@ isReadOnly(role): boolean
 - `src/components/ProtectedRoute.tsx` - Auth guard for private routes
 - `src/components/ShareHorse.tsx` - Share link creation/editing dialog with all link types
 - `src/components/ShareLinkAnalytics.tsx` - Analytics dashboard for share link tracking
+- `src/components/CompetitionManager.tsx` - Dialog for adding competition results with Equipe links
 
 ### Pages
 - `src/pages/Index.tsx` - Horse listing dashboard
@@ -418,29 +420,14 @@ If this query returns nothing, RLS policies or GRANT permissions need to be fixe
 - **Location**: `src/App.tsx:18-30`
 - **Key Pattern**: Always use `organization.id` in horses query keys, not `user.id`
 
-### 4. Share Link Public Access (CURRENT ISSUE - IN PROGRESS)
-- **Status**: Debugging in progress as of 2025-10-21
-- **Symptoms**: Share links show "Link Not Available" error when accessed
-- **Database Status**: ✅ Working correctly
-  - Share link exists in database
-  - `anon` role has SELECT permissions on all required tables
-  - RLS policies allow public access
-  - Direct SQL query as `anon` role returns share link data successfully
-- **Frontend Status**: ⚠️ Partially working
-  - First query (getSharedHorseMetadata) succeeds - share link metadata loads
-  - Second query (getSharedHorse) status unknown - needs console output
-- **Next Steps**:
-  1. Check browser console for "Fetching horse data" and error messages
-  2. Verify horseService.getHorse() has proper RLS access for anonymous users
-  3. Check if horse data query is even being triggered (conditional rendering issue)
-  4. Test share link in incognito window with dev tools open
-- **Debugging Tools Added**:
-  - Console logging in SharedHorse.tsx lines 27-29, 40-48
-  - Error logging in shareService.ts line 206-207
+### 4. Share Link Update Error (RESOLVED - 2025-11-02)
+- **Issue**: "Cannot coerce the result to a single JSON object" error when updating share links
+- **Root Cause**: Missing UPDATE/INSERT/DELETE RLS policies on share_links table
+- **Solution**: Created migration 029 with admin-only write policies
+- **Status**: ✅ Fixed and deployed
 - **Related Files**:
-  - `src/pages/SharedHorse.tsx` - Public share link page
-  - `src/services/shareService.ts` - Share link service layer
-  - `database/migrations/022_grant_anon_access_to_shares.sql` - Anonymous access grants
+  - `database/migrations/029_add_share_links_write_policies.sql` - Write policies
+  - `docs/SHARE_LINK_UPDATE_FIX.md` - Complete documentation
 
 ## Environment Variables
 
@@ -466,7 +453,9 @@ Migrations are in `database/migrations/` and numbered sequentially:
 - `019_create_share_link_views_tracking.sql` - Create share_link_views table for analytics
 - `020_add_public_share_link_policies.sql` - Initial public access policies (deprecated)
 - `021_fix_share_link_public_access.sql` - Comprehensive RLS policy overhaul (deprecated)
-- `022_grant_anon_access_to_shares.sql` - **Required**: Grant SELECT to anon role for public sharing
+- `022_grant_anon_access_to_shares.sql` - Grant SELECT to anon role for public sharing
+- `023_fix_share_link_public_access_final.sql` - Final public access RLS policies
+- `029_add_share_links_write_policies.sql` - **Required**: Add INSERT/UPDATE/DELETE policies for share_links
 
 ## Running the App
 
@@ -561,6 +550,64 @@ Deployed on Vercel with:
 5. **Profile sync**: Update name, verify avatar and member list update
 
 ## Recent Changes
+
+### Share Link Write Policies Fix - COMPLETED (2025-11-02)
+Fixed critical bug preventing share link updates.
+
+**Issue**:
+- Error: "Cannot coerce the result to a single JSON object" when updating share links
+- Root cause: No UPDATE/INSERT/DELETE RLS policies existed on share_links table
+
+**Solution**:
+- Created migration `029_add_share_links_write_policies.sql`
+- Added three new policies:
+  - `share_links_insert_admin` - Admins can create share links
+  - `share_links_update_admin` - Admins can update share links
+  - `share_links_delete_admin` - Admins can delete share links
+- All policies enforce organization membership and admin role
+
+**Security**:
+- Only authenticated admins can write to share_links
+- Read-only users cannot create/update/delete
+- Organization-scoped access control
+- Public users can still view share links (read-only)
+
+**Files Created**:
+- `database/migrations/029_add_share_links_write_policies.sql`
+- `docs/SHARE_LINK_UPDATE_FIX.md`
+
+### Results Tab Enhancement - COMPLETED (2025-11-02)
+Added comprehensive competition results management to horse detail pages.
+
+**Changes**:
+- Created `src/components/CompetitionManager.tsx` - Dialog for adding competition results
+- Updated `src/pages/HorseDetail.tsx` - Results tab now always visible (not conditional)
+- Competition form includes: Event name, Date, Discipline, Placement, Notes, Results link
+- Empty state with helpful message when no results exist
+- Admins can add results via "Add Result" button
+- Enhanced result cards with better styling for notes and external links
+- Results links support multiple platforms: Equipe, USEF, FEI, and others
+- Links open in new tab with "View Full Results →" text and trophy icon
+
+**Features**:
+- Required fields: Event name, Date, Discipline, Placement
+- Optional fields: Notes (textarea), Results link (URL validation with platform examples)
+- Platform examples shown in form:
+  - Equipe: `https://online.equipe.com/startlists/[id]`
+  - USEF: `https://www.usef.org/...`
+  - FEI: `https://data.fei.org/...`
+- Real-time form validation with helpful error messages
+- Automatic query invalidation to refresh horse data after adding results
+- Mobile-responsive design with proper touch targets
+- Special gold badge for 1st place finishes
+
+**Files Created**:
+- `src/components/CompetitionManager.tsx` (241 lines)
+- `docs/RESULTS_TAB_FEATURE.md` - Technical documentation
+- `docs/HOW_TO_ADD_EQUIPE_RESULTS.md` - User guide with step-by-step instructions
+
+**Files Modified**:
+- `src/pages/HorseDetail.tsx` - Updated tab structure and result display
 
 ### Modern UI Redesign - COMPLETED (2025-10-31)
 Complete mobile-first redesign of landing page, horse cards, and detail page. See "Modern UI Redesign" section below for full details.
@@ -712,6 +759,6 @@ For issues or questions, refer to the codebase or database schema. All business 
 
 ---
 
-**Last Updated**: October 31, 2025
-**Version**: 1.2
-**Status**: Modern UI redesign complete, all features stable
+**Last Updated**: November 2, 2025
+**Version**: 1.3
+**Status**: Share link update fix deployed, Results tab feature complete, all systems stable

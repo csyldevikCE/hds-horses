@@ -12,6 +12,7 @@ import { MediaUpload } from '@/components/MediaUpload';
 import { PedigreeTree } from '@/components/PedigreeTree';
 import { XRayUpload } from '@/components/XRayUpload';
 import { XRayList } from '@/components/XRayList';
+import { CompetitionManager } from '@/components/CompetitionManager';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -160,12 +161,10 @@ const HorseDetail = () => {
               <Syringe className="h-4 w-4" />
               Health
             </TabsTrigger>
-            {horse.competitions && horse.competitions.length > 0 && (
-              <TabsTrigger value="competitions" className="flex items-center gap-2">
-                <Trophy className="h-4 w-4" />
-                Competitions
-              </TabsTrigger>
-            )}
+            <TabsTrigger value="results" className="flex items-center gap-2">
+              <Trophy className="h-4 w-4" />
+              Results
+            </TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -342,57 +341,75 @@ const HorseDetail = () => {
             </Card>
           </TabsContent>
 
-          {/* Competitions Tab */}
-          {horse.competitions && horse.competitions.length > 0 && (
-            <TabsContent value="competitions">
-              <Card>
-                <CardHeader>
+          {/* Results Tab */}
+          <TabsContent value="results">
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
                     <Trophy className="h-5 w-5 text-yellow-600" />
-                    Competition History
+                    Competition Results
                   </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {horse.competitions.map((competition) => (
-                    <div key={competition.id} className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow">
-                      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-lg mb-1">{competition.event}</h4>
-                          <p className="text-sm text-muted-foreground mb-2">{competition.discipline}</p>
-                          {competition.notes && (
-                            <p className="text-sm text-muted-foreground italic mt-2">
-                              {competition.notes}
-                            </p>
-                          )}
-                          {competition.equipeLink && (
-                            <a
-                              href={competition.equipeLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm text-blue-600 hover:text-blue-800 underline flex items-center gap-1 mt-2"
+                  {isAdmin(userRole) && <CompetitionManager horseId={horse.id} />}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {!horse.competitions || horse.competitions.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Trophy className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                    <p className="text-muted-foreground mb-4">
+                      No competition results yet.
+                    </p>
+                    {isAdmin(userRole) && (
+                      <p className="text-sm text-muted-foreground">
+                        Click "Add Result" above to record competition achievements.
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {horse.competitions.map((competition) => (
+                      <div key={competition.id} className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow">
+                        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-3">
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-lg mb-1">{competition.event}</h4>
+                            <p className="text-sm text-muted-foreground mb-2">{competition.discipline}</p>
+                            {competition.notes && (
+                              <p className="text-sm text-foreground mt-2 p-3 bg-muted/50 rounded-md">
+                                {competition.notes}
+                              </p>
+                            )}
+                            {competition.equipeLink && (
+                              <a
+                                href={competition.equipeLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 mt-3 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline font-medium"
+                              >
+                                <Trophy className="h-4 w-4" />
+                                View Full Results →
+                              </a>
+                            )}
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                            <Badge
+                              variant={competition.placement.includes('1st') ? 'default' : 'secondary'}
+                              className={`text-base ${competition.placement.includes('1st') ? 'bg-yellow-600 hover:bg-yellow-700' : ''}`}
                             >
-                              View on Equipe →
-                            </a>
-                          )}
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <Badge
-                            variant={competition.placement.includes('1st') ? 'default' : 'secondary'}
-                            className={`text-base ${competition.placement.includes('1st') ? 'bg-yellow-600 hover:bg-yellow-700' : ''}`}
-                          >
-                            {competition.placement}
-                          </Badge>
-                          <p className="text-sm text-muted-foreground">
-                            {new Date(competition.date).toLocaleDateString()}
-                          </p>
+                              {competition.placement}
+                            </Badge>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(competition.date).toLocaleDateString()}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            </TabsContent>
-          )}
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
         </Tabs>
       </div>
     </div>
