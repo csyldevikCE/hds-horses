@@ -40,10 +40,10 @@ export const PedigreeTree = ({ horseName, pedigree }: PedigreeTreeProps) => {
       {/* Parents - Generation 2 */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Sire */}
-        <Card className="bg-blue-50 dark:bg-blue-950 border-2 border-blue-200 dark:border-blue-800">
+        <Card className="bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
-              <Badge variant="outline" className="bg-blue-100 dark:bg-blue-900">Sire</Badge>
+              <Badge variant="outline" className="bg-gray-100 dark:bg-gray-800">Sire</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -103,10 +103,10 @@ export const PedigreeTree = ({ horseName, pedigree }: PedigreeTreeProps) => {
         </Card>
 
         {/* Dam */}
-        <Card className="bg-pink-50 dark:bg-pink-950 border-2 border-pink-200 dark:border-pink-800">
+        <Card className="bg-white dark:bg-gray-950 border-2 border-gray-200 dark:border-gray-700">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg flex items-center gap-2">
-              <Badge variant="outline" className="bg-pink-100 dark:bg-pink-900">Dam</Badge>
+              <Badge variant="outline" className="bg-gray-50 dark:bg-gray-900">Dam</Badge>
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -169,11 +169,11 @@ export const PedigreeTree = ({ horseName, pedigree }: PedigreeTreeProps) => {
       {/* Legend */}
       <div className="flex flex-wrap items-center justify-center gap-4 text-sm text-muted-foreground pt-2">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-blue-100 dark:bg-blue-900 border border-blue-300" />
+          <div className="w-4 h-4 rounded bg-gray-100 dark:bg-gray-800 border border-gray-300" />
           <span>Sire Line (Male)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-pink-100 dark:bg-pink-900 border border-pink-300" />
+          <div className="w-4 h-4 rounded bg-white dark:bg-gray-950 border border-gray-300" />
           <span>Dam Line (Female)</span>
         </div>
       </div>
