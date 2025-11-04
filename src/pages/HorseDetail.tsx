@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, MapPin, Calendar, Info, CheckCircle, Edit, Share2, Trophy, Loader2, Ruler, Weight, DollarSign, GitBranch, Images, Syringe, Activity } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Info, CheckCircle, Edit, Share2, Trophy, Loader2, Ruler, Weight, DollarSign, GitBranch, Images, Syringe, Activity, Award } from 'lucide-react';
 
 const HorseDetail = () => {
   const { id } = useParams();
