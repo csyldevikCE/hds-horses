@@ -129,6 +129,87 @@ Detailed analytics for share link tracking.
 - Organization members can view analytics for their share links
 - Anyone (including anonymous) can insert view records
 
+#### `vaccinations`
+FEI-compliant vaccination records for horses.
+- `id` (UUID, PK)
+- `horse_id` (UUID, FK to horses)
+- `organization_id` (UUID, FK to organizations)
+- `vaccine_type` (TEXT) - Type of vaccine (Equine Influenza, Tetanus, etc.)
+- `vaccine_name` (TEXT) - Specific vaccine product name
+- `dose_number` (TEXT) - 'V1', 'V2', 'V3', 'Booster 1', etc.
+- `administered_date` (DATE) - Date vaccine was given
+- `next_due_date` (DATE) - Auto-calculated based on FEI protocol
+- `veterinarian_name` (TEXT)
+- `veterinarian_license` (TEXT)
+- `batch_number` (TEXT) - Vaccine batch/lot number
+- `notes` (TEXT)
+- `recorded_in_passport` (BOOLEAN) - Recorded in horse passport
+- `recorded_in_fei_app` (BOOLEAN) - Recorded in FEI Clean Sport app
+- `created_at`, `updated_at`
+
+**FEI Equine Influenza Protocol**:
+- V1 (Primary 1st dose)
+- V2 (Primary 2nd dose - 21-60 days after V1)
+- V3 (Primary 3rd dose - within 6 months + 21 days after V2)
+- Annual Boosters (every 12 months from V3)
+- FEI competition rule: No vaccination within 7 days before competition
+
+**RLS Policies**:
+- Organization members can view vaccinations for their horses
+- Admins can insert/update/delete vaccinations
+- Cascade delete when horse is deleted
+
+#### `vet_visits`
+Veterinary visit records with comprehensive tracking.
+- `id` (UUID, PK)
+- `horse_id` (UUID, FK to horses)
+- `organization_id` (UUID, FK to organizations)
+- `visit_date` (DATE) - Date of visit
+- `visit_type` (TEXT) - 'Routine Check', 'Emergency', 'Dental', 'Surgery', etc.
+- `veterinarian_name` (TEXT)
+- `veterinarian_clinic` (TEXT)
+- `veterinarian_phone` (TEXT)
+- `diagnosis` (TEXT) - Diagnosis or findings
+- `treatment` (TEXT) - Treatment provided
+- `medications` (TEXT) - Medications prescribed
+- `notes` (TEXT) - Additional notes
+- `follow_up_required` (BOOLEAN)
+- `follow_up_date` (DATE) - Scheduled follow-up date
+- `cost` (DECIMAL) - Visit cost in USD
+- `created_at`, `updated_at`
+
+**Visit Types**:
+- Routine Check, Emergency, Dental, Surgery, Follow-up
+- Lameness Exam, Pre-Purchase Exam, Vaccination, Farrier Visit
+- Custom (user-defined)
+
+**RLS Policies**:
+- Organization members can view vet visits for their horses
+- Admins can insert/update/delete vet visits
+- Cascade delete when horse is deleted
+
+#### `vet_visit_documents`
+Documents associated with vet visits (lab results, X-rays, invoices, etc.).
+- `id` (UUID, PK)
+- `vet_visit_id` (UUID, FK to vet_visits)
+- `file_url` (TEXT) - External URL to document
+- `file_name` (TEXT) - Display name for document
+- `file_type` (TEXT) - MIME type (optional)
+- `file_size` (INTEGER) - File size in bytes (optional)
+- `document_type` (TEXT) - 'Lab Results', 'X-Ray Report', 'Invoice', 'Prescription', etc.
+- `description` (TEXT) - Brief description
+- `created_at`
+
+**Document Types**:
+- Lab Results, X-Ray Report, Ultrasound Report
+- Invoice, Prescription, Treatment Plan
+- Health Certificate, Surgery Report, Custom
+
+**RLS Policies**:
+- Organization members can view documents for their vet visits
+- Admins can insert/delete documents
+- Cascade delete when vet visit is deleted
+
 ## Authentication & Authorization
 
 ### Authentication Flow
@@ -214,10 +295,31 @@ isReadOnly(role): boolean
   - Live updates (30-second refresh)
 - **Security**: bcrypt password hashing (10 rounds), RLS policies, token-based access
 
-### 4. Media Management
+### 4. Health Management
+- **FEI-Compliant Vaccination Tracking**:
+  - Record vaccinations with full veterinarian details
+  - FEI Equine Influenza protocol support (V1, V2, V3, Boosters)
+  - Automatic next-due-date calculation based on FEI rules
+  - Compliance status tracking (Compliant, Due Soon, Overdue)
+  - Batch number and license number recording
+  - Horse passport and FEI Clean Sport app tracking
+  - Vaccination history grouped by vaccine type
+  - Visual status badges with color coding
+- **Veterinary Visit Management**:
+  - Comprehensive visit records (date, type, veterinarian info)
+  - Diagnosis, treatment, and medication tracking
+  - Multiple document attachments per visit (lab results, X-rays, invoices)
+  - Follow-up scheduling with overdue detection
+  - Cost tracking per visit
+  - Visit type categories (Routine, Emergency, Dental, Surgery, etc.)
+  - Latest visit summary card
+  - Complete visit history with expandable details
+
+### 5. Media Management
 - Multiple images per horse with primary selection
 - YouTube video embedding
 - Image captions
+- Responsive gallery with aspect ratio preservation
 
 ## Important Files
 
@@ -233,6 +335,11 @@ isReadOnly(role): boolean
 - `src/components/ShareHorse.tsx` - Share link creation/editing dialog with all link types
 - `src/components/ShareLinkAnalytics.tsx` - Analytics dashboard for share link tracking
 - `src/components/CompetitionManager.tsx` - Dialog for adding competition results with Equipe links
+- `src/components/VaccinationManager.tsx` - Dialog for recording vaccinations with FEI protocol support
+- `src/components/VaccinationLog.tsx` - Vaccination history display grouped by vaccine type
+- `src/components/VetVisitManager.tsx` - Dialog for recording vet visits with document upload
+- `src/components/VetVisitList.tsx` - Vet visit history with latest visit summary
+- `src/components/HorseGallery.tsx` - Responsive image/video gallery with aspect ratio preservation
 
 ### Pages
 - `src/pages/Index.tsx` - Horse listing dashboard
@@ -245,6 +352,8 @@ isReadOnly(role): boolean
 - `src/services/organizationService.ts` - Organization CRUD operations
 - `src/services/horseService.ts` - Horse CRUD with organization context
 - `src/services/shareService.ts` - Share link CRUD, password hashing/verification, analytics, view tracking
+- `src/services/vaccinationService.ts` - Vaccination CRUD, FEI protocol logic, compliance status calculation
+- `src/services/vetVisitService.ts` - Vet visit CRUD, document management, follow-up tracking
 
 ### Database
 - `database/migrations/` - SQL migration scripts
@@ -364,7 +473,92 @@ const analytics = await shareService.getShareLinkAnalytics(shareLinkId)
 
 **Password Hashing**: Uses bcryptjs with 10 salt rounds. Passwords are hashed before storage, never stored in plain text.
 
-### 7. Public Share Link Access
+### 7. Vaccination Management
+
+```typescript
+import { vaccinationService } from '@/services/vaccinationService'
+
+// Record a vaccination
+const vaccination = await vaccinationService.createVaccination({
+  horse_id: horse.id,
+  organization_id: organization.id,
+  vaccine_type: 'Equine Influenza',
+  vaccine_name: 'Flu Vax Pro',
+  dose_number: 'V1', // FEI protocol: V1, V2, V3, Booster 1, etc.
+  administered_date: '2024-11-04',
+  veterinarian_name: 'Dr. Smith',
+  veterinarian_license: 'VET12345',
+  batch_number: 'ABC123',
+  notes: 'No adverse reactions',
+  recorded_in_passport: true,
+  recorded_in_fei_app: true
+})
+
+// Next due date is automatically calculated based on FEI protocol
+// V1 → V2 due in 30 days
+// V2 → V3 due in 6 months + 21 days
+// V3 → Annual booster due in 12 months
+
+// Get vaccinations for a horse (grouped by type)
+const vaccinations = await vaccinationService.getVaccinations(horseId)
+
+// Check compliance status
+const status = vaccinationService.getComplianceStatus('2024-12-05')
+// Returns: 'Compliant' | 'Due Soon' | 'Overdue'
+```
+
+**FEI Protocol**: The service automatically calculates next due dates based on FEI Equine Influenza rules. For non-FEI vaccines, use standard dose numbers like 'Initial', 'Booster', 'Annual'.
+
+### 8. Veterinary Visit Management
+
+```typescript
+import { vetVisitService } from '@/services/vetVisitService'
+
+// Record a vet visit
+const visit = await vetVisitService.createVetVisit({
+  horse_id: horse.id,
+  organization_id: organization.id,
+  visit_date: '2024-11-04',
+  visit_type: 'Routine Check',
+  veterinarian_name: 'Dr. Johnson',
+  veterinarian_clinic: 'Equine Health Center',
+  veterinarian_phone: '+1-555-0123',
+  diagnosis: 'Minor hoof bruising',
+  treatment: 'Rest and cold therapy',
+  medications: 'Bute 1g daily for 5 days',
+  notes: 'Monitor for improvement',
+  follow_up_required: true,
+  follow_up_date: '2024-11-18',
+  cost: 250.00
+})
+
+// Add documents to the visit
+await vetVisitService.addDocument({
+  vet_visit_id: visit.id,
+  file_url: 'https://example.com/xray.jpg',
+  file_name: 'Hoof X-Ray.jpg',
+  document_type: 'X-Ray Report',
+  description: 'Left front hoof X-ray'
+})
+
+// Get all visits for a horse
+const visits = await vetVisitService.getVetVisits(horseId)
+
+// Get latest visit
+const latestVisit = await vetVisitService.getLatestVetVisit(horseId)
+
+// Check if follow-up is overdue
+const isOverdue = vetVisitService.isFollowUpOverdue('2024-11-01')
+// Returns true if date is in the past
+
+// Format cost for display
+const formattedCost = vetVisitService.formatCost(250.00)
+// Returns: "$250.00"
+```
+
+**Document Types**: Lab Results, X-Ray Report, Ultrasound Report, Invoice, Prescription, Treatment Plan, Health Certificate, Surgery Report, Custom.
+
+### 9. Public Share Link Access
 
 Share links use the anonymous (`anon`) role in Supabase. Key requirements:
 
@@ -456,6 +650,8 @@ Migrations are in `database/migrations/` and numbered sequentially:
 - `022_grant_anon_access_to_shares.sql` - Grant SELECT to anon role for public sharing
 - `023_fix_share_link_public_access_final.sql` - Final public access RLS policies
 - `029_add_share_links_write_policies.sql` - **Required**: Add INSERT/UPDATE/DELETE policies for share_links
+- `030_create_vaccinations_table.sql` - **Required**: FEI-compliant vaccination tracking system
+- `031_create_vet_visits_table.sql` - **Required**: Veterinary visit records with document support
 
 ## Running the App
 
@@ -550,6 +746,75 @@ Deployed on Vercel with:
 5. **Profile sync**: Update name, verify avatar and member list update
 
 ## Recent Changes
+
+### Health Management System - COMPLETED (2025-11-04)
+Complete health tracking system with FEI-compliant vaccinations and veterinary visit records.
+
+**Vaccination System** (Migration 030):
+- **FEI Protocol Support**: Automatic calculation of next due dates based on FEI Equine Influenza protocol
+  - V1 (Primary 1st dose)
+  - V2 (21-60 days after V1, defaults to 30 days)
+  - V3 (within 6 months + 21 days after V2)
+  - Annual Boosters (every 12 months from V3)
+- **Compliance Tracking**: Visual status badges
+  - Compliant (green) - Up to date
+  - Due Soon (yellow) - Within 30 days
+  - Overdue (red) - Past due date
+- **Comprehensive Records**: Vaccine type, name, dose number, batch number, veterinarian name/license
+- **FEI Integration**: Checkboxes for horse passport and FEI Clean Sport app recording
+- **Smart UI**: Dose number dropdown switches between standard and FEI-specific options based on vaccine type
+- **Grouped Display**: Vaccination history grouped by vaccine type for easy review
+
+**Veterinary Visit System** (Migration 031):
+- **Visit Tracking**: Date, type, veterinarian info (name, clinic, phone)
+- **Medical Records**: Diagnosis, treatment, medications, notes fields
+- **Document Management**: Multiple document attachments per visit
+  - Lab Results, X-Ray Reports, Ultrasound Reports
+  - Invoices, Prescriptions, Treatment Plans
+  - Health Certificates, Surgery Reports
+  - External URL-based storage with file name display
+- **Follow-up Management**: Schedule follow-ups with overdue detection
+- **Cost Tracking**: Record visit costs in USD with formatted display
+- **Visit Types**: Routine Check, Emergency, Dental, Surgery, Follow-up, Lameness Exam, Pre-Purchase Exam, Vaccination, Farrier Visit, Custom
+- **Latest Visit Summary**: Highlighted card showing most recent visit
+- **Document Viewing**: In-line document links with type badges
+
+**Removed Features**:
+- Coggins Test section replaced by comprehensive vet visit tracking
+
+**Files Created**:
+- `database/migrations/030_create_vaccinations_table.sql` - Vaccination table with RLS policies
+- `database/migrations/031_create_vet_visits_table.sql` - Vet visits and documents tables
+- `src/services/vaccinationService.ts` (298 lines) - Business logic for vaccination management
+- `src/services/vetVisitService.ts` (289 lines) - Business logic for vet visit management
+- `src/components/VaccinationManager.tsx` (391 lines) - Dialog for recording vaccinations
+- `src/components/VaccinationLog.tsx` (310 lines) - Vaccination history display
+- `src/components/VetVisitManager.tsx` (436 lines) - Dialog for recording vet visits
+- `src/components/VetVisitList.tsx` (292 lines) - Vet visit history display
+
+**Files Modified**:
+- `src/lib/supabase.ts` - Added TypeScript types for vaccinations, vet_visits, vet_visit_documents
+- `src/pages/HorseDetail.tsx` - Integrated new health management components in Health tab
+
+### UI Refinements - COMPLETED (2025-11-04)
+Minor visual improvements to gallery and tab navigation.
+
+**Gallery Layout Fix**:
+- Fixed distorted images/videos on desktop
+- Changed from fixed height (`h-96`) with `object-cover` to max height with `object-contain`
+- Added black backgrounds for professional letterboxing effect
+- Preserved aspect ratios for both images and videos
+- Responsive max heights: 500px mobile, 600px desktop
+
+**Tab Icon Updates**:
+- Overview: Heart → Info (more appropriate for information tab)
+- Gallery: Activity → Images (Activity was confusing)
+- Pedigree: Award → GitBranch (better represents lineage tree)
+- Kept Award icon in imports for use in content sections
+
+**Files Modified**:
+- `src/components/HorseGallery.tsx` - Gallery layout improvements
+- `src/pages/HorseDetail.tsx` - Tab icon updates
 
 ### Share Link Write Policies Fix - COMPLETED (2025-11-02)
 Fixed critical bug preventing share link updates.
@@ -759,6 +1024,6 @@ For issues or questions, refer to the codebase or database schema. All business 
 
 ---
 
-**Last Updated**: November 2, 2025
-**Version**: 1.3
-**Status**: Share link update fix deployed, Results tab feature complete, all systems stable
+**Last Updated**: November 4, 2025
+**Version**: 1.4
+**Status**: Health management system complete with FEI-compliant vaccinations and vet visit tracking, all systems stable
