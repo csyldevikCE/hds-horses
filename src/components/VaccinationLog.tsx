@@ -205,114 +205,118 @@ export const VaccinationLog = ({ horseId }: VaccinationLogProps) => {
                 return (
                   <div
                     key={vaccination.id}
-                    className="p-4 rounded-lg border bg-card hover:shadow-md transition-shadow"
+                    className="p-3 sm:p-4 rounded-lg border bg-card hover:shadow-md transition-shadow"
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      {/* Left side - Main info */}
-                      <div className="flex-1 space-y-3">
-                        {/* Dose and date */}
-                        <div className="flex items-center gap-3 flex-wrap">
-                          {vaccination.dose_number && (
-                            <Badge variant="secondary">{vaccination.dose_number}</Badge>
-                          )}
-                          {vaccination.vaccine_name && (
-                            <Badge variant="outline">{vaccination.vaccine_name}</Badge>
-                          )}
-                          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                            <Calendar className="h-4 w-4" />
-                            {new Date(vaccination.administered_date).toLocaleDateString()}
-                          </div>
+                    <div className="space-y-3">
+                      {/* Dose and date */}
+                      <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-wrap">
+                        {vaccination.dose_number && (
+                          <Badge variant="secondary" className="w-fit">{vaccination.dose_number}</Badge>
+                        )}
+                        {vaccination.vaccine_name && (
+                          <Badge variant="outline" className="w-fit">{vaccination.vaccine_name}</Badge>
+                        )}
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                          <Calendar className="h-4 w-4" />
+                          {new Date(vaccination.administered_date).toLocaleDateString()}
                         </div>
-
-                        {/* Next due date with status */}
-                        {vaccination.next_due_date && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-muted-foreground">
-                              Next due: {new Date(vaccination.next_due_date).toLocaleDateString()}
-                            </span>
-                            {getStatusBadge(status)}
-                          </div>
-                        )}
-
-                        {/* Veterinarian info */}
-                        {vaccination.veterinarian_name && (
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <User className="h-4 w-4" />
-                            {vaccination.veterinarian_name}
-                            {vaccination.veterinarian_license && (
-                              <span className="text-xs">({vaccination.veterinarian_license})</span>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Batch number */}
-                        {vaccination.batch_number && (
-                          <div className="text-xs text-muted-foreground">
-                            Batch: {vaccination.batch_number}
-                          </div>
-                        )}
-
-                        {/* Notes */}
-                        {vaccination.notes && (
-                          <div className="p-3 bg-muted/50 rounded-md">
-                            <div className="flex items-start gap-2">
-                              <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
-                              <p className="text-sm text-foreground">{vaccination.notes}</p>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* FEI compliance indicators */}
-                        {vaccination.vaccine_type === 'Equine Influenza' && (
-                          <div className="flex gap-2 text-xs">
-                            {vaccination.recorded_in_passport && (
-                              <Badge variant="outline" className="gap-1">
-                                <CheckCircle className="h-3 w-3" />
-                                In Passport
-                              </Badge>
-                            )}
-                            {vaccination.recorded_in_fei_app && (
-                              <Badge variant="outline" className="gap-1">
-                                <CheckCircle className="h-3 w-3" />
-                                In FEI App
-                              </Badge>
-                            )}
-                          </div>
-                        )}
                       </div>
 
-                      {/* Right side - Actions */}
+                      {/* Next due date with status */}
+                      {vaccination.next_due_date && (
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                          <span className="text-sm text-muted-foreground">
+                            Next due: {new Date(vaccination.next_due_date).toLocaleDateString()}
+                          </span>
+                          {getStatusBadge(status)}
+                        </div>
+                      )}
+
+                      {/* Veterinarian info */}
+                      {vaccination.veterinarian_name && (
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <User className="h-4 w-4 flex-shrink-0" />
+                            <span className="break-words">{vaccination.veterinarian_name}</span>
+                          </div>
+                          {vaccination.veterinarian_license && (
+                            <div className="text-xs text-muted-foreground ml-6">
+                              License: {vaccination.veterinarian_license}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Batch number */}
+                      {vaccination.batch_number && (
+                        <div className="text-xs text-muted-foreground">
+                          Batch: {vaccination.batch_number}
+                        </div>
+                      )}
+
+                      {/* Notes */}
+                      {vaccination.notes && (
+                        <div className="p-3 bg-muted/50 rounded-md">
+                          <div className="flex items-start gap-2">
+                            <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
+                            <p className="text-sm text-foreground break-words">{vaccination.notes}</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* FEI compliance indicators */}
+                      {vaccination.vaccine_type === 'Equine Influenza' && (
+                        <div className="flex flex-wrap gap-2 text-xs">
+                          {vaccination.recorded_in_passport && (
+                            <Badge variant="outline" className="gap-1 w-fit">
+                              <CheckCircle className="h-3 w-3" />
+                              In Passport
+                            </Badge>
+                          )}
+                          {vaccination.recorded_in_fei_app && (
+                            <Badge variant="outline" className="gap-1 w-fit">
+                              <CheckCircle className="h-3 w-3" />
+                              In FEI App
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Admin Actions */}
                       {isAdmin(userRole) && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive hover:text-destructive"
-                              disabled={deleteVaccinationMutation.isPending}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Vaccination Record?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to delete this vaccination record? This action
-                                cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => deleteVaccinationMutation.mutate(vaccination.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        <div className="pt-3 border-t flex justify-end">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive"
+                                disabled={deleteVaccinationMutation.isPending}
                               >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                                <Trash2 className="h-4 w-4" />
+                                <span className="ml-2 hidden sm:inline">Delete Record</span>
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Vaccination Record?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete this vaccination record? This action
+                                  cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => deleteVaccinationMutation.mutate(vaccination.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
                       )}
                     </div>
                   </div>

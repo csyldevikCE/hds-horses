@@ -132,80 +132,83 @@ export const VetVisitList = ({ horseId }: VetVisitListProps) => {
       <div className="space-y-4">
         {vetVisits.map((visit) => (
           <Card key={visit.id} className="hover:shadow-md transition-shadow">
-            <CardContent className="p-6">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                {/* Left side - Main info */}
-                <div className="flex-1 space-y-3">
-                  {/* Visit date and type */}
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">
-                        {new Date(visit.visit_date).toLocaleDateString()}
-                      </span>
+            <CardContent className="p-4 sm:p-6">
+              <div className="space-y-4 mb-4">
+                {/* Visit date and type */}
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span className="font-medium text-sm sm:text-base">
+                      {new Date(visit.visit_date).toLocaleDateString()}
+                    </span>
+                  </div>
+                  {visit.visit_type && <Badge variant="secondary" className="w-fit">{visit.visit_type}</Badge>}
+                  {visit.cost && (
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                      <DollarSign className="h-4 w-4" />
+                      {vetVisitService.formatCost(visit.cost)}
                     </div>
-                    {visit.visit_type && <Badge variant="secondary">{visit.visit_type}</Badge>}
-                    {visit.cost && (
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <DollarSign className="h-4 w-4" />
-                        {vetVisitService.formatCost(visit.cost)}
+                  )}
+                </div>
+
+                {/* Veterinarian info */}
+                {visit.veterinarian_name && (
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <User className="h-4 w-4 flex-shrink-0" />
+                      <span className="break-words">{visit.veterinarian_name}</span>
+                    </div>
+                    {visit.veterinarian_clinic && (
+                      <div className="text-xs text-muted-foreground ml-6">
+                        {visit.veterinarian_clinic}
+                      </div>
+                    )}
+                    {visit.veterinarian_phone && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground ml-6">
+                        <Phone className="h-3 w-3" />
+                        <span>{visit.veterinarian_phone}</span>
                       </div>
                     )}
                   </div>
+                )}
 
-                  {/* Veterinarian info */}
-                  {visit.veterinarian_name && (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <User className="h-4 w-4" />
-                      <span>{visit.veterinarian_name}</span>
-                      {visit.veterinarian_clinic && (
-                        <span className="text-xs">@ {visit.veterinarian_clinic}</span>
-                      )}
-                      {visit.veterinarian_phone && (
-                        <>
-                          <Phone className="h-4 w-4 ml-2" />
-                          <span>{visit.veterinarian_phone}</span>
-                        </>
-                      )}
+                {/* Diagnosis */}
+                {visit.diagnosis && (
+                  <div className="p-3 bg-muted/50 rounded-md">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Diagnosis</p>
+                    <p className="text-sm text-foreground break-words">{visit.diagnosis}</p>
+                  </div>
+                )}
+
+                {/* Treatment */}
+                {visit.treatment && (
+                  <div className="p-3 bg-muted/50 rounded-md">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Treatment</p>
+                    <p className="text-sm text-foreground break-words">{visit.treatment}</p>
+                  </div>
+                )}
+
+                {/* Medications */}
+                {visit.medications && (
+                  <div className="p-3 bg-muted/50 rounded-md">
+                    <p className="text-xs font-medium text-muted-foreground mb-1">Medications</p>
+                    <p className="text-sm text-foreground break-words">{visit.medications}</p>
+                  </div>
+                )}
+
+                {/* Notes */}
+                {visit.notes && (
+                  <div className="p-3 bg-muted/50 rounded-md">
+                    <div className="flex items-start gap-2">
+                      <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
+                      <p className="text-sm text-foreground break-words">{visit.notes}</p>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {/* Diagnosis */}
-                  {visit.diagnosis && (
-                    <div className="p-3 bg-muted/50 rounded-md">
-                      <p className="text-xs font-medium text-muted-foreground mb-1">Diagnosis</p>
-                      <p className="text-sm text-foreground">{visit.diagnosis}</p>
-                    </div>
-                  )}
-
-                  {/* Treatment */}
-                  {visit.treatment && (
-                    <div className="p-3 bg-muted/50 rounded-md">
-                      <p className="text-xs font-medium text-muted-foreground mb-1">Treatment</p>
-                      <p className="text-sm text-foreground">{visit.treatment}</p>
-                    </div>
-                  )}
-
-                  {/* Medications */}
-                  {visit.medications && (
-                    <div className="p-3 bg-muted/50 rounded-md">
-                      <p className="text-xs font-medium text-muted-foreground mb-1">Medications</p>
-                      <p className="text-sm text-foreground">{visit.medications}</p>
-                    </div>
-                  )}
-
-                  {/* Notes */}
-                  {visit.notes && (
-                    <div className="p-3 bg-muted/50 rounded-md">
-                      <div className="flex items-start gap-2">
-                        <FileText className="h-4 w-4 text-muted-foreground mt-0.5" />
-                        <p className="text-sm text-foreground">{visit.notes}</p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Follow-up */}
-                  {visit.follow_up_required && (
+                {/* Follow-up */}
+                {visit.follow_up_required && (
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                     <div className="flex items-center gap-2">
                       <AlertCircle className="h-4 w-4 text-amber-600" />
                       <span className="text-sm">
@@ -215,95 +218,99 @@ export const VetVisitList = ({ horseId }: VetVisitListProps) => {
                             <span className="font-medium">
                               {new Date(visit.follow_up_date).toLocaleDateString()}
                             </span>
-                            {vetVisitService.isFollowUpOverdue(visit.follow_up_date) && (
-                              <Badge variant="destructive" className="ml-2">Overdue</Badge>
-                            )}
                           </>
                         ) : 'required'}
                       </span>
                     </div>
-                  )}
+                    {visit.follow_up_date && vetVisitService.isFollowUpOverdue(visit.follow_up_date) && (
+                      <Badge variant="destructive" className="w-fit">Overdue</Badge>
+                    )}
+                  </div>
+                )}
 
-                  {/* Documents */}
-                  {visit.documents && visit.documents.length > 0 && (
-                    <div className="pt-3 border-t">
-                      <p className="text-xs font-medium mb-2 text-muted-foreground">
-                        Documents ({visit.documents.length})
-                      </p>
-                      <div className="space-y-2">
-                        {visit.documents.map((doc) => (
-                          <div
-                            key={doc.id}
-                            className="flex items-center justify-between p-2 bg-muted/30 rounded text-sm"
-                          >
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <Download className="h-4 w-4 text-muted-foreground" />
-                                <span className="font-medium truncate">{doc.file_name}</span>
-                              </div>
-                              {doc.document_type && (
-                                <p className="text-xs text-muted-foreground ml-6">
-                                  {doc.document_type}
-                                </p>
-                              )}
-                              {doc.description && (
-                                <p className="text-xs text-muted-foreground ml-6 truncate">
-                                  {doc.description}
-                                </p>
-                              )}
-                            </div>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              asChild
-                            >
-                              <a
-                                href={doc.file_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                <ExternalLink className="h-4 w-4" />
-                              </a>
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Right side - Actions */}
-                {isAdmin(userRole) && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-destructive hover:text-destructive"
-                        disabled={deleteVetVisitMutation.isPending}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Veterinary Visit?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete this visit record and all associated documents?
-                          This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => deleteVetVisitMutation.mutate(visit.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                {/* Documents */}
+                {visit.documents && visit.documents.length > 0 && (
+                  <div className="pt-3 border-t">
+                    <p className="text-xs font-medium mb-2 text-muted-foreground">
+                      Documents ({visit.documents.length})
+                    </p>
+                    <div className="space-y-2">
+                      {visit.documents.map((doc) => (
+                        <div
+                          key={doc.id}
+                          className="flex items-center justify-between p-2 bg-muted/30 rounded text-sm gap-2"
                         >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <Download className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                              <span className="font-medium truncate">{doc.file_name}</span>
+                            </div>
+                            {doc.document_type && (
+                              <p className="text-xs text-muted-foreground ml-6">
+                                {doc.document_type}
+                              </p>
+                            )}
+                            {doc.description && (
+                              <p className="text-xs text-muted-foreground ml-6 truncate">
+                                {doc.description}
+                              </p>
+                            )}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="flex-shrink-0"
+                            asChild
+                          >
+                            <a
+                              href={doc.file_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </a>
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Admin Actions */}
+                {isAdmin(userRole) && (
+                  <div className="pt-4 border-t flex justify-end">
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          disabled={deleteVetVisitMutation.isPending}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="ml-2 hidden sm:inline">Delete Visit</span>
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Veterinary Visit?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Are you sure you want to delete this visit record and all associated documents?
+                            This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => deleteVetVisitMutation.mutate(visit.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Delete
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 )}
               </div>
             </CardContent>
