@@ -137,8 +137,8 @@ export const inviteUserToOrganization = async (
   // Check current role counts
   const counts = await countUsersByRole(organizationId);
 
-  if (role === 'admin' && counts.admin >= 2) {
-    return { success: false, error: 'Maximum number of admins (2) reached' };
+  if (role === 'admin' && counts.admin >= 4) {
+    return { success: false, error: 'Maximum number of admins (4) reached' };
   }
 
   if (role === 'read_only' && counts.read_only >= 2) {
@@ -176,8 +176,8 @@ export const addUserToOrganization = async (
   // Check current role counts
   const counts = await countUsersByRole(organizationId);
 
-  if (role === 'admin' && counts.admin >= 2) {
-    throw new Error('Maximum number of admins (2) reached');
+  if (role === 'admin' && counts.admin >= 4) {
+    throw new Error('Maximum number of admins (4) reached');
   }
 
   if (role === 'read_only' && counts.read_only >= 2) {
@@ -281,8 +281,8 @@ export const updateUserRole = async (
   if (newRole === 'admin') {
     // If changing to admin, check if we have room (accounting for this user leaving their current role)
     const currentAdmins = currentMember.role === 'admin' ? counts.admin - 1 : counts.admin;
-    if (currentAdmins >= 2) {
-      throw new Error('Maximum number of admins (2) reached');
+    if (currentAdmins >= 4) {
+      throw new Error('Maximum number of admins (4) reached');
     }
   } else if (newRole === 'read_only') {
     // If changing to read_only, check if we have room

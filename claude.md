@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-HDS Horses is a multi-tenant web application for managing horse listings, competitions, media, and team collaboration. Organizations can have up to 2 administrators and 2 read-only users, with role-based access control throughout the application.
+HDS Horses is a multi-tenant web application for managing horse listings, competitions, media, and team collaboration. Organizations can have up to 4 administrators and 2 read-only users, with role-based access control throughout the application.
 
 ## Tech Stack
 
@@ -50,7 +50,7 @@ Junction table for organization membership and roles.
 - `invited_by`, `invited_at`, `joined_at`
 
 **Business Rules**:
-- Maximum 2 admins per organization
+- Maximum 4 admins per organization
 - Maximum 2 read-only users per organization
 - First user to sign up automatically becomes admin of new organization
 
@@ -739,7 +739,7 @@ Deployed on Vercel with:
 - [ ] RLS prevents cross-organization data access
 
 ### Key Test Scenarios
-1. **Multi-user**: Create 2 admin + 2 read-only accounts in same org
+1. **Multi-user**: Create 4 admin + 2 read-only accounts in same org
 2. **Permissions**: Verify read-only users cannot edit/delete
 3. **Organization isolation**: Create second org, verify no data leakage
 4. **Session persistence**: Refresh page, verify no logout
@@ -1027,3 +1027,4 @@ For issues or questions, refer to the codebase or database schema. All business 
 **Last Updated**: November 4, 2025
 **Version**: 1.4
 **Status**: Health management system complete with FEI-compliant vaccinations and vet visit tracking, all systems stable
+- memorize

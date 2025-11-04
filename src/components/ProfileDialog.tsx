@@ -220,10 +220,10 @@ export const ProfileDialog = ({ children }: ProfileDialogProps) => {
       const currentAdmins = members.filter(m => m.role === 'admin').length
       const currentReadOnly = members.filter(m => m.role === 'read_only').length
 
-      if (inviteRole === 'admin' && currentAdmins >= 2) {
+      if (inviteRole === 'admin' && currentAdmins >= 4) {
         toast({
           title: 'Error',
-          description: 'Maximum 2 admins per organization',
+          description: 'Maximum 4 admins per organization',
           variant: 'destructive'
         })
         setIsInviting(false)
@@ -592,10 +592,10 @@ export const ProfileDialog = ({ children }: ProfileDialogProps) => {
                   {/* Member Limits */}
                   <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
                     <p className="text-sm text-blue-900">
-                      <strong>Team Limits:</strong> Maximum 2 administrators and 2 read-only users per organization
+                      <strong>Team Limits:</strong> Maximum 4 administrators and 2 read-only users per organization
                     </p>
                     <p className="text-sm text-blue-700 mt-1">
-                      Current: {members.filter(m => m.role === 'admin').length}/2 Admins, {members.filter(m => m.role === 'read_only').length}/2 Read-Only
+                      Current: {members.filter(m => m.role === 'admin').length}/4 Admins, {members.filter(m => m.role === 'read_only').length}/2 Read-Only
                     </p>
                   </div>
                 </div>
