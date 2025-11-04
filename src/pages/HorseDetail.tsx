@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, MapPin, Calendar, Heart, CheckCircle, Edit, Share2, Trophy, Loader2, Ruler, Weight, DollarSign, Award, Activity, Syringe } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Info, CheckCircle, Edit, Share2, Trophy, Loader2, Ruler, Weight, DollarSign, GitBranch, Images, Syringe, Activity } from 'lucide-react';
 
 const HorseDetail = () => {
   const { id } = useParams();
@@ -147,16 +147,16 @@ const HorseDetail = () => {
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="w-full justify-start mb-6 overflow-x-auto flex-wrap h-auto">
             <TabsTrigger value="overview" className="flex items-center gap-2">
-              <Heart className="h-4 w-4" />
+              <Info className="h-4 w-4" />
               Overview
             </TabsTrigger>
             <TabsTrigger value="gallery" className="flex items-center gap-2">
-              <Activity className="h-4 w-4" />
+              <Images className="h-4 w-4" />
               Gallery
             </TabsTrigger>
             {horse.pedigree && (
               <TabsTrigger value="pedigree" className="flex items-center gap-2">
-                <Award className="h-4 w-4" />
+                <GitBranch className="h-4 w-4" />
                 Pedigree
               </TabsTrigger>
             )}
