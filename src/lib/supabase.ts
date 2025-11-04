@@ -530,6 +530,100 @@ export interface Database {
           updated_at?: string
         }
       }
+      vet_visits: {
+        Row: {
+          id: string
+          horse_id: string
+          organization_id: string
+          visit_date: string
+          visit_type: string | null
+          veterinarian_name: string | null
+          veterinarian_clinic: string | null
+          veterinarian_phone: string | null
+          diagnosis: string | null
+          treatment: string | null
+          medications: string | null
+          notes: string | null
+          follow_up_required: boolean
+          follow_up_date: string | null
+          cost: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          horse_id: string
+          organization_id: string
+          visit_date: string
+          visit_type?: string | null
+          veterinarian_name?: string | null
+          veterinarian_clinic?: string | null
+          veterinarian_phone?: string | null
+          diagnosis?: string | null
+          treatment?: string | null
+          medications?: string | null
+          notes?: string | null
+          follow_up_required?: boolean
+          follow_up_date?: string | null
+          cost?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          horse_id?: string
+          organization_id?: string
+          visit_date?: string
+          visit_type?: string | null
+          veterinarian_name?: string | null
+          veterinarian_clinic?: string | null
+          veterinarian_phone?: string | null
+          diagnosis?: string | null
+          treatment?: string | null
+          medications?: string | null
+          notes?: string | null
+          follow_up_required?: boolean
+          follow_up_date?: string | null
+          cost?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      vet_visit_documents: {
+        Row: {
+          id: string
+          vet_visit_id: string
+          file_url: string
+          file_name: string
+          file_type: string | null
+          file_size: number | null
+          document_type: string | null
+          description: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          vet_visit_id: string
+          file_url: string
+          file_name: string
+          file_type?: string | null
+          file_size?: number | null
+          document_type?: string | null
+          description?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          vet_visit_id?: string
+          file_url?: string
+          file_name?: string
+          file_type?: string | null
+          file_size?: number | null
+          document_type?: string | null
+          description?: string | null
+          created_at?: string
+        }
+      }
     }
   }
 } 

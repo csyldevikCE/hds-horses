@@ -14,6 +14,8 @@ import { XRayList } from '@/components/XRayList';
 import { CompetitionManager } from '@/components/CompetitionManager';
 import { VaccinationManager } from '@/components/VaccinationManager';
 import { VaccinationLog } from '@/components/VaccinationLog';
+import { VetVisitManager } from '@/components/VetVisitManager';
+import { VetVisitList } from '@/components/VetVisitList';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -295,28 +297,19 @@ const HorseDetail = () => {
 
           {/* Health Tab */}
           <TabsContent value="health" className="space-y-6">
-            {/* Basic Health Status */}
+            {/* Veterinary Visits */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                  Health Status
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <CheckCircle className="h-5 w-5 text-primary" />
+                    Veterinary Visits
+                  </CardTitle>
+                  {isAdmin(userRole) && <VetVisitManager horseId={horse.id} />}
+                </div>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle className={`h-5 w-5 ${horse.health.coggins ? 'text-green-600' : 'text-muted-foreground'}`} />
-                    <span className="font-medium">Coggins Test</span>
-                  </div>
-                  <Badge variant={horse.health.coggins ? 'default' : 'secondary'}>
-                    {horse.health.coggins ? 'Current' : 'Needs Update'}
-                  </Badge>
-                </div>
-                <div className="p-4 rounded-lg bg-muted/50">
-                  <p className="text-sm text-muted-foreground mb-1">Last Veterinary Check</p>
-                  <p className="font-medium">{new Date(horse.health.lastVetCheck).toLocaleDateString()}</p>
-                </div>
+              <CardContent>
+                <VetVisitList horseId={horse.id} />
               </CardContent>
             </Card>
 
