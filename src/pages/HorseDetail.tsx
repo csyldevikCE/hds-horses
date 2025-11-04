@@ -71,7 +71,6 @@ const HorseDetail = () => {
   };
 
   const primaryImage = horse.images?.find(img => img.isPrimary) || horse.images?.[0];
-  const defaultImage = 'https://images.unsplash.com/photo-1553284965-83fd3e82fa5a?w=1200&q=80';
 
   return (
     <div className="min-h-screen bg-background">
@@ -108,14 +107,17 @@ const HorseDetail = () => {
 
       {/* Hero Section with Image */}
       <div className="relative h-[300px] md:h-[400px] bg-muted overflow-hidden">
-        <img
-          src={primaryImage?.url || defaultImage}
-          alt={horse.name}
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            e.currentTarget.src = defaultImage;
-          }}
-        />
+        {primaryImage ? (
+          <img
+            src={primaryImage.url}
+            alt={horse.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="text-9xl">🐎</div>
+          </div>
+        )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
         {/* Hero Content */}
