@@ -294,10 +294,10 @@ const HorseDetail = () => {
             {/* Veterinary Visits */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <CardTitle className="flex items-center gap-2">
                     <CheckCircle className="h-5 w-5 text-primary" />
-                    Veterinary Visits
+                    <span className="text-base sm:text-lg">Veterinary Visits</span>
                   </CardTitle>
                   {isAdmin(userRole) && <VetVisitManager horseId={horse.id} />}
                 </div>
@@ -310,10 +310,10 @@ const HorseDetail = () => {
             {/* Vaccination Log */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <CardTitle className="flex items-center gap-2">
                     <Syringe className="h-5 w-5 text-primary" />
-                    Vaccination Records
+                    <span className="text-base sm:text-lg">Vaccination Records</span>
                   </CardTitle>
                   {isAdmin(userRole) && <VaccinationManager horseId={horse.id} />}
                 </div>
@@ -326,8 +326,8 @@ const HorseDetail = () => {
             {/* X-Rays */}
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle>X-Ray Records</CardTitle>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <CardTitle className="text-base sm:text-lg">X-Ray Records</CardTitle>
                   {isAdmin(userRole) && <XRayUpload horseId={horse.id} />}
                 </div>
               </CardHeader>
@@ -341,10 +341,10 @@ const HorseDetail = () => {
           <TabsContent value="results">
             <Card>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <CardTitle className="flex items-center gap-2">
                     <Trophy className="h-5 w-5 text-yellow-600" />
-                    Competition Results
+                    <span className="text-base sm:text-lg">Competition Results</span>
                   </CardTitle>
                   {isAdmin(userRole) && <CompetitionManager horseId={horse.id} />}
                 </div>
