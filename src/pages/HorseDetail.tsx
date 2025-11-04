@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, MapPin, Calendar, Info, CheckCircle, Edit, Share2, Trophy, Loader2, Ruler, Weight, DollarSign, GitBranch, Images, Syringe, Activity, Award } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Info, CheckCircle, Edit, Share2, Trophy, Loader2, Ruler, DollarSign, GitBranch, Images, Syringe, Activity, Award } from 'lucide-react';
 
 const HorseDetail = () => {
   const { id } = useParams();
@@ -131,12 +131,6 @@ const HorseDetail = () => {
                   {horse.status}
                 </Badge>
               </div>
-              {horse.price && (
-                <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3 md:px-6 md:py-4">
-                  <p className="text-sm text-white/70 mb-1">Asking Price</p>
-                  <p className="text-2xl md:text-3xl font-bold">${horse.price.toLocaleString()}</p>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -185,19 +179,6 @@ const HorseDetail = () => {
                   </div>
                 </CardContent>
               </Card>
-              {horse.weight && (
-                <Card>
-                  <CardContent className="p-4 flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/20">
-                      <Weight className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Weight</p>
-                      <p className="font-semibold">{horse.weight} lbs</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
               <Card>
                 <CardContent className="p-4 flex items-center gap-3">
                   <div className="p-2 rounded-lg bg-orange-100 dark:bg-orange-900/20">
@@ -217,6 +198,17 @@ const HorseDetail = () => {
                   <div>
                     <p className="text-xs text-muted-foreground">Location</p>
                     <p className="font-semibold text-sm">{horse.location}</p>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4 flex items-center gap-3">
+                  <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-900/20">
+                    <DollarSign className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground">Price</p>
+                    <p className="font-semibold">{horse.price ? `$${horse.price.toLocaleString()}` : 'N/A'}</p>
                   </div>
                 </CardContent>
               </Card>
