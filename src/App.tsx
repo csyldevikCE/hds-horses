@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import HorseDetail from "./pages/HorseDetail";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import ConfirmEmail from "./pages/ConfirmEmail";
 import ForgotPassword from "./pages/ForgotPassword";
 import AuthCallback from "./pages/AuthCallback";
 import SharedHorse from "./pages/SharedHorse";
@@ -54,6 +55,7 @@ const App = () => (
               {/* Public routes */}
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/confirm-email" element={<ConfirmEmail />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
               <Route path="/shared/:token" element={<SharedHorse />} />

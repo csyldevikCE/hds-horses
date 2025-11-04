@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { useToast } from '@/hooks/use-toast'
 import { Eye, EyeOff, Loader2, Users } from 'lucide-react'
 import logo from '@/assets/logo.png'
 
@@ -31,7 +30,6 @@ const Signup = () => {
 
   const { signUp } = useAuth()
   const navigate = useNavigate()
-  const { toast } = useToast()
 
   // Load invitation if token exists
   useEffect(() => {
@@ -110,18 +108,13 @@ const Signup = () => {
       if (error) {
         setError(error.message)
       } else {
-        if (invitation) {
-          toast({
-            title: "Account created!",
-            description: `Welcome to ${invitation.organizations.name}! You can now log in.`,
-          })
-        } else {
-          toast({
-            title: "Account created!",
-            description: "Your organization has been set up. You can now log in.",
-          })
-        }
-        navigate('/login')
+        // Redirect to email confirmation page
+        navigate('/confirm-email', {
+          state: {
+            email: email,
+            isInvite: !!invitation
+          }
+        })
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.')
