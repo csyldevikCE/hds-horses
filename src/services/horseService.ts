@@ -142,7 +142,7 @@ export const horseService = {
       .from('horses')
       .select('*')
       .eq('organization_id', organizationId)
-      .order('created_at', { ascending: false })
+      .order('updated_at', { ascending: false })
 
     if (error) throw error
 
