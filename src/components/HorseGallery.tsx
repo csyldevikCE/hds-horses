@@ -48,11 +48,11 @@ export const HorseGallery = ({ horse }: HorseGalleryProps) => {
       <div className="space-y-4">
         {/* Main Image Display */}
         <Card className="overflow-hidden">
-          <div className="relative group">
+          <div className="relative group bg-black">
             <img
               src={selectedImage?.url}
               alt={selectedImage?.caption || horse.name}
-              className="w-full h-96 object-cover cursor-pointer"
+              className="w-full max-h-[500px] md:max-h-[600px] object-contain cursor-pointer mx-auto"
               onClick={() => setIsFullscreen(true)}
               onError={(e) => {
                 console.error('Image failed to load:', selectedImage?.url);
@@ -135,11 +135,11 @@ export const HorseGallery = ({ horse }: HorseGalleryProps) => {
             
             {/* Main Video Player */}
             <Card className="overflow-hidden">
-              <div className="relative">
+              <div className="relative bg-black">
                 <video
                   key={horse.videos[selectedVideoIndex]?.id}
                   controls
-                  className="w-full h-64 md:h-96 object-cover bg-black"
+                  className="w-full max-h-[500px] md:max-h-[600px] object-contain mx-auto"
                   poster={horse.videos[selectedVideoIndex]?.thumbnail}
                   preload="metadata"
                 >
