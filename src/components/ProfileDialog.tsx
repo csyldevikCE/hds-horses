@@ -325,13 +325,43 @@ export const ProfileDialog = ({ children }: ProfileDialogProps) => {
       return
     }
 
+    if (!organization?.id) {
+      toast({
+        title: 'Error',
+        description: 'Organization not found',
+        variant: 'destructive'
+      })
+      return
+    }
+
     try {
+      // Check if user is the organization creator
+      const { data: org } = await supabase
+        .from('organizations')
+        .select('created_by')
+        .eq('id', organization.id)
+        .single()
+
+      if (org?.created_by === memberUserId) {
+        toast({
+          title: 'Error',
+          description: 'Cannot remove the organization creator',
+          variant: 'destructive'
+        })
+        return
+      }
+
+      // Delete using both id and organization_id for better RLS handling
       const { error } = await supabase
         .from('organization_users')
         .delete()
         .eq('id', memberId)
+        .eq('organization_id', organization.id)
 
-      if (error) throw error
+      if (error) {
+        console.error('Delete error details:', error)
+        throw new Error(error.message || 'Failed to delete user')
+      }
 
       toast({
         title: 'Success',
@@ -340,9 +370,10 @@ export const ProfileDialog = ({ children }: ProfileDialogProps) => {
 
       loadMembers()
     } catch (error: any) {
+      console.error('Error removing user:', error)
       toast({
         title: 'Error',
-        description: error.message,
+        description: error.message || 'Failed to remove user from organization',
         variant: 'destructive'
       })
     }
