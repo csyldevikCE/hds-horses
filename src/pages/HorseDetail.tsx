@@ -12,6 +12,8 @@ import { PedigreeTree } from '@/components/PedigreeTree';
 import { XRayUpload } from '@/components/XRayUpload';
 import { XRayList } from '@/components/XRayList';
 import { CompetitionManager } from '@/components/CompetitionManager';
+import { VaccinationManager } from '@/components/VaccinationManager';
+import { VaccinationLog } from '@/components/VaccinationLog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -293,6 +295,7 @@ const HorseDetail = () => {
 
           {/* Health Tab */}
           <TabsContent value="health" className="space-y-6">
+            {/* Basic Health Status */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -301,15 +304,6 @@ const HorseDetail = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle className={`h-5 w-5 ${horse.health.vaccinations ? 'text-green-600' : 'text-muted-foreground'}`} />
-                    <span className="font-medium">Vaccinations</span>
-                  </div>
-                  <Badge variant={horse.health.vaccinations ? 'default' : 'secondary'}>
-                    {horse.health.vaccinations ? 'Current' : 'Needs Update'}
-                  </Badge>
-                </div>
                 <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
                   <div className="flex items-center gap-3">
                     <CheckCircle className={`h-5 w-5 ${horse.health.coggins ? 'text-green-600' : 'text-muted-foreground'}`} />
@@ -323,6 +317,22 @@ const HorseDetail = () => {
                   <p className="text-sm text-muted-foreground mb-1">Last Veterinary Check</p>
                   <p className="font-medium">{new Date(horse.health.lastVetCheck).toLocaleDateString()}</p>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Vaccination Log */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Syringe className="h-5 w-5 text-primary" />
+                    Vaccination Records
+                  </CardTitle>
+                  {isAdmin(userRole) && <VaccinationManager horseId={horse.id} />}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <VaccinationLog horseId={horse.id} />
               </CardContent>
             </Card>
 

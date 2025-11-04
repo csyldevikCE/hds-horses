@@ -474,6 +474,62 @@ export interface Database {
           created_at?: string
         }
       }
+      vaccinations: {
+        Row: {
+          id: string
+          horse_id: string
+          organization_id: string
+          vaccine_type: string
+          vaccine_name: string | null
+          dose_number: string | null
+          administered_date: string
+          next_due_date: string | null
+          veterinarian_name: string | null
+          veterinarian_license: string | null
+          batch_number: string | null
+          notes: string | null
+          recorded_in_passport: boolean
+          recorded_in_fei_app: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          horse_id: string
+          organization_id: string
+          vaccine_type: string
+          vaccine_name?: string | null
+          dose_number?: string | null
+          administered_date: string
+          next_due_date?: string | null
+          veterinarian_name?: string | null
+          veterinarian_license?: string | null
+          batch_number?: string | null
+          notes?: string | null
+          recorded_in_passport?: boolean
+          recorded_in_fei_app?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          horse_id?: string
+          organization_id?: string
+          vaccine_type?: string
+          vaccine_name?: string | null
+          dose_number?: string | null
+          administered_date?: string
+          next_due_date?: string | null
+          veterinarian_name?: string | null
+          veterinarian_license?: string | null
+          batch_number?: string | null
+          notes?: string | null
+          recorded_in_passport?: boolean
+          recorded_in_fei_app?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
   }
 } 
