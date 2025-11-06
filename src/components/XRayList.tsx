@@ -11,7 +11,8 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
-import { FileImage, Download, Edit, Trash2, Loader2, Calendar, User, FileText, Link as LinkIcon } from 'lucide-react'
+import { FileImage, Download, Edit, Trash2, Loader2, Calendar, User, FileText, Link as LinkIcon, Eye } from 'lucide-react'
+import { DicomViewer } from '@/components/DicomViewer'
 
 interface XRayListProps {
   horseId: string
@@ -230,41 +231,35 @@ export const XRayList = ({ horseId }: XRayListProps) => {
                   )}
                 </div>
 
-                {/* Download/View button */}
-                <div className="mt-3">
+                {/* View/Download buttons */}
+                <div className="mt-3 flex gap-2">
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => setViewingXRay(xray.id)}
+                  >
+                    <Eye className="h-3 w-3 mr-1" />
+                    View
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     onClick={() => {
                       const displayUrl = getDisplayUrl(xray)
-                      if (xray.format === 'dicom') {
-                        window.open(displayUrl, '_blank')
-                      } else {
-                        setViewingXRay(xray.id)
-                      }
+                      window.open(displayUrl, '_blank')
                     }}
                   >
-                    {xray.format === 'dicom' ? (
-                      <>
-                        <Download className="h-3 w-3 mr-1" />
-                        Download
-                      </>
-                    ) : (
-                      <>
-                        <FileImage className="h-3 w-3 mr-1" />
-                        View
-                      </>
-                    )}
+                    <Download className="h-3 w-3 mr-1" />
+                    Download
                   </Button>
                   {xray.file_type === 'url' && (
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => window.open(getDisplayUrl(xray), '_blank')}
-                      className="ml-2"
                     >
                       <LinkIcon className="h-3 w-3 mr-1" />
-                      Open Link
+                      External Link
                     </Button>
                   )}
                 </div>
@@ -346,23 +341,43 @@ export const XRayList = ({ horseId }: XRayListProps) => {
         </DialogContent>
       </Dialog>
 
-      {/* View Dialog (for images) */}
+      {/* View Dialog (for all image types including DICOM) */}
       <Dialog open={!!viewingXRay} onOpenChange={(open) => !open && setViewingXRay(null)}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-6xl max-h-[90vh]">
           <DialogHeader>
-            <DialogTitle>X-Ray Image</DialogTitle>
+            <DialogTitle>
+              {(() => {
+                const xray = xrays.find(x => x.id === viewingXRay)
+                return xray?.body_part ? `X-Ray: ${xray.body_part}` : 'X-Ray Image'
+              })()}
+            </DialogTitle>
           </DialogHeader>
           {viewingXRay && (() => {
             const xray = xrays.find(x => x.id === viewingXRay)
-            return xray ? (
+            if (!xray) return null
+
+            const displayUrl = getDisplayUrl(xray)
+
+            // Show DICOM viewer for DICOM files
+            if (xray.format === 'dicom') {
+              return (
+                <DicomViewer
+                  fileUrl={displayUrl}
+                  className="w-full"
+                />
+              )
+            }
+
+            // Show regular image for JPEG/PNG
+            return (
               <div className="flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-lg p-4">
                 <img
-                  src={getDisplayUrl(xray)}
+                  src={displayUrl}
                   alt="X-ray"
                   className="max-w-full max-h-[70vh] object-contain"
                 />
               </div>
-            ) : null
+            )
           })()}
         </DialogContent>
       </Dialog>

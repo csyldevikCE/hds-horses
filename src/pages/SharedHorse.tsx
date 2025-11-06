@@ -4,11 +4,13 @@ import { useQuery } from '@tanstack/react-query'
 import { shareService } from '@/services/shareService'
 import { HorseGallery } from '@/components/HorseGallery'
 import { PedigreeTree } from '@/components/PedigreeTree'
+import { DicomViewer } from '@/components/DicomViewer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Heart, Loader2, Trophy, AlertTriangle, Lock, Eye, EyeOff, FileImage, Calendar, User, FileText, Download } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import logo from '@/assets/logo.png'
@@ -20,6 +22,7 @@ const SharedHorse = () => {
   const [passwordAttempted, setPasswordAttempted] = useState(false)
   const [passwordError, setPasswordError] = useState('')
   const [viewLogged, setViewLogged] = useState(false)
+  const [viewingXRay, setViewingXRay] = useState<string | null>(null)
 
   // First, get the share link metadata to check if password is required
   const { data: shareLink, isLoading: isLoadingMetadata, error: metadataError } = useQuery({
@@ -491,24 +494,23 @@ const SharedHorse = () => {
                                 )}
                               </div>
 
-                              {/* Download/View button */}
-                              <div className="mt-3">
+                              {/* View/Download buttons */}
+                              <div className="mt-3 flex gap-2">
                                 <Button
                                   variant="outline"
                                   size="sm"
+                                  onClick={() => setViewingXRay(xray.id)}
+                                >
+                                  <Eye className="h-3 w-3 mr-1" />
+                                  View
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
                                   onClick={() => window.open(xray.file_url, '_blank')}
                                 >
-                                  {xray.format === 'dicom' ? (
-                                    <>
-                                      <Download className="h-3 w-3 mr-1" />
-                                      Download
-                                    </>
-                                  ) : (
-                                    <>
-                                      <FileImage className="h-3 w-3 mr-1" />
-                                      View
-                                    </>
-                                  )}
+                                  <Download className="h-3 w-3 mr-1" />
+                                  Download
                                 </Button>
                               </div>
                             </div>
@@ -599,6 +601,47 @@ const SharedHorse = () => {
             )}
           </div>
         </div>
+
+        {/* X-Ray Viewer Dialog */}
+        {horse.xrays && horse.xrays.length > 0 && (
+          <Dialog open={!!viewingXRay} onOpenChange={(open) => !open && setViewingXRay(null)}>
+            <DialogContent className="max-w-6xl max-h-[90vh]">
+              <DialogHeader>
+                <DialogTitle>
+                  {(() => {
+                    const xray = horse.xrays.find(x => x.id === viewingXRay)
+                    return xray?.body_part ? `X-Ray: ${xray.body_part}` : 'X-Ray Image'
+                  })()}
+                </DialogTitle>
+              </DialogHeader>
+              {viewingXRay && (() => {
+                const xray = horse.xrays.find(x => x.id === viewingXRay)
+                if (!xray) return null
+
+                // Show DICOM viewer for DICOM files
+                if (xray.format === 'dicom') {
+                  return (
+                    <DicomViewer
+                      fileUrl={xray.file_url}
+                      className="w-full"
+                    />
+                  )
+                }
+
+                // Show regular image for JPEG/PNG
+                return (
+                  <div className="flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-lg p-4">
+                    <img
+                      src={xray.file_url}
+                      alt="X-ray"
+                      className="max-w-full max-h-[70vh] object-contain"
+                    />
+                  </div>
+                )
+              })()}
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     </div>
   )
