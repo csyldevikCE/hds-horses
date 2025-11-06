@@ -19,7 +19,7 @@ export default defineConfig(() => ({
           dest: 'codecs'
         },
         {
-          src: 'node_modules/@cornerstonejs/dicom-image-loader/dist/dynamic-import/*.wasm',
+          src: 'node_modules/cornerstone-wado-image-loader/dist/dynamic-import/*.wasm',
           dest: 'codecs'
         }
       ]
@@ -34,7 +34,7 @@ export default defineConfig(() => ({
     exclude: [
       '@cornerstonejs/core',
       '@cornerstonejs/tools',
-      '@cornerstonejs/dicom-image-loader'
+      'cornerstone-wado-image-loader'
     ],
   },
   build: {
