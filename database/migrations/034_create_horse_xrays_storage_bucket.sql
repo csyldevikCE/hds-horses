@@ -8,13 +8,13 @@ VALUES (
   'horse-xrays',
   'horse-xrays',
   false, -- PRIVATE bucket for security
-  52428800, -- 50MB limit
+  524288000, -- 500MB limit (X-rays/DICOM files can be large)
   ARRAY['application/dicom', 'image/jpeg', 'image/png']
 )
 ON CONFLICT (id)
 DO UPDATE SET
   public = false, -- Ensure it's private
-  file_size_limit = 52428800,
+  file_size_limit = 524288000,
   allowed_mime_types = ARRAY['application/dicom', 'image/jpeg', 'image/png'];
 
 -- Drop existing policies if they exist

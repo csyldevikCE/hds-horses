@@ -48,7 +48,7 @@ export const XRayUpload = ({ horseId }: XRayUploadProps) => {
 
         // Validate file
         if (!xrayService.isValidFileSize(selectedFile)) {
-          throw new Error('File size must be less than 50MB')
+          throw new Error('File size must be less than 500MB')
         }
 
         if (!xrayService.isDicomFile(selectedFile) && !xrayService.isImageFile(selectedFile)) {
@@ -204,7 +204,7 @@ export const XRayUpload = ({ horseId }: XRayUploadProps) => {
                       Browse Files
                     </Button>
                     <p className="mt-2 text-xs text-muted-foreground">
-                      Supported: DICOM (.dcm), JPEG, PNG • Max size: 50MB
+                      Supported: DICOM (.dcm), JPEG, PNG • Max size: 500MB
                     </p>
                   </div>
                 )}

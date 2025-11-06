@@ -251,10 +251,10 @@ class XRayService {
   }
 
   /**
-   * Validate file size (max 50MB)
+   * Validate file size (max 500MB for large DICOM files)
    */
   isValidFileSize(file: File): boolean {
-    const maxSize = 50 * 1024 * 1024 // 50MB
+    const maxSize = 500 * 1024 * 1024 // 500MB
     return file.size <= maxSize
   }
 }
