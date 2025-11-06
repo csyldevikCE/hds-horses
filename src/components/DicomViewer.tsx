@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import * as cornerstone from '@cornerstonejs/core'
 import * as cornerstoneTools from '@cornerstonejs/tools'
-import cornerstoneDICOMImageLoader from '@cornerstonejs/dicom-image-loader'
+import cornerstoneWADOImageLoader from 'cornerstone-wado-image-loader'
 import dicomParser from 'dicom-parser'
 import { Button } from '@/components/ui/button'
 import { Loader2, Maximize2, ZoomIn, Move, Contrast } from 'lucide-react'
@@ -42,13 +42,13 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
       if (cornerstoneInitialized) return
 
       try {
-        // Configure DICOM image loader
-        cornerstoneDICOMImageLoader.external.cornerstone = cornerstone
-        cornerstoneDICOMImageLoader.external.dicomParser = dicomParser
+        // Configure WADO image loader
+        cornerstoneWADOImageLoader.external.cornerstone = cornerstone
+        cornerstoneWADOImageLoader.external.dicomParser = dicomParser
 
-        // Configure image loader with CORS
-        cornerstoneDICOMImageLoader.configure({
-          useWebWorkers: true,
+        // Configure image loader - disable web workers for Vite compatibility
+        cornerstoneWADOImageLoader.configure({
+          useWebWorkers: false, // Disabled for Vite/Vercel compatibility
           decodeConfig: {
             convertFloatPixelDataToInt: false,
           },
