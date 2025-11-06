@@ -1,102 +1,190 @@
 import { useEffect, useRef, useState } from 'react'
-import { App as DwvApp } from 'dwv'
+import * as cornerstone from '@cornerstonejs/core'
+import * as cornerstoneTools from '@cornerstonejs/tools'
+import cornerstoneDICOMImageLoader from '@cornerstonejs/dicom-image-loader'
+import dicomParser from 'dicom-parser'
 import { Button } from '@/components/ui/button'
-import { Loader2, Maximize2, Hand, ZoomIn as ZoomInIcon, Activity } from 'lucide-react'
+import { Loader2, Maximize2, ZoomIn, Move, Contrast } from 'lucide-react'
+
+const { RenderingEngine, Enums: csEnums } = cornerstone
+const {
+  ToolGroupManager,
+  ZoomTool,
+  PanTool,
+  WindowLevelTool,
+  Enums: ToolEnums
+} = cornerstoneTools
 
 interface DicomViewerProps {
   fileUrl: string
   className?: string
 }
 
+let cornerstoneInitialized = false
+
 export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
-  const [dwvApp, setDwvApp] = useState<DwvApp | null>(null)
+  const viewportRef = useRef<HTMLDivElement>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isInitialized, setIsInitialized] = useState(false)
-  const [currentTool, setCurrentTool] = useState<string>('ZoomAndPan')
+  const [isReady, setIsReady] = useState(false)
+  const [currentTool, setCurrentTool] = useState('Zoom')
+  const renderingEngineRef = useRef<any>(null)
+  const toolGroupRef = useRef<any>(null)
 
+  const viewportId = 'DICOM_VIEWPORT'
+  const renderingEngineId = `renderingEngine-${Math.random().toString(36).substr(2, 9)}`
+  const toolGroupId = 'DICOM_TOOL_GROUP'
+
+  // Initialize Cornerstone once globally
   useEffect(() => {
-    if (!containerRef.current) return
+    const initializeCornerstone = async () => {
+      if (cornerstoneInitialized) return
 
-    console.log('Initializing DWV app...')
+      try {
+        // Configure DICOM image loader
+        cornerstoneDICOMImageLoader.external.cornerstone = cornerstone
+        cornerstoneDICOMImageLoader.external.dicomParser = dicomParser
 
-    // Initialize DWV app
-    const app = new DwvApp()
+        // Configure image loader with CORS
+        cornerstoneDICOMImageLoader.configure({
+          useWebWorkers: true,
+          decodeConfig: {
+            convertFloatPixelDataToInt: false,
+          },
+        })
 
-    // Configure the app with tools
-    try {
-      app.init({
-        dataViewConfigs: { '*': [{ divId: 'dwv-layer' }] },
-        tools: {
-          Scroll: {},
-          ZoomAndPan: {},
-          WindowLevel: {}
-        }
-      })
+        // Initialize Cornerstone
+        await cornerstone.init()
+        cornerstoneTools.init()
 
-      console.log('DWV app initialized')
+        // Add tools
+        cornerstoneTools.addTool(ZoomTool)
+        cornerstoneTools.addTool(PanTool)
+        cornerstoneTools.addTool(WindowLevelTool)
 
-      // Set default tool to ZoomAndPan after load
-      app.addEventListener('load', () => {
-        console.log('DWV file loaded, setting up tools...')
-
-        try {
-          // Set the tool after load (events are bound automatically in v0.35+)
-          app.setTool('ZoomAndPan')
-          console.log('Tool set to ZoomAndPan')
-          console.log('Events are automatically bound in DWV v0.35+')
-
-          setLoading(false)
-          setIsInitialized(true)
-        } catch (err) {
-          console.error('Error in load handler:', err)
-          setError('Failed to initialize viewer controls')
-          setLoading(false)
-        }
-      })
-
-      // Handle load error
-      app.addEventListener('error', (event) => {
-        console.error('DWV load error:', event)
-        setError('Failed to load DICOM file')
+        cornerstoneInitialized = true
+        console.log('Cornerstone initialized successfully')
+      } catch (err) {
+        console.error('Failed to initialize Cornerstone:', err)
+        setError('Failed to initialize DICOM viewer')
         setLoading(false)
-      })
-
-      setDwvApp(app)
-    } catch (err) {
-      console.error('Error initializing DWV:', err)
-      setError('Failed to initialize DICOM viewer')
-      setLoading(false)
-    }
-
-    return () => {
-      if (app) {
-        app.reset()
       }
     }
+
+    initializeCornerstone()
   }, [])
 
+  // Load and display DICOM
   useEffect(() => {
-    if (!dwvApp || !fileUrl) return
+    if (!viewportRef.current || !cornerstoneInitialized || !fileUrl) return
 
-    setLoading(true)
-    setError(null)
+    const loadDicom = async () => {
+      try {
+        setLoading(true)
+        setError(null)
 
-    // Load the DICOM file
-    dwvApp.loadURLs([fileUrl])
-  }, [dwvApp, fileUrl])
+        // Create rendering engine
+        const renderingEngine = new RenderingEngine(renderingEngineId)
+        renderingEngineRef.current = renderingEngine
 
-  const handleToolChange = (tool: string) => {
-    if (dwvApp) {
-      dwvApp.setTool(tool)
-      setCurrentTool(tool)
+        // Define viewport
+        const viewportInput = {
+          viewportId,
+          type: csEnums.ViewportType.STACK,
+          element: viewportRef.current,
+        }
+
+        renderingEngine.enableElement(viewportInput)
+
+        // Create tool group
+        const toolGroup = ToolGroupManager.createToolGroup(toolGroupId)
+        toolGroupRef.current = toolGroup
+
+        if (toolGroup) {
+          toolGroup.addTool(ZoomTool.toolName)
+          toolGroup.addTool(PanTool.toolName)
+          toolGroup.addTool(WindowLevelTool.toolName)
+
+          toolGroup.addViewport(viewportId, renderingEngineId)
+
+          // Set initial tool active
+          toolGroup.setToolActive(ZoomTool.toolName, {
+            bindings: [{ mouseButton: ToolEnums.MouseBindings.Primary }],
+          })
+        }
+
+        // Load image - handle both DICOM and regular images
+        const imageId = fileUrl.endsWith('.dcm') || fileUrl.includes('dicom')
+          ? `wadouri:${fileUrl}`
+          : fileUrl
+
+        const viewport = renderingEngine.getViewport(viewportId)
+
+        await viewport.setStack([imageId])
+        viewport.render()
+
+        setLoading(false)
+        setIsReady(true)
+        console.log('DICOM loaded successfully')
+
+      } catch (err: any) {
+        console.error('Error loading DICOM:', err)
+        setError(err.message || 'Failed to load DICOM file')
+        setLoading(false)
+      }
+    }
+
+    loadDicom()
+
+    // Cleanup
+    return () => {
+      if (renderingEngineRef.current) {
+        try {
+          renderingEngineRef.current.destroy()
+        } catch (e) {
+          console.error('Error destroying rendering engine:', e)
+        }
+      }
+      if (toolGroupRef.current) {
+        try {
+          ToolGroupManager.destroyToolGroup(toolGroupId)
+        } catch (e) {
+          console.error('Error destroying tool group:', e)
+        }
+      }
+    }
+  }, [fileUrl, renderingEngineId, toolGroupId])
+
+  const handleToolChange = (toolName: string) => {
+    if (!toolGroupRef.current) return
+
+    try {
+      // Deactivate all tools
+      toolGroupRef.current.setToolPassive(ZoomTool.toolName)
+      toolGroupRef.current.setToolPassive(PanTool.toolName)
+      toolGroupRef.current.setToolPassive(WindowLevelTool.toolName)
+
+      // Activate selected tool
+      toolGroupRef.current.setToolActive(toolName, {
+        bindings: [{ mouseButton: ToolEnums.MouseBindings.Primary }],
+      })
+
+      setCurrentTool(toolName)
+    } catch (err) {
+      console.error('Error changing tool:', err)
     }
   }
 
   const handleReset = () => {
-    if (dwvApp) {
-      dwvApp.resetDisplay()
+    if (!renderingEngineRef.current) return
+
+    try {
+      const viewport = renderingEngineRef.current.getViewport(viewportId)
+      viewport.resetCamera()
+      viewport.render()
+    } catch (err) {
+      console.error('Error resetting viewport:', err)
     }
   }
 
@@ -107,7 +195,7 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
         <div className="absolute inset-0 flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-lg z-10">
           <div className="text-center">
             <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-primary" />
-            <p className="text-sm text-muted-foreground">Loading DICOM image...</p>
+            <p className="text-sm text-muted-foreground">Loading medical image...</p>
           </div>
         </div>
       )}
@@ -115,7 +203,7 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
       {/* Error state */}
       {error && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-lg z-10">
-          <div className="text-center text-destructive">
+          <div className="text-center text-destructive p-4">
             <p className="font-medium">{error}</p>
             <p className="text-sm mt-1">Please try downloading the file instead</p>
           </div>
@@ -123,31 +211,31 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
       )}
 
       {/* Viewer controls */}
-      {isInitialized && !error && (
-        <div className="absolute top-4 right-4 z-20 flex gap-2 bg-background/80 backdrop-blur-sm rounded-lg p-2 shadow-lg">
+      {isReady && !error && (
+        <div className="absolute top-4 right-4 z-20 flex gap-2 bg-background/90 backdrop-blur-sm rounded-lg p-2 shadow-lg">
           <Button
-            variant={currentTool === 'ZoomAndPan' ? 'default' : 'ghost'}
+            variant={currentTool === ZoomTool.toolName ? 'default' : 'ghost'}
             size="icon"
-            onClick={() => handleToolChange('ZoomAndPan')}
-            title="Zoom & Pan (Mouse wheel + drag)"
+            onClick={() => handleToolChange(ZoomTool.toolName)}
+            title="Zoom (scroll or drag)"
           >
-            <ZoomInIcon className="h-4 w-4" />
+            <ZoomIn className="h-4 w-4" />
           </Button>
           <Button
-            variant={currentTool === 'Scroll' ? 'default' : 'ghost'}
+            variant={currentTool === PanTool.toolName ? 'default' : 'ghost'}
             size="icon"
-            onClick={() => handleToolChange('Scroll')}
-            title="Scroll through slices"
+            onClick={() => handleToolChange(PanTool.toolName)}
+            title="Pan (drag to move)"
           >
-            <Hand className="h-4 w-4" />
+            <Move className="h-4 w-4" />
           </Button>
           <Button
-            variant={currentTool === 'WindowLevel' ? 'default' : 'ghost'}
+            variant={currentTool === WindowLevelTool.toolName ? 'default' : 'ghost'}
             size="icon"
-            onClick={() => handleToolChange('WindowLevel')}
-            title="Adjust brightness/contrast"
+            onClick={() => handleToolChange(WindowLevelTool.toolName)}
+            title="Window/Level (drag to adjust brightness/contrast)"
           >
-            <Activity className="h-4 w-4" />
+            <Contrast className="h-4 w-4" />
           </Button>
           <div className="w-px bg-border" />
           <Button
@@ -161,23 +249,27 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
         </div>
       )}
 
-      {/* DWV container */}
+      {/* Viewport container */}
       <div
         ref={containerRef}
         className="bg-black rounded-lg overflow-hidden"
         style={{ minHeight: '500px', height: '500px' }}
       >
-        <div id="dwv-layer" className="w-full h-full" />
+        <div
+          ref={viewportRef}
+          className="w-full h-full"
+          onContextMenu={(e) => e.preventDefault()} // Prevent right-click menu
+        />
       </div>
 
       {/* Instructions */}
-      {isInitialized && !error && (
+      {isReady && !error && (
         <div className="mt-4 p-3 bg-muted/50 rounded-lg">
           <p className="text-sm font-medium mb-2">Tools:</p>
           <ul className="text-xs text-muted-foreground space-y-1">
-            <li><strong>Zoom & Pan:</strong> Mouse wheel to zoom • Click and drag to pan</li>
-            <li><strong>Scroll:</strong> Mouse wheel or drag to scroll through image slices</li>
-            <li><strong>Window/Level:</strong> Click and drag to adjust brightness and contrast</li>
+            <li><strong>Zoom:</strong> Scroll mouse wheel or drag to zoom in/out</li>
+            <li><strong>Pan:</strong> Click and drag to move the image</li>
+            <li><strong>Window/Level:</strong> Drag to adjust brightness and contrast</li>
           </ul>
         </div>
       )}
