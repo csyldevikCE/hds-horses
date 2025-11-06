@@ -75,7 +75,7 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
                   context.drawImage(image, 0, 0)
                   const imageData = context.getImageData(0, 0, image.width, image.height)
 
-                  resolve({
+                  const cornerstoneImage = {
                     imageId,
                     minPixelValue: 0,
                     maxPixelValue: 255,
@@ -94,7 +94,13 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
                     invert: false,
                     sizeInBytes: imageData.data.length,
                     getPixelData: () => imageData.data,
-                  })
+                    getCanvas: () => canvas,
+                    voiLUTFunction: 'LINEAR',
+                    numberOfComponents: 4,
+                    dataType: 'Uint8Array' as any,
+                  }
+
+                  resolve(cornerstoneImage as any)
                 } else {
                   reject(new Error('Could not get canvas context'))
                 }
@@ -175,9 +181,9 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
 
         console.log('Loading image with ID:', imageId)
 
-        const viewport = renderingEngine.getViewport(viewportId)
+        const viewport = renderingEngine.getViewport(viewportId) as any
 
-        await viewport.setStack([imageId])
+        await viewport.setStack([imageId], 0)
         viewport.render()
 
         setLoading(false)
