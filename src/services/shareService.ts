@@ -351,7 +351,32 @@ export const shareService = {
         .order('date_taken', { ascending: false })
 
       if (!xraysError && xrays) {
-        sharedData.xrays = xrays
+        // Generate signed URLs for uploaded X-rays (private bucket)
+        const xraysWithSignedUrls = await Promise.all(
+          xrays.map(async (xray) => {
+            if (xray.file_type === 'upload') {
+              try {
+                // Generate a signed URL valid for 24 hours
+                const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+                  .from('horse-xrays')
+                  .createSignedUrl(xray.file_url, 86400) // 24 hours
+
+                if (!signedUrlError && signedUrlData) {
+                  return {
+                    ...xray,
+                    file_url: signedUrlData.signedUrl
+                  }
+                }
+              } catch (error) {
+                console.error('Error generating signed URL for X-ray:', error)
+              }
+            }
+            // Return original for URL-based X-rays or if signed URL generation failed
+            return xray
+          })
+        )
+
+        sharedData.xrays = xraysWithSignedUrls
       }
     }
 
