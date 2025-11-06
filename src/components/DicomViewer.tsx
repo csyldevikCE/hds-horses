@@ -60,49 +60,51 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
 
         // Register custom image loader for regular images (JPEG/PNG)
         cornerstone.imageLoader.registerImageLoader('https', (imageId: string) => {
-          const url = imageId.replace('https:', 'https://')
-          return new Promise((resolve, reject) => {
-            const image = new Image()
-            image.crossOrigin = 'anonymous'
+          const url = imageId
+          return {
+            promise: new Promise((resolve, reject) => {
+              const image = new Image()
+              image.crossOrigin = 'anonymous'
 
-            image.onload = () => {
-              const canvas = document.createElement('canvas')
-              canvas.width = image.width
-              canvas.height = image.height
-              const context = canvas.getContext('2d')
-              if (context) {
-                context.drawImage(image, 0, 0)
-                const imageData = context.getImageData(0, 0, image.width, image.height)
+              image.onload = () => {
+                const canvas = document.createElement('canvas')
+                canvas.width = image.width
+                canvas.height = image.height
+                const context = canvas.getContext('2d')
+                if (context) {
+                  context.drawImage(image, 0, 0)
+                  const imageData = context.getImageData(0, 0, image.width, image.height)
 
-                resolve({
-                  imageId,
-                  minPixelValue: 0,
-                  maxPixelValue: 255,
-                  slope: 1,
-                  intercept: 0,
-                  windowCenter: 128,
-                  windowWidth: 256,
-                  render: cornerstone.imageLoader.getDefaultImageLoader().render,
-                  rows: image.height,
-                  columns: image.width,
-                  height: image.height,
-                  width: image.width,
-                  color: true,
-                  rgba: true,
-                  columnPixelSpacing: 1,
-                  rowPixelSpacing: 1,
-                  invert: false,
-                  sizeInBytes: imageData.data.length,
-                  getPixelData: () => imageData.data,
-                })
-              } else {
-                reject(new Error('Could not get canvas context'))
+                  resolve({
+                    imageId,
+                    minPixelValue: 0,
+                    maxPixelValue: 255,
+                    slope: 1,
+                    intercept: 0,
+                    windowCenter: 128,
+                    windowWidth: 256,
+                    rows: image.height,
+                    columns: image.width,
+                    height: image.height,
+                    width: image.width,
+                    color: true,
+                    rgba: true,
+                    columnPixelSpacing: 1,
+                    rowPixelSpacing: 1,
+                    invert: false,
+                    sizeInBytes: imageData.data.length,
+                    getPixelData: () => imageData.data,
+                  })
+                } else {
+                  reject(new Error('Could not get canvas context'))
+                }
               }
-            }
 
-            image.onerror = () => reject(new Error('Failed to load image'))
-            image.src = url
-          })
+              image.onerror = () => reject(new Error('Failed to load image'))
+              image.src = url
+            }),
+            cancelFn: undefined,
+          }
         })
 
         // Add tools
