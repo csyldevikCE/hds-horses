@@ -19,39 +19,56 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
   useEffect(() => {
     if (!containerRef.current) return
 
+    console.log('Initializing DWV app...')
+
     // Initialize DWV app
     const app = new DwvApp()
 
     // Configure the app with tools
-    app.init({
-      dataViewConfigs: { '*': [{ divId: 'dwv-layer' }] },
-      tools: {
-        Scroll: {},
-        ZoomAndPan: {},
-        WindowLevel: {}
-      }
-    })
+    try {
+      app.init({
+        dataViewConfigs: { '*': [{ divId: 'dwv-layer' }] },
+        tools: {
+          Scroll: {},
+          ZoomAndPan: {},
+          WindowLevel: {}
+        }
+      })
 
-    // Set default tool to ZoomAndPan
-    app.addEventListener('load', () => {
-      // Set the tool after load
-      app.setTool('ZoomAndPan')
-      // Bind mouse events
-      if (containerRef.current) {
-        app.bindEvents()
-      }
+      console.log('DWV app initialized')
+
+      // Set default tool to ZoomAndPan after load
+      app.addEventListener('load', () => {
+        console.log('DWV file loaded, setting up tools...')
+
+        try {
+          // Set the tool after load (events are bound automatically in v0.35+)
+          app.setTool('ZoomAndPan')
+          console.log('Tool set to ZoomAndPan')
+          console.log('Events are automatically bound in DWV v0.35+')
+
+          setLoading(false)
+          setIsInitialized(true)
+        } catch (err) {
+          console.error('Error in load handler:', err)
+          setError('Failed to initialize viewer controls')
+          setLoading(false)
+        }
+      })
+
+      // Handle load error
+      app.addEventListener('error', (event) => {
+        console.error('DWV load error:', event)
+        setError('Failed to load DICOM file')
+        setLoading(false)
+      })
+
+      setDwvApp(app)
+    } catch (err) {
+      console.error('Error initializing DWV:', err)
+      setError('Failed to initialize DICOM viewer')
       setLoading(false)
-      setIsInitialized(true)
-    })
-
-    // Handle load error
-    app.addEventListener('error', (event) => {
-      console.error('DWV load error:', event)
-      setError('Failed to load DICOM file')
-      setLoading(false)
-    })
-
-    setDwvApp(app)
+    }
 
     return () => {
       if (app) {
