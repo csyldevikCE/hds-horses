@@ -152,7 +152,7 @@ class XRayService {
   }
 
   /**
-   * Upload X-ray file to Supabase Storage
+   * Upload X-ray file to Supabase Storage (Private Bucket)
    */
   async uploadXRayFile(
     file: File,
@@ -164,7 +164,7 @@ class XRayService {
       const fileExt = file.name.split('.').pop()
       const fileName = `${organizationId}/${horseId}/${Date.now()}.${fileExt}`
 
-      // Upload to Supabase Storage
+      // Upload to Supabase Storage (private bucket)
       const { data, error } = await supabase.storage
         .from('horse-xrays')
         .upload(fileName, file, {
@@ -174,14 +174,29 @@ class XRayService {
 
       if (error) throw error
 
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('horse-xrays')
-        .getPublicUrl(data.path)
-
-      return urlData.publicUrl
+      // For private buckets, we store the path and generate signed URLs on demand
+      // Return the storage path (not a URL) which will be used to generate signed URLs later
+      return data.path
     } catch (error) {
       console.error('Error uploading X-ray file:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Get a signed URL for viewing an X-ray (valid for 1 hour)
+   * Use this for private bucket access
+   */
+  async getSignedUrl(filePath: string): Promise<string> {
+    try {
+      const { data, error } = await supabase.storage
+        .from('horse-xrays')
+        .createSignedUrl(filePath, 3600) // 1 hour expiry
+
+      if (error) throw error
+      return data.signedUrl
+    } catch (error) {
+      console.error('Error getting signed URL:', error)
       throw error
     }
   }

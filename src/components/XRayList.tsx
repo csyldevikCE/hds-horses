@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { xrayService } from '@/services/xrayService'
 import { useAuth } from '@/contexts/AuthContext'
@@ -23,6 +23,7 @@ export const XRayList = ({ horseId }: XRayListProps) => {
   const queryClient = useQueryClient()
   const [editingXRay, setEditingXRay] = useState<string | null>(null)
   const [viewingXRay, setViewingXRay] = useState<string | null>(null)
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({})
 
   // Form state for editing
   const [editDateTaken, setEditDateTaken] = useState('')
@@ -34,6 +35,39 @@ export const XRayList = ({ horseId }: XRayListProps) => {
     queryKey: ['horse-xrays', horseId],
     queryFn: () => xrayService.getHorseXRays(horseId),
   })
+
+  // Generate signed URLs for uploaded files (private bucket)
+  useEffect(() => {
+    const generateSignedUrls = async () => {
+      const urls: Record<string, string> = {}
+
+      for (const xray of xrays) {
+        // Only generate signed URLs for uploaded files, not external URLs
+        if (xray.file_type === 'upload') {
+          try {
+            const signedUrl = await xrayService.getSignedUrl(xray.file_url)
+            urls[xray.id] = signedUrl
+          } catch (error) {
+            console.error(`Failed to get signed URL for X-ray ${xray.id}:`, error)
+          }
+        }
+      }
+
+      setSignedUrls(urls)
+    }
+
+    if (xrays.length > 0) {
+      generateSignedUrls()
+    }
+  }, [xrays])
+
+  // Helper to get the display URL (signed URL for uploads, direct URL for external links)
+  const getDisplayUrl = (xray: any): string => {
+    if (xray.file_type === 'upload') {
+      return signedUrls[xray.id] || ''
+    }
+    return xray.file_url
+  }
 
   const updateMutation = useMutation({
     mutationFn: (xrayId: string) => {
@@ -129,7 +163,7 @@ export const XRayList = ({ horseId }: XRayListProps) => {
                   </div>
                 ) : (
                   <img
-                    src={xray.file_url}
+                    src={getDisplayUrl(xray)}
                     alt="X-ray"
                     className="w-16 h-16 rounded-lg object-cover cursor-pointer hover:opacity-80"
                     onClick={() => setViewingXRay(xray.id)}
@@ -202,8 +236,9 @@ export const XRayList = ({ horseId }: XRayListProps) => {
                     variant="outline"
                     size="sm"
                     onClick={() => {
+                      const displayUrl = getDisplayUrl(xray)
                       if (xray.format === 'dicom') {
-                        window.open(xray.file_url, '_blank')
+                        window.open(displayUrl, '_blank')
                       } else {
                         setViewingXRay(xray.id)
                       }
@@ -225,7 +260,7 @@ export const XRayList = ({ horseId }: XRayListProps) => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => window.open(xray.file_url, '_blank')}
+                      onClick={() => window.open(getDisplayUrl(xray), '_blank')}
                       className="ml-2"
                     >
                       <LinkIcon className="h-3 w-3 mr-1" />
@@ -317,15 +352,18 @@ export const XRayList = ({ horseId }: XRayListProps) => {
           <DialogHeader>
             <DialogTitle>X-Ray Image</DialogTitle>
           </DialogHeader>
-          {viewingXRay && (
-            <div className="flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-lg p-4">
-              <img
-                src={xrays.find(x => x.id === viewingXRay)?.file_url}
-                alt="X-ray"
-                className="max-w-full max-h-[70vh] object-contain"
-              />
-            </div>
-          )}
+          {viewingXRay && (() => {
+            const xray = xrays.find(x => x.id === viewingXRay)
+            return xray ? (
+              <div className="flex items-center justify-center bg-black/5 dark:bg-white/5 rounded-lg p-4">
+                <img
+                  src={getDisplayUrl(xray)}
+                  alt="X-ray"
+                  className="max-w-full max-h-[70vh] object-contain"
+                />
+              </div>
+            ) : null
+          })()}
         </DialogContent>
       </Dialog>
     </div>
