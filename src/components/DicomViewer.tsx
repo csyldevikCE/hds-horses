@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { App as DwvApp } from 'dwv'
 import { Button } from '@/components/ui/button'
-import { Loader2, ZoomIn, ZoomOut, RotateCw, Maximize2 } from 'lucide-react'
+import { Loader2, Maximize2, Hand, ZoomIn as ZoomInIcon, Activity } from 'lucide-react'
 
 interface DicomViewerProps {
   fileUrl: string
@@ -14,6 +14,7 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
+  const [currentTool, setCurrentTool] = useState<string>('ZoomAndPan')
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -21,19 +22,24 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
     // Initialize DWV app
     const app = new DwvApp()
 
-    // Configure the app
+    // Configure the app with tools
     app.init({
-      dataViewConfigs: { '*': [{ divId: 'dwv' }] },
+      dataViewConfigs: { '*': [{ divId: 'dwv-layer' }] },
       tools: {
         Scroll: {},
         ZoomAndPan: {},
-        WindowLevel: {},
-        Draw: {}
+        WindowLevel: {}
       }
     })
 
-    // Handle load end
+    // Set default tool to ZoomAndPan
     app.addEventListener('load', () => {
+      // Set the tool after load
+      app.setTool('ZoomAndPan')
+      // Bind mouse events
+      if (containerRef.current) {
+        app.bindEvents()
+      }
       setLoading(false)
       setIsInitialized(true)
     })
@@ -64,22 +70,10 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
     dwvApp.loadURLs([fileUrl])
   }, [dwvApp, fileUrl])
 
-  const handleZoomIn = () => {
+  const handleToolChange = (tool: string) => {
     if (dwvApp) {
-      const viewLayer = dwvApp.getActiveLayerGroup()?.getActiveViewLayer()
-      if (viewLayer) {
-        const currentZoom = viewLayer.getViewController().getCurrentScrollPosition()
-        // DWV zoom implementation
-      }
-    }
-  }
-
-  const handleZoomOut = () => {
-    if (dwvApp) {
-      const viewLayer = dwvApp.getActiveLayerGroup()?.getActiveViewLayer()
-      if (viewLayer) {
-        // DWV zoom out implementation
-      }
+      dwvApp.setTool(tool)
+      setCurrentTool(tool)
     }
   }
 
@@ -113,25 +107,34 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
 
       {/* Viewer controls */}
       {isInitialized && !error && (
-        <div className="absolute top-4 right-4 z-20 flex gap-2">
+        <div className="absolute top-4 right-4 z-20 flex gap-2 bg-background/80 backdrop-blur-sm rounded-lg p-2 shadow-lg">
           <Button
-            variant="secondary"
+            variant={currentTool === 'ZoomAndPan' ? 'default' : 'ghost'}
             size="icon"
-            onClick={handleZoomIn}
-            title="Zoom In"
+            onClick={() => handleToolChange('ZoomAndPan')}
+            title="Zoom & Pan (Mouse wheel + drag)"
           >
-            <ZoomIn className="h-4 w-4" />
+            <ZoomInIcon className="h-4 w-4" />
           </Button>
           <Button
-            variant="secondary"
+            variant={currentTool === 'Scroll' ? 'default' : 'ghost'}
             size="icon"
-            onClick={handleZoomOut}
-            title="Zoom Out"
+            onClick={() => handleToolChange('Scroll')}
+            title="Scroll through slices"
           >
-            <ZoomOut className="h-4 w-4" />
+            <Hand className="h-4 w-4" />
           </Button>
           <Button
-            variant="secondary"
+            variant={currentTool === 'WindowLevel' ? 'default' : 'ghost'}
+            size="icon"
+            onClick={() => handleToolChange('WindowLevel')}
+            title="Adjust brightness/contrast"
+          >
+            <Activity className="h-4 w-4" />
+          </Button>
+          <div className="w-px bg-border" />
+          <Button
+            variant="ghost"
             size="icon"
             onClick={handleReset}
             title="Reset View"
@@ -144,17 +147,21 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
       {/* DWV container */}
       <div
         ref={containerRef}
-        id="dwv"
-        className="bg-black/90 rounded-lg overflow-hidden"
-        style={{ minHeight: '400px' }}
+        className="bg-black rounded-lg overflow-hidden"
+        style={{ minHeight: '500px', height: '500px' }}
       >
-        <canvas className="w-full h-full" />
+        <div id="dwv-layer" className="w-full h-full" />
       </div>
 
       {/* Instructions */}
       {isInitialized && !error && (
-        <div className="mt-4 text-xs text-muted-foreground text-center">
-          <p>Use mouse wheel to scroll through slices • Click and drag to pan • Right-click and drag to adjust window/level</p>
+        <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+          <p className="text-sm font-medium mb-2">Tools:</p>
+          <ul className="text-xs text-muted-foreground space-y-1">
+            <li><strong>Zoom & Pan:</strong> Mouse wheel to zoom • Click and drag to pan</li>
+            <li><strong>Scroll:</strong> Mouse wheel or drag to scroll through image slices</li>
+            <li><strong>Window/Level:</strong> Click and drag to adjust brightness and contrast</li>
+          </ul>
         </div>
       )}
     </div>
