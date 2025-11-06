@@ -13,12 +13,12 @@ This guide will help you configure Supabase to send proper email confirmations f
 ### Step 2: Set Site URL
 Set your Site URL to your production domain:
 - **Development**: `http://localhost:5173`
-- **Production**: `https://your-domain.com` (e.g., `https://hds-horses.vercel.app`)
+- **Production**: `https://hds-horses.vercel.app`
 
 ### Step 3: Add Redirect URLs
 Add these URLs to the **Redirect URLs** list:
 - `http://localhost:5173/auth/callback` (for development)
-- `https://your-domain.com/auth/callback` (for production)
+- `https://hds-horses.vercel.app/auth/callback` (for production)
 
 This ensures that when users click the confirmation link in their email, they'll be redirected to the proper callback page that handles the authentication.
 

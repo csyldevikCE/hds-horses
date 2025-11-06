@@ -175,15 +175,16 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle className="flex items-center gap-2">
             <Edit className="h-5 w-5" />
             Edit {horse.name}
           </DialogTitle>
         </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
+
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
           {/* Basic Information */}
           <Card>
             <CardHeader>
@@ -667,6 +668,7 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
                 'Update Horse'
               )}
             </Button>
+          </div>
           </div>
         </form>
       </DialogContent>

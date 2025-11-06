@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useMemo } from 'react'
 import * as cornerstone from '@cornerstonejs/core'
 import * as cornerstoneTools from '@cornerstonejs/tools'
 import cornerstoneWADOImageLoader from 'cornerstone-wado-image-loader'
@@ -32,9 +32,10 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
   const renderingEngineRef = useRef<any>(null)
   const toolGroupRef = useRef<any>(null)
 
-  const viewportId = 'DICOM_VIEWPORT'
-  const renderingEngineId = `renderingEngine-${Math.random().toString(36).substr(2, 9)}`
-  const toolGroupId = 'DICOM_TOOL_GROUP'
+  // Use useMemo to ensure these IDs are only created once per component instance
+  const viewportId = useMemo(() => `DICOM_VIEWPORT_${Math.random().toString(36).substr(2, 9)}`, [])
+  const renderingEngineId = useMemo(() => `renderingEngine-${Math.random().toString(36).substr(2, 9)}`, [])
+  const toolGroupId = useMemo(() => `DICOM_TOOL_GROUP_${Math.random().toString(36).substr(2, 9)}`, [])
 
   // Initialize Cornerstone once globally
   useEffect(() => {
@@ -134,10 +135,34 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
   useEffect(() => {
     if (!viewportRef.current || !cornerstoneInitialized || !fileUrl) return
 
+    let isMounted = true
+
     const loadDicom = async () => {
       try {
         setLoading(true)
         setError(null)
+
+        // Cleanup any existing rendering engine first
+        if (renderingEngineRef.current) {
+          try {
+            renderingEngineRef.current.destroy()
+            renderingEngineRef.current = null
+          } catch (e) {
+            console.warn('Error destroying previous rendering engine:', e)
+          }
+        }
+
+        // Cleanup any existing tool group first
+        if (toolGroupRef.current) {
+          try {
+            ToolGroupManager.destroyToolGroup(toolGroupId)
+            toolGroupRef.current = null
+          } catch (e) {
+            console.warn('Error destroying previous tool group:', e)
+          }
+        }
+
+        if (!isMounted) return
 
         // Create rendering engine
         const renderingEngine = new RenderingEngine(renderingEngineId)
@@ -184,6 +209,9 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
         const viewport = renderingEngine.getViewport(viewportId) as any
 
         await viewport.setStack([imageId], 0)
+
+        if (!isMounted) return
+
         viewport.render()
 
         setLoading(false)
@@ -192,8 +220,10 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
 
       } catch (err: any) {
         console.error('Error loading DICOM:', err)
-        setError(err.message || 'Failed to load DICOM file')
-        setLoading(false)
+        if (isMounted) {
+          setError(err.message || 'Failed to load DICOM file')
+          setLoading(false)
+        }
       }
     }
 
@@ -201,22 +231,27 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
 
     // Cleanup
     return () => {
+      isMounted = false
+      setIsReady(false)
+
       if (renderingEngineRef.current) {
         try {
           renderingEngineRef.current.destroy()
+          renderingEngineRef.current = null
         } catch (e) {
-          console.error('Error destroying rendering engine:', e)
+          console.warn('Error destroying rendering engine:', e)
         }
       }
       if (toolGroupRef.current) {
         try {
           ToolGroupManager.destroyToolGroup(toolGroupId)
+          toolGroupRef.current = null
         } catch (e) {
-          console.error('Error destroying tool group:', e)
+          console.warn('Error destroying tool group:', e)
         }
       }
     }
-  }, [fileUrl, renderingEngineId, toolGroupId])
+  }, [fileUrl, renderingEngineId, toolGroupId, viewportId])
 
   const handleToolChange = (toolName: string) => {
     if (!toolGroupRef.current) return
