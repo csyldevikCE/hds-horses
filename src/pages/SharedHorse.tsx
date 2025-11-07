@@ -322,23 +322,22 @@ const SharedHorse = () => {
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-8">
-        {/* Horse Name - spans full width above content */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">{horse.name}</h1>
-          <p className="text-muted-foreground">{horse.breed} • {horse.age} years old</p>
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
+        {/* Horse Name - centered on mobile, left-aligned on desktop */}
+        <div className="mb-8 text-center lg:text-left">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground">{horse.name}</h1>
+          <p className="text-lg text-muted-foreground mt-2">{horse.breed} • {horse.age} years old</p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Gallery */}
-          {horse.images && horse.images.length > 0 && (
-            <div className="space-y-6">
-              <HorseGallery horse={horse} />
-            </div>
-          )}
+        {/* Gallery - Full width */}
+        {horse.images && horse.images.length > 0 && (
+          <div className="mb-8">
+            <HorseGallery horse={horse} />
+          </div>
+        )}
 
-          {/* Details */}
-          <div className="space-y-6">
+        {/* Details - Responsive grid: 1 col mobile, 2 col tablet, 3 col desktop */}
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {/* Basic Info - Always shown */}
             <Card className="shadow-card">
               <CardHeader>
@@ -599,7 +598,6 @@ const SharedHorse = () => {
                 </CardContent>
               </Card>
             )}
-          </div>
         </div>
 
         {/* X-Ray Viewer Dialog */}
