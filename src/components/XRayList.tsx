@@ -363,6 +363,7 @@ export const XRayList = ({ horseId }: XRayListProps) => {
               return (
                 <DicomViewer
                   fileUrl={displayUrl}
+                  format={xray.format}
                   className="w-full"
                 />
               )

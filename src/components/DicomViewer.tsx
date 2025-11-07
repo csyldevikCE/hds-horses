@@ -17,12 +17,13 @@ const {
 
 interface DicomViewerProps {
   fileUrl: string
+  format?: 'dicom' | 'jpeg' | 'png'
   className?: string
 }
 
 let cornerstoneInitialized = false
 
-export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
+export const DicomViewer = ({ fileUrl, format = 'dicom', className = '' }: DicomViewerProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const viewportRef = useRef<HTMLDivElement>(null)
   const [loading, setLoading] = useState(true)
@@ -56,6 +57,10 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
           useWebWorkers: false, // Disabled for Vite/Vercel compatibility
           decodeConfig: {
             convertFloatPixelDataToInt: false,
+          },
+          beforeSend: (xhr: XMLHttpRequest) => {
+            // Don't send credentials for signed URLs
+            xhr.withCredentials = false
           },
         })
 
@@ -196,23 +201,39 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
 
         // Load image - handle both DICOM and regular images
         let imageId: string
-        if (fileUrl.endsWith('.dcm') || fileUrl.toLowerCase().includes('dicom')) {
+        if (format === 'dicom') {
           // DICOM files use wadouri: scheme
           imageId = `wadouri:${fileUrl}`
+          console.log('Loading DICOM file with wadouri scheme')
         } else {
           // Regular images (JPEG/PNG) use their URL directly
           imageId = fileUrl
+          console.log('Loading regular image (JPEG/PNG)')
         }
 
         console.log('Loading image with ID:', imageId)
+        console.log('Image format:', format)
+        console.log('File URL:', fileUrl)
 
         const viewport = renderingEngine.getViewport(viewportId) as any
 
-        await viewport.setStack([imageId], 0)
+        try {
+          await viewport.setStack([imageId], 0)
+          console.log('Image stack set successfully')
+        } catch (stackErr: any) {
+          console.error('Error setting stack:', stackErr)
+          throw new Error(`Failed to load image: ${stackErr.message || 'Unknown error'}`)
+        }
 
         if (!isMounted) return
 
-        viewport.render()
+        try {
+          viewport.render()
+          console.log('Viewport rendered successfully')
+        } catch (renderErr: any) {
+          console.error('Error rendering viewport:', renderErr)
+          throw new Error(`Failed to render image: ${renderErr.message || 'Unknown error'}`)
+        }
 
         setLoading(false)
         setIsReady(true)
@@ -220,6 +241,7 @@ export const DicomViewer = ({ fileUrl, className = '' }: DicomViewerProps) => {
 
       } catch (err: any) {
         console.error('Error loading DICOM:', err)
+        console.error('Error stack:', err.stack)
         if (isMounted) {
           setError(err.message || 'Failed to load DICOM file')
           setLoading(false)
