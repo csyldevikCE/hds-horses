@@ -25,6 +25,7 @@ export const XRayList = ({ horseId }: XRayListProps) => {
   const [editingXRay, setEditingXRay] = useState<string | null>(null)
   const [viewingXRay, setViewingXRay] = useState<string | null>(null)
   const [signedUrls, setSignedUrls] = useState<Record<string, string>>({})
+  const [loadingSignedUrls, setLoadingSignedUrls] = useState(false)
 
   // Form state for editing
   const [editDateTaken, setEditDateTaken] = useState('')
@@ -40,6 +41,7 @@ export const XRayList = ({ horseId }: XRayListProps) => {
   // Generate signed URLs for uploaded files (private bucket)
   useEffect(() => {
     const generateSignedUrls = async () => {
+      setLoadingSignedUrls(true)
       const urls: Record<string, string> = {}
 
       for (const xray of xrays) {
@@ -48,6 +50,7 @@ export const XRayList = ({ horseId }: XRayListProps) => {
           try {
             const signedUrl = await xrayService.getSignedUrl(xray.file_url)
             urls[xray.id] = signedUrl
+            console.log(`Generated signed URL for X-ray ${xray.id}`)
           } catch (error) {
             console.error(`Failed to get signed URL for X-ray ${xray.id}:`, error)
           }
@@ -55,6 +58,7 @@ export const XRayList = ({ horseId }: XRayListProps) => {
       }
 
       setSignedUrls(urls)
+      setLoadingSignedUrls(false)
     }
 
     if (xrays.length > 0) {
@@ -357,6 +361,18 @@ export const XRayList = ({ horseId }: XRayListProps) => {
             if (!xray) return null
 
             const displayUrl = getDisplayUrl(xray)
+
+            // Show loading state if URL is not ready yet (for uploaded files)
+            if (xray.file_type === 'upload' && !displayUrl) {
+              return (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-2 text-primary" />
+                    <p className="text-sm text-muted-foreground">Preparing X-ray...</p>
+                  </div>
+                </div>
+              )
+            }
 
             // Show DICOM viewer for DICOM files
             if (xray.format === 'dicom') {

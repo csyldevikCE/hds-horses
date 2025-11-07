@@ -138,11 +138,22 @@ export const DicomViewer = ({ fileUrl, format = 'dicom', className = '' }: Dicom
 
   // Load and display DICOM
   useEffect(() => {
-    if (!viewportRef.current || !cornerstoneInitialized || !fileUrl) return
+    console.log('DicomViewer useEffect triggered')
+    console.log('viewportRef.current:', !!viewportRef.current)
+    console.log('cornerstoneInitialized:', cornerstoneInitialized)
+    console.log('fileUrl:', fileUrl)
+    console.log('format:', format)
+
+    if (!viewportRef.current || !cornerstoneInitialized || !fileUrl) {
+      console.log('Early return - conditions not met')
+      if (!fileUrl) console.error('fileUrl is missing!')
+      return
+    }
 
     let isMounted = true
 
     const loadDicom = async () => {
+      console.log('loadDicom function started')
       try {
         setLoading(true)
         setError(null)
