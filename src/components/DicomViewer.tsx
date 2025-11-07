@@ -284,7 +284,7 @@ export const DicomViewer = ({ fileUrl, format = 'dicom', className = '' }: Dicom
         }
       }
     }
-  }, [fileUrl, renderingEngineId, toolGroupId, viewportId])
+  }, [fileUrl, format, renderingEngineId, toolGroupId, viewportId, cornerstoneInitialized])
 
   const handleToolChange = (toolName: string) => {
     if (!toolGroupRef.current) return
