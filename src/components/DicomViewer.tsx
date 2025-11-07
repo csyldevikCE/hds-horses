@@ -21,7 +21,8 @@ interface DicomViewerProps {
   className?: string
 }
 
-let cornerstoneInitialized = false
+// Global flag to ensure Cornerstone is only initialized once
+let cornerstoneInitPromise: Promise<void> | null = null
 
 export const DicomViewer = ({ fileUrl, format = 'dicom', className = '' }: DicomViewerProps) => {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -30,6 +31,7 @@ export const DicomViewer = ({ fileUrl, format = 'dicom', className = '' }: Dicom
   const [error, setError] = useState<string | null>(null)
   const [isReady, setIsReady] = useState(false)
   const [currentTool, setCurrentTool] = useState('Zoom')
+  const [cornerstoneReady, setCornerstoneReady] = useState(false)
   const renderingEngineRef = useRef<any>(null)
   const toolGroupRef = useRef<any>(null)
 
@@ -41,96 +43,109 @@ export const DicomViewer = ({ fileUrl, format = 'dicom', className = '' }: Dicom
   // Initialize Cornerstone once globally
   useEffect(() => {
     const initializeCornerstone = async () => {
-      if (cornerstoneInitialized) return
-
-      try {
-        // Initialize Cornerstone first
-        await cornerstone.init()
-        cornerstoneTools.init()
-
-        // Configure WADO image loader for DICOM files
-        cornerstoneWADOImageLoader.external.cornerstone = cornerstone
-        cornerstoneWADOImageLoader.external.dicomParser = dicomParser
-
-        // Configure image loader - disable web workers for Vite compatibility
-        cornerstoneWADOImageLoader.configure({
-          useWebWorkers: false, // Disabled for Vite/Vercel compatibility
-          decodeConfig: {
-            convertFloatPixelDataToInt: false,
-          },
-          beforeSend: (xhr: XMLHttpRequest) => {
-            // Don't send credentials for signed URLs
-            xhr.withCredentials = false
-          },
-        })
-
-        // Register custom image loader for regular images (JPEG/PNG)
-        cornerstone.imageLoader.registerImageLoader('https', (imageId: string) => {
-          const url = imageId
-          return {
-            promise: new Promise((resolve, reject) => {
-              const image = new Image()
-              image.crossOrigin = 'anonymous'
-
-              image.onload = () => {
-                const canvas = document.createElement('canvas')
-                canvas.width = image.width
-                canvas.height = image.height
-                const context = canvas.getContext('2d')
-                if (context) {
-                  context.drawImage(image, 0, 0)
-                  const imageData = context.getImageData(0, 0, image.width, image.height)
-
-                  const cornerstoneImage = {
-                    imageId,
-                    minPixelValue: 0,
-                    maxPixelValue: 255,
-                    slope: 1,
-                    intercept: 0,
-                    windowCenter: 128,
-                    windowWidth: 256,
-                    rows: image.height,
-                    columns: image.width,
-                    height: image.height,
-                    width: image.width,
-                    color: true,
-                    rgba: true,
-                    columnPixelSpacing: 1,
-                    rowPixelSpacing: 1,
-                    invert: false,
-                    sizeInBytes: imageData.data.length,
-                    getPixelData: () => imageData.data,
-                    getCanvas: () => canvas,
-                    voiLUTFunction: 'LINEAR',
-                    numberOfComponents: 4,
-                    dataType: 'Uint8Array' as any,
-                  }
-
-                  resolve(cornerstoneImage as any)
-                } else {
-                  reject(new Error('Could not get canvas context'))
-                }
-              }
-
-              image.onerror = () => reject(new Error('Failed to load image'))
-              image.src = url
-            }),
-            cancelFn: undefined,
-          }
-        })
-
-        // Add tools
-        cornerstoneTools.addTool(ZoomTool)
-        cornerstoneTools.addTool(PanTool)
-        cornerstoneTools.addTool(WindowLevelTool)
-
-        cornerstoneInitialized = true
-        console.log('Cornerstone initialized successfully')
-      } catch (err) {
-        console.error('Failed to initialize Cornerstone:', err)
-        setError('Failed to initialize DICOM viewer')
-        setLoading(false)
+      // If already initialized or initializing, wait for it
+      if (cornerstoneInitPromise) {
+        await cornerstoneInitPromise
+        setCornerstoneReady(true)
+        console.log('Cornerstone already initialized, ready to use')
+        return
       }
+
+      // Create initialization promise
+      cornerstoneInitPromise = (async () => {
+        try {
+          // Initialize Cornerstone first
+          await cornerstone.init()
+          cornerstoneTools.init()
+
+          // Configure WADO image loader for DICOM files
+          cornerstoneWADOImageLoader.external.cornerstone = cornerstone
+          cornerstoneWADOImageLoader.external.dicomParser = dicomParser
+
+          // Configure image loader - disable web workers for Vite compatibility
+          cornerstoneWADOImageLoader.configure({
+            useWebWorkers: false, // Disabled for Vite/Vercel compatibility
+            decodeConfig: {
+              convertFloatPixelDataToInt: false,
+            },
+            beforeSend: (xhr: XMLHttpRequest) => {
+              // Don't send credentials for signed URLs
+              xhr.withCredentials = false
+            },
+          })
+
+          // Register custom image loader for regular images (JPEG/PNG)
+          cornerstone.imageLoader.registerImageLoader('https', (imageId: string) => {
+            const url = imageId
+            return {
+              promise: new Promise((resolve, reject) => {
+                const image = new Image()
+                image.crossOrigin = 'anonymous'
+
+                image.onload = () => {
+                  const canvas = document.createElement('canvas')
+                  canvas.width = image.width
+                  canvas.height = image.height
+                  const context = canvas.getContext('2d')
+                  if (context) {
+                    context.drawImage(image, 0, 0)
+                    const imageData = context.getImageData(0, 0, image.width, image.height)
+
+                    const cornerstoneImage = {
+                      imageId,
+                      minPixelValue: 0,
+                      maxPixelValue: 255,
+                      slope: 1,
+                      intercept: 0,
+                      windowCenter: 128,
+                      windowWidth: 256,
+                      rows: image.height,
+                      columns: image.width,
+                      height: image.height,
+                      width: image.width,
+                      color: true,
+                      rgba: true,
+                      columnPixelSpacing: 1,
+                      rowPixelSpacing: 1,
+                      invert: false,
+                      sizeInBytes: imageData.data.length,
+                      getPixelData: () => imageData.data,
+                      getCanvas: () => canvas,
+                      voiLUTFunction: 'LINEAR',
+                      numberOfComponents: 4,
+                      dataType: 'Uint8Array' as any,
+                    }
+
+                    resolve(cornerstoneImage as any)
+                  } else {
+                    reject(new Error('Could not get canvas context'))
+                  }
+                }
+
+                image.onerror = () => reject(new Error('Failed to load image'))
+                image.src = url
+              }),
+              cancelFn: undefined,
+            }
+          })
+
+          // Add tools
+          cornerstoneTools.addTool(ZoomTool)
+          cornerstoneTools.addTool(PanTool)
+          cornerstoneTools.addTool(WindowLevelTool)
+
+          console.log('Cornerstone initialized successfully')
+        } catch (err) {
+          console.error('Failed to initialize Cornerstone:', err)
+          setError('Failed to initialize DICOM viewer')
+          setLoading(false)
+          throw err
+        }
+      })()
+
+      // Wait for initialization to complete
+      await cornerstoneInitPromise
+      setCornerstoneReady(true)
     }
 
     initializeCornerstone()
@@ -140,13 +155,14 @@ export const DicomViewer = ({ fileUrl, format = 'dicom', className = '' }: Dicom
   useEffect(() => {
     console.log('DicomViewer useEffect triggered')
     console.log('viewportRef.current:', !!viewportRef.current)
-    console.log('cornerstoneInitialized:', cornerstoneInitialized)
+    console.log('cornerstoneReady:', cornerstoneReady)
     console.log('fileUrl:', fileUrl)
     console.log('format:', format)
 
-    if (!viewportRef.current || !cornerstoneInitialized || !fileUrl) {
+    if (!viewportRef.current || !cornerstoneReady || !fileUrl) {
       console.log('Early return - conditions not met')
       if (!fileUrl) console.error('fileUrl is missing!')
+      if (!cornerstoneReady) console.log('Waiting for Cornerstone to initialize...')
       return
     }
 
@@ -284,7 +300,7 @@ export const DicomViewer = ({ fileUrl, format = 'dicom', className = '' }: Dicom
         }
       }
     }
-  }, [fileUrl, format, renderingEngineId, toolGroupId, viewportId, cornerstoneInitialized])
+  }, [fileUrl, format, renderingEngineId, toolGroupId, viewportId, cornerstoneReady])
 
   const handleToolChange = (toolName: string) => {
     if (!toolGroupRef.current) return
