@@ -621,7 +621,6 @@ const SharedHorse = () => {
                   return (
                     <DicomViewer
                       fileUrl={xray.file_url}
-                      format="dicom"
                       className="w-full"
                     />
                   )
