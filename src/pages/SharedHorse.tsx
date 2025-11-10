@@ -1,12 +1,10 @@
-import { useState, useEffect, lazy, Suspense } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { shareService } from '@/services/shareService'
 import { HorseGallery } from '@/components/HorseGallery'
 import { PedigreeTree } from '@/components/PedigreeTree'
-
-// Lazy load DicomViewer to reduce initial bundle size
-const DicomViewer = lazy(() => import('@/components/DicomViewer').then(module => ({ default: module.DicomViewer })))
+import { DicomViewer } from '@/components/DicomViewer'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -621,17 +619,11 @@ const SharedHorse = () => {
                 // Show DICOM viewer for DICOM files
                 if (xray.format === 'dicom') {
                   return (
-                    <Suspense fallback={
-                      <div className="flex items-center justify-center py-12">
-                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                      </div>
-                    }>
-                      <DicomViewer
-                        fileUrl={xray.file_url}
-                        format="dicom"
-                        className="w-full"
-                      />
-                    </Suspense>
+                    <DicomViewer
+                      fileUrl={xray.file_url}
+                      format="dicom"
+                      className="w-full"
+                    />
                   )
                 }
 

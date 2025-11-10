@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { xrayService } from '@/services/xrayService'
 import { useAuth } from '@/contexts/AuthContext'
@@ -12,9 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import { FileImage, Download, Edit, Trash2, Loader2, Calendar, User, FileText, Link as LinkIcon, Eye } from 'lucide-react'
-
-// Lazy load DicomViewer to reduce initial bundle size
-const DicomViewer = lazy(() => import('@/components/DicomViewer').then(module => ({ default: module.DicomViewer })))
+import { DicomViewer } from '@/components/DicomViewer'
 
 interface XRayListProps {
   horseId: string
@@ -379,17 +377,11 @@ export const XRayList = ({ horseId }: XRayListProps) => {
             // Show DICOM viewer for DICOM files
             if (xray.format === 'dicom') {
               return (
-                <Suspense fallback={
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  </div>
-                }>
-                  <DicomViewer
-                    fileUrl={displayUrl}
-                    format={xray.format}
-                    className="w-full"
-                  />
-                </Suspense>
+                <DicomViewer
+                  fileUrl={displayUrl}
+                  format={xray.format}
+                  className="w-full"
+                />
               )
             }
 
