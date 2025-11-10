@@ -139,6 +139,7 @@ export const HorseGallery = ({ horse }: HorseGalleryProps) => {
                 <video
                   key={horse.videos[selectedVideoIndex]?.id}
                   controls
+                  controlsList="nodownload"
                   className="w-full max-h-[500px] md:max-h-[600px] object-contain mx-auto"
                   poster={horse.videos[selectedVideoIndex]?.thumbnail}
                   preload="metadata"

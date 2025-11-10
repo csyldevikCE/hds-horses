@@ -23,7 +23,7 @@ export const XRayUpload = ({ horseId }: XRayUploadProps) => {
   const queryClient = useQueryClient()
 
   // File upload state
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([])
   const [dragActive, setDragActive] = useState(false)
 
   // URL state
@@ -39,58 +39,72 @@ export const XRayUpload = ({ horseId }: XRayUploadProps) => {
     mutationFn: async () => {
       if (!organization) throw new Error('No organization found')
 
-      let fileUrl = ''
-      let fileType: 'upload' | 'url' = 'upload'
-      let format: 'dicom' | 'jpeg' | 'png' = 'dicom'
-
       if (uploadMethod === 'file') {
-        if (!selectedFile) throw new Error('No file selected')
+        if (selectedFiles.length === 0) throw new Error('No files selected')
 
-        // Validate file
-        if (!xrayService.isValidFileSize(selectedFile)) {
-          throw new Error('File size must be less than 500MB')
-        }
+        // Upload multiple files
+        const uploadPromises = selectedFiles.map(async (file) => {
+          // Validate file
+          if (!xrayService.isValidFileSize(file)) {
+            throw new Error(`File ${file.name} exceeds 500MB limit`)
+          }
 
-        if (!xrayService.isDicomFile(selectedFile) && !xrayService.isImageFile(selectedFile)) {
-          throw new Error('File must be DICOM (.dcm), JPEG, or PNG format')
-        }
+          if (!xrayService.isDicomFile(file) && !xrayService.isImageFile(file)) {
+            throw new Error(`File ${file.name} must be DICOM (.dcm), JPEG, or PNG format`)
+          }
 
-        // Upload file to storage
-        fileUrl = await xrayService.uploadXRayFile(selectedFile, horseId, organization.id)
-        format = xrayService.getFileFormat(selectedFile)
+          // Upload file to storage
+          const fileUrl = await xrayService.uploadXRayFile(file, horseId, organization.id)
+          const format = xrayService.getFileFormat(file)
+
+          // Create X-ray record
+          // For multiple files, skip metadata fields (date, body part, vet name)
+          // Only include notes if provided
+          return await xrayService.createXRay({
+            horseId,
+            organizationId: organization.id,
+            fileUrl,
+            fileType: 'upload',
+            format,
+            dateTaken: selectedFiles.length === 1 ? dateTaken || undefined : undefined,
+            bodyPart: selectedFiles.length === 1 ? bodyPart || undefined : undefined,
+            veterinarianName: selectedFiles.length === 1 ? veterinarianName || undefined : undefined,
+            notes: notes || undefined,
+          })
+        })
+
+        return await Promise.all(uploadPromises)
       } else {
-        // URL method
+        // URL method (single upload)
         if (!urlInput) throw new Error('Please enter a URL')
-        fileUrl = urlInput
-        fileType = 'url'
-        // Default to dicom for URLs
-        format = 'dicom'
-      }
 
-      // Create X-ray record
-      return await xrayService.createXRay({
-        horseId,
-        organizationId: organization.id,
-        fileUrl,
-        fileType,
-        format,
-        dateTaken: dateTaken || undefined,
-        bodyPart: bodyPart || undefined,
-        veterinarianName: veterinarianName || undefined,
-        notes: notes || undefined,
-      })
+        return await xrayService.createXRay({
+          horseId,
+          organizationId: organization.id,
+          fileUrl: urlInput,
+          fileType: 'url',
+          format: 'dicom',
+          dateTaken: dateTaken || undefined,
+          bodyPart: bodyPart || undefined,
+          veterinarianName: veterinarianName || undefined,
+          notes: notes || undefined,
+        })
+      }
     },
-    onSuccess: async () => {
+    onSuccess: async (data) => {
       await queryClient.invalidateQueries({ queryKey: ['horse', horseId] })
       await queryClient.invalidateQueries({ queryKey: ['horse-xrays', horseId] })
 
+      const count = Array.isArray(data) ? data.length : 1
       toast({
-        title: 'X-ray added successfully',
-        description: 'The X-ray has been uploaded and saved.',
+        title: count > 1 ? `${count} X-rays added successfully` : 'X-ray added successfully',
+        description: count > 1
+          ? `${count} X-ray files have been uploaded and saved.`
+          : 'The X-ray has been uploaded and saved.',
       })
 
       // Reset form
-      setSelectedFile(null)
+      setSelectedFiles([])
       setUrlInput('')
       setDateTaken('')
       setBodyPart('')
@@ -122,15 +136,19 @@ export const XRayUpload = ({ horseId }: XRayUploadProps) => {
     e.stopPropagation()
     setDragActive(false)
 
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      setSelectedFile(e.dataTransfer.files[0])
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      setSelectedFiles(Array.from(e.dataTransfer.files))
     }
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setSelectedFile(e.target.files[0])
+    if (e.target.files && e.target.files.length > 0) {
+      setSelectedFiles(Array.from(e.target.files))
     }
+  }
+
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -174,37 +192,53 @@ export const XRayUpload = ({ horseId }: XRayUploadProps) => {
                 onDragOver={handleDrag}
                 onDrop={handleDrop}
               >
-                {selectedFile ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-center gap-2">
-                      <FileImage className="h-8 w-8 text-primary" />
-                      <div className="flex-1 text-left">
-                        <p className="font-medium">{selectedFile.name}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                        </p>
+                {selectedFiles.length > 0 ? (
+                  <div className="space-y-2">
+                    {selectedFiles.map((file, index) => (
+                      <div key={index} className="flex items-center gap-2 bg-muted/50 rounded-lg p-2">
+                        <FileImage className="h-6 w-6 text-primary flex-shrink-0" />
+                        <div className="flex-1 text-left min-w-0">
+                          <p className="font-medium text-sm truncate">{file.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {(file.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="flex-shrink-0"
+                          onClick={() => removeFile(index)}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setSelectedFile(null)}
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
+                    ))}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="w-full mt-2"
+                      onClick={() => document.getElementById('file-upload')?.click()}
+                    >
+                      <Upload className="h-4 w-4 mr-2" />
+                      Add More Files
+                    </Button>
                   </div>
                 ) : (
                   <div>
                     <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                     <p className="mb-2 text-sm text-muted-foreground">
-                      Drag and drop your X-ray file here, or
+                      Drag and drop X-ray files here, or
                     </p>
                     <Button type="button" variant="outline" onClick={() => document.getElementById('file-upload')?.click()}>
                       Browse Files
                     </Button>
                     <p className="mt-2 text-xs text-muted-foreground">
-                      Supported: DICOM (.dcm), JPEG, PNG • Max size: 500MB
+                      Supported: DICOM (.dcm), JPEG, PNG • Max size: 500MB per file
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground font-medium">
+                      💡 Select multiple files to upload them all at once
                     </p>
                   </div>
                 )}
@@ -214,6 +248,7 @@ export const XRayUpload = ({ horseId }: XRayUploadProps) => {
                   className="hidden"
                   accept=".dcm,image/jpeg,image/png,application/dicom"
                   onChange={handleFileChange}
+                  multiple
                 />
               </div>
             </TabsContent>
@@ -237,44 +272,62 @@ export const XRayUpload = ({ horseId }: XRayUploadProps) => {
 
           {/* Metadata fields */}
           <div className="space-y-4 pt-4 border-t">
-            <h4 className="font-medium">X-Ray Information</h4>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="date-taken">Date Taken</Label>
-                <Input
-                  id="date-taken"
-                  type="date"
-                  value={dateTaken}
-                  onChange={(e) => setDateTaken(e.target.value)}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="body-part">Body Part</Label>
-                <Input
-                  id="body-part"
-                  type="text"
-                  placeholder="e.g., Left Front Leg, Hoof"
-                  value={bodyPart}
-                  onChange={(e) => setBodyPart(e.target.value)}
-                />
-              </div>
+            <div className="flex items-center justify-between">
+              <h4 className="font-medium">X-Ray Information</h4>
+              {uploadMethod === 'file' && selectedFiles.length > 1 && (
+                <p className="text-xs text-muted-foreground">
+                  ({selectedFiles.length} files selected)
+                </p>
+              )}
             </div>
 
-            <div>
-              <Label htmlFor="vet-name">Veterinarian Name</Label>
-              <Input
-                id="vet-name"
-                type="text"
-                placeholder="e.g., Dr. Smith"
-                value={veterinarianName}
-                onChange={(e) => setVeterinarianName(e.target.value)}
-              />
-            </div>
+            {/* Only show detailed metadata for single file uploads */}
+            {(uploadMethod === 'url' || selectedFiles.length === 1) && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="date-taken">Date Taken</Label>
+                    <Input
+                      id="date-taken"
+                      type="date"
+                      value={dateTaken}
+                      onChange={(e) => setDateTaken(e.target.value)}
+                    />
+                  </div>
 
+                  <div>
+                    <Label htmlFor="body-part">Body Part</Label>
+                    <Input
+                      id="body-part"
+                      type="text"
+                      placeholder="e.g., Left Front Leg, Hoof"
+                      value={bodyPart}
+                      onChange={(e) => setBodyPart(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="vet-name">Veterinarian Name</Label>
+                  <Input
+                    id="vet-name"
+                    type="text"
+                    placeholder="e.g., Dr. Smith"
+                    value={veterinarianName}
+                    onChange={(e) => setVeterinarianName(e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            {/* Notes field always visible */}
             <div>
-              <Label htmlFor="notes">Clinical Notes / Findings</Label>
+              <Label htmlFor="notes">
+                Clinical Notes / Findings
+                {uploadMethod === 'file' && selectedFiles.length > 1 && (
+                  <span className="text-muted-foreground ml-1">(applies to all {selectedFiles.length} files)</span>
+                )}
+              </Label>
               <Textarea
                 id="notes"
                 placeholder="Enter any clinical findings, diagnosis, or notes..."
@@ -291,7 +344,12 @@ export const XRayUpload = ({ horseId }: XRayUploadProps) => {
             </Button>
             <Button type="submit" disabled={uploadMutation.isPending}>
               {uploadMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {uploadMutation.isPending ? 'Uploading...' : 'Add X-Ray'}
+              {uploadMutation.isPending
+                ? `Uploading${uploadMethod === 'file' && selectedFiles.length > 1 ? ` ${selectedFiles.length} files` : ''}...`
+                : uploadMethod === 'file' && selectedFiles.length > 1
+                  ? `Add ${selectedFiles.length} X-Rays`
+                  : 'Add X-Ray'
+              }
             </Button>
           </div>
         </form>
