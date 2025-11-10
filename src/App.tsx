@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,16 +8,29 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ErrorFallback } from "@/components/ErrorFallback";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import Index from "./pages/Index";
-import HorseDetail from "./pages/HorseDetail";
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
-import ConfirmEmail from "./pages/ConfirmEmail";
-import ForgotPassword from "./pages/ForgotPassword";
-import AuthCallback from "./pages/AuthCallback";
-import SharedHorse from "./pages/SharedHorse";
-import AcceptInvitation from "./pages/AcceptInvitation";
-import NotFound from "./pages/NotFound";
+import { Loader2 } from "lucide-react";
+
+// Lazy load all pages for code splitting
+const Index = lazy(() => import("./pages/Index"));
+const HorseDetail = lazy(() => import("./pages/HorseDetail"));
+const Login = lazy(() => import("./pages/Login"));
+const Signup = lazy(() => import("./pages/Signup"));
+const ConfirmEmail = lazy(() => import("./pages/ConfirmEmail"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
+const SharedHorse = lazy(() => import("./pages/SharedHorse"));
+const AcceptInvitation = lazy(() => import("./pages/AcceptInvitation"));
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+// Loading fallback component
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50">
+    <div className="text-center">
+      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-primary" />
+      <p className="text-muted-foreground">Loading...</p>
+    </div>
+  </div>
+);
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -51,31 +65,33 @@ const App = () => (
           <Toaster />
           <Sonner />
           <BrowserRouter>
-            <Routes>
-              {/* Public routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/confirm-email" element={<ConfirmEmail />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/auth/callback" element={<AuthCallback />} />
-              <Route path="/shared/:token" element={<SharedHorse />} />
-              <Route path="/accept-invitation" element={<AcceptInvitation />} />
+            <Suspense fallback={<PageLoader />}>
+              <Routes>
+                {/* Public routes */}
+                <Route path="/login" element={<Login />} />
+                <Route path="/signup" element={<Signup />} />
+                <Route path="/confirm-email" element={<ConfirmEmail />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/shared/:token" element={<SharedHorse />} />
+                <Route path="/accept-invitation" element={<AcceptInvitation />} />
 
-              {/* Protected routes */}
-              <Route path="/" element={
-                <ProtectedRoute>
-                  <Index />
-                </ProtectedRoute>
-              } />
-              <Route path="/horse/:id" element={
-                <ProtectedRoute>
-                  <HorseDetail />
-                </ProtectedRoute>
-              } />
+                {/* Protected routes */}
+                <Route path="/" element={
+                  <ProtectedRoute>
+                    <Index />
+                  </ProtectedRoute>
+                } />
+                <Route path="/horse/:id" element={
+                  <ProtectedRoute>
+                    <HorseDetail />
+                  </ProtectedRoute>
+                } />
 
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Suspense>
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>

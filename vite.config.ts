@@ -42,8 +42,38 @@ export default defineConfig(() => ({
     sourcemap: false,
     rollupOptions: {
       output: {
-        // Ensure web workers are handled correctly
-        manualChunks: undefined,
+        // Manual chunking for better code splitting and caching
+        manualChunks: (id) => {
+          // Separate large vendor libraries into their own chunks
+          if (id.includes('node_modules')) {
+            // Cornerstone medical imaging libraries (heavy)
+            if (id.includes('@cornerstonejs') || id.includes('cornerstone-wado-image-loader') || id.includes('dicom-parser')) {
+              return 'cornerstone';
+            }
+            // React and core UI libraries
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'react-vendor';
+            }
+            // Radix UI components
+            if (id.includes('@radix-ui')) {
+              return 'radix-ui';
+            }
+            // Charts and visualization
+            if (id.includes('recharts') || id.includes('react-simple-maps')) {
+              return 'charts';
+            }
+            // TanStack Query
+            if (id.includes('@tanstack/react-query')) {
+              return 'tanstack-query';
+            }
+            // Supabase
+            if (id.includes('@supabase')) {
+              return 'supabase';
+            }
+            // All other node_modules
+            return 'vendor';
+          }
+        },
       }
     },
     // Increase chunk size warning limit for medical imaging libraries
