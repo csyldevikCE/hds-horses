@@ -166,7 +166,12 @@ export const XRayUpload = ({ horseId }: XRayUploadProps) => {
       </DialogTrigger>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto" onOpenAutoFocus={(e) => e.preventDefault()}>
         <DialogHeader>
-          <DialogTitle>Add X-Ray</DialogTitle>
+          <DialogTitle className="flex items-center gap-2">
+            Add X-Ray
+            <span className="text-xs font-normal text-muted-foreground bg-primary/10 px-2 py-0.5 rounded-full">
+              Multiple files supported
+            </span>
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -237,9 +242,12 @@ export const XRayUpload = ({ horseId }: XRayUploadProps) => {
                     <p className="mt-2 text-xs text-muted-foreground">
                       Supported: DICOM (.dcm), JPEG, PNG • Max size: 500MB per file
                     </p>
-                    <p className="mt-1 text-xs text-muted-foreground font-medium">
-                      💡 Select multiple files to upload them all at once
-                    </p>
+                    <div className="mt-3 flex items-center justify-center gap-2 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-md py-2 px-3">
+                      <FileImage className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                      <p className="text-xs text-blue-700 dark:text-blue-300 font-medium">
+                        You can select multiple files to upload them all at once
+                      </p>
+                    </div>
                   </div>
                 )}
                 <input
