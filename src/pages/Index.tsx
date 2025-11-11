@@ -17,6 +17,7 @@ const Index = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBreed, setSelectedBreed] = useState('all');
   const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedAge, setSelectedAge] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
   const { user, organization, userRole } = useAuth();
@@ -29,6 +30,11 @@ const Index = () => {
 
   const breeds = ['all', ...new Set(horses.map(horse => horse.breed))];
   const statuses = ['all', ...new Set(horses.map(horse => horse.status))];
+  const ages = ['all', ...new Set(horses.map(horse => horse.age.toString()))].sort((a, b) => {
+    if (a === 'all') return -1;
+    if (b === 'all') return 1;
+    return Number(a) - Number(b);
+  });
 
   const filteredHorses = horses.filter(horse => {
     const matchesSearch = horse.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -36,8 +42,9 @@ const Index = () => {
                          horse.color.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesBreed = selectedBreed === 'all' || horse.breed === selectedBreed;
     const matchesStatus = selectedStatus === 'all' || horse.status === selectedStatus;
+    const matchesAge = selectedAge === 'all' || horse.age.toString() === selectedAge;
 
-    return matchesSearch && matchesBreed && matchesStatus;
+    return matchesSearch && matchesBreed && matchesStatus && matchesAge;
   });
 
   // Calculate stats
@@ -185,6 +192,19 @@ const Index = () => {
                 </SelectContent>
               </Select>
 
+              {/* Age Filter */}
+              <Select value={selectedAge} onValueChange={setSelectedAge}>
+                <SelectTrigger className="w-full md:w-[140px]">
+                  <SelectValue placeholder="All Ages" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Ages</SelectItem>
+                  {ages.filter(a => a !== 'all').map(age => (
+                    <SelectItem key={age} value={age}>{age} years</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
               {/* Create Horse Button - Only for admins */}
               {isAdmin(userRole) && (
                 <CreateHorseForm>
@@ -198,10 +218,10 @@ const Index = () => {
             </div>
 
             {/* Active Filters Display */}
-            {(searchTerm || selectedBreed !== 'all' || selectedStatus !== 'all') && (
+            {(searchTerm || selectedBreed !== 'all' || selectedStatus !== 'all' || selectedAge !== 'all') && (
               <div className="flex items-center gap-2 mt-4 text-sm text-muted-foreground">
                 <span>Showing {filteredHorses.length} of {horses.length} horses</span>
-                {(selectedBreed !== 'all' || selectedStatus !== 'all' || searchTerm) && (
+                {(selectedBreed !== 'all' || selectedStatus !== 'all' || selectedAge !== 'all' || searchTerm) && (
                   <Button
                     variant="ghost"
                     size="sm"
@@ -209,6 +229,7 @@ const Index = () => {
                       setSearchTerm('');
                       setSelectedBreed('all');
                       setSelectedStatus('all');
+                      setSelectedAge('all');
                     }}
                     className="h-auto p-0 text-xs underline"
                   >
