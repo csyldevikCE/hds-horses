@@ -6,14 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { MediaUpload } from '@/components/MediaUpload';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { horseService } from '@/services/horseService';
-import { Edit, Plus, Trash2, Loader2 } from 'lucide-react';
+import { Edit, Loader2 } from 'lucide-react';
 
 interface EditHorseFormProps {
   horse: Horse;
@@ -61,43 +60,13 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
     // Training
     trainingLevel: horse.training.level,
     disciplines: horse.training.disciplines.join(', '),
-    
-    // Health Records
-    vaccinations: horse.health.vaccinations,
-    coggins: horse.health.coggins,
-    lastVetCheck: horse.health.lastVetCheck,
   });
-
-  const [competitions, setCompetitions] = useState(horse.competitions || []);
 
   const handleInputChange = (name: string, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
-  };
-
-  const addCompetition = () => {
-    const newCompetition = {
-      id: Date.now().toString(),
-      event: '',
-      date: '',
-      discipline: '',
-      placement: '',
-      notes: '',
-      equipeLink: ''
-    };
-    setCompetitions([...competitions, newCompetition]);
-  };
-
-  const removeCompetition = (id: string) => {
-    setCompetitions(competitions.filter(comp => comp.id !== id));
-  };
-
-  const updateCompetition = (id: string, field: string, value: string) => {
-    setCompetitions(competitions.map(comp => 
-      comp.id === id ? { ...comp, [field]: value } : comp
-    ));
   };
 
   // Update horse mutation
@@ -130,17 +99,11 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
           damDamSire: formData.damDamSire || undefined,
           damDamDam: formData.damDamDam || undefined
         } : undefined,
-        health: {
-          vaccinations: formData.vaccinations,
-          coggins: formData.coggins,
-          lastVetCheck: formData.lastVetCheck
-        },
         training: {
           level: formData.trainingLevel,
           disciplines: formData.disciplines.split(',').map(d => d.trim()).filter(d => d)
         },
-        location: formData.location,
-        competitions: competitions
+        location: formData.location
       };
 
       return horseService.updateHorse(horse.id, updatedHorse);
@@ -503,141 +466,6 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
                   required
                 />
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Health Records */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Health Records</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="vaccinations"
-                  checked={formData.vaccinations}
-                  onCheckedChange={(checked) => handleInputChange('vaccinations', checked as boolean)}
-                />
-                <Label htmlFor="vaccinations">Current Vaccinations</Label>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="coggins"
-                  checked={formData.coggins}
-                  onCheckedChange={(checked) => handleInputChange('coggins', checked as boolean)}
-                />
-                <Label htmlFor="coggins">Current Coggins Test</Label>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="lastVetCheck">Last Vet Check</Label>
-                <Input
-                  id="lastVetCheck"
-                  type="date"
-                  value={formData.lastVetCheck}
-                  onChange={(e) => handleInputChange('lastVetCheck', e.target.value)}
-                  required
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Competition Results */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                Competition Results
-                <Button type="button" variant="outline" size="sm" onClick={addCompetition}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Competition
-                </Button>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {competitions.length === 0 ? (
-                <p className="text-muted-foreground text-center py-4">No competition results added yet.</p>
-              ) : (
-                competitions.map((competition) => (
-                  <Card key={competition.id} className="relative">
-                    <CardContent className="pt-6">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="absolute top-2 right-2"
-                        onClick={() => removeCompetition(competition.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pr-12">
-                        <div className="space-y-2">
-                          <Label htmlFor={`event-${competition.id}`}>Event</Label>
-                          <Input
-                            id={`event-${competition.id}`}
-                            value={competition.event}
-                            onChange={(e) => updateCompetition(competition.id, 'event', e.target.value)}
-                            placeholder="e.g., Kentucky Derby"
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor={`date-${competition.id}`}>Date</Label>
-                          <Input
-                            id={`date-${competition.id}`}
-                            type="date"
-                            value={competition.date}
-                            onChange={(e) => updateCompetition(competition.id, 'date', e.target.value)}
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor={`discipline-${competition.id}`}>Discipline</Label>
-                          <Input
-                            id={`discipline-${competition.id}`}
-                            value={competition.discipline}
-                            onChange={(e) => updateCompetition(competition.id, 'discipline', e.target.value)}
-                            placeholder="e.g., Dressage, Jumping"
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <Label htmlFor={`placement-${competition.id}`}>Placement</Label>
-                          <Input
-                            id={`placement-${competition.id}`}
-                            value={competition.placement}
-                            onChange={(e) => updateCompetition(competition.id, 'placement', e.target.value)}
-                            placeholder="e.g., 1st Place, 2nd Place"
-                          />
-                        </div>
-                        
-                        <div className="space-y-2 md:col-span-2">
-                          <Label htmlFor={`notes-${competition.id}`}>Notes (optional)</Label>
-                          <Textarea
-                            id={`notes-${competition.id}`}
-                            value={competition.notes || ''}
-                            onChange={(e) => updateCompetition(competition.id, 'notes', e.target.value)}
-                            placeholder="Additional notes about this competition"
-                            rows={2}
-                          />
-                        </div>
-                        
-                        <div className="space-y-2 md:col-span-2">
-                          <Label htmlFor={`equipeLink-${competition.id}`}>Equipe Link (optional)</Label>
-                          <Input
-                            id={`equipeLink-${competition.id}`}
-                            type="url"
-                            value={competition.equipeLink || ''}
-                            onChange={(e) => updateCompetition(competition.id, 'equipeLink', e.target.value)}
-                            placeholder="https://equipe.com/result/..."
-                          />
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))
-              )}
             </CardContent>
           </Card>
 
