@@ -9,7 +9,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card, CardContent } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Plus, Zap as HorseIcon, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -38,10 +37,7 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
     dam: '',
     location: '',
     trainingLevel: '',
-    disciplines: '',
-    vaccinations: false,
-    coggins: false,
-    lastVetCheck: ''
+    disciplines: ''
   });
 
   const handleInputChange = (name: string, value: string | boolean) => {
@@ -85,10 +81,7 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
       dam: '',
       location: '',
       trainingLevel: '',
-      disciplines: '',
-      vaccinations: false,
-      coggins: false,
-      lastVetCheck: ''
+      disciplines: ''
     });
   };
 
@@ -119,11 +112,6 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
         sire: formData.sire,
         dam: formData.dam
       } : undefined,
-      health: {
-        vaccinations: formData.vaccinations,
-        coggins: formData.coggins,
-        lastVetCheck: formData.lastVetCheck
-      },
       training: {
         level: formData.trainingLevel,
         disciplines: formData.disciplines.split(',').map(d => d.trim()).filter(d => d)
@@ -328,40 +316,6 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
                     placeholder="e.g., Dressage, Jumping, Trail (comma separated)"
                     value={formData.disciplines}
                     onChange={(e) => handleInputChange('disciplines', e.target.value)}
-                  />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Health */}
-          <Card>
-            <CardContent className="p-4">
-              <h3 className="font-semibold mb-4">Health Records</h3>
-              <div className="space-y-4">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="vaccinations"
-                    checked={formData.vaccinations}
-                    onCheckedChange={(checked) => handleInputChange('vaccinations', checked)}
-                  />
-                  <Label htmlFor="vaccinations">Vaccinations up to date</Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="coggins"
-                    checked={formData.coggins}
-                    onCheckedChange={(checked) => handleInputChange('coggins', checked)}
-                  />
-                  <Label htmlFor="coggins">Coggins test current</Label>
-                </div>
-                <div>
-                  <Label htmlFor="lastVetCheck">Last Veterinary Check</Label>
-                  <Input
-                    id="lastVetCheck"
-                    type="date"
-                    value={formData.lastVetCheck}
-                    onChange={(e) => handleInputChange('lastVetCheck', e.target.value)}
                   />
                 </div>
               </div>
