@@ -16,11 +16,13 @@ import { VaccinationManager } from '@/components/VaccinationManager';
 import { VaccinationLog } from '@/components/VaccinationLog';
 import { VetVisitManager } from '@/components/VetVisitManager';
 import { VetVisitList } from '@/components/VetVisitList';
+import { VetDocUpload } from '@/components/VetDocUpload';
+import { VetDocList } from '@/components/VetDocList';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, MapPin, Calendar, Info, CheckCircle, Edit, Share2, Trophy, Loader2, Ruler, DollarSign, GitBranch, Images, Syringe, Activity, Award } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Info, CheckCircle, Edit, Share2, Trophy, Loader2, Ruler, DollarSign, GitBranch, Images, Syringe, Activity, Award, FileText } from 'lucide-react';
 
 const HorseDetail = () => {
   const { id } = useParams();
@@ -333,6 +335,22 @@ const HorseDetail = () => {
               </CardHeader>
               <CardContent>
                 <XRayList horseId={horse.id} />
+              </CardContent>
+            </Card>
+
+            {/* Veterinary Documents */}
+            <Card>
+              <CardHeader>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-primary" />
+                    <span className="text-base sm:text-lg">Veterinary Documents</span>
+                  </CardTitle>
+                  {isAdmin(userRole) && <VetDocUpload horseId={horse.id} />}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <VetDocList horseId={horse.id} />
               </CardContent>
             </Card>
           </TabsContent>

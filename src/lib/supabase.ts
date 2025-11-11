@@ -624,6 +624,44 @@ export interface Database {
           created_at?: string
         }
       }
+      veterinary_documents: {
+        Row: {
+          id: string
+          horse_id: string
+          organization_id: string
+          file_url: string
+          file_name: string
+          file_type: string | null
+          file_size: number | null
+          document_type: string | null
+          description: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          horse_id: string
+          organization_id: string
+          file_url: string
+          file_name: string
+          file_type?: string | null
+          file_size?: number | null
+          document_type?: string | null
+          description?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          horse_id?: string
+          organization_id?: string
+          file_url?: string
+          file_name?: string
+          file_type?: string | null
+          file_size?: number | null
+          document_type?: string | null
+          description?: string | null
+          created_at?: string
+        }
+      }
     }
   }
 } 
