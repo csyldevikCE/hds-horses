@@ -59,4 +59,13 @@ export interface Horse {
   }[];
   location: string;
   dateAdded: string;
+  // BLUP integration fields
+  regno?: string;
+  chipNumber?: string;
+  wffsStatus?: number;
+  studBookNo?: string;
+  lifeNo?: string;
+  breeder?: string;
+  blupUrl?: string;
+  lastBlupSync?: string;
 }

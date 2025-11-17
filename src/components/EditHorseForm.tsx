@@ -7,12 +7,14 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { MediaUpload } from '@/components/MediaUpload';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { horseService } from '@/services/horseService';
-import { Edit, Loader2 } from 'lucide-react';
+import { blupService, BlupHorseData } from '@/services/blupService';
+import { Edit, Loader2, Download, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 interface EditHorseFormProps {
   horse: Horse;
@@ -24,7 +26,13 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
   const { toast } = useToast();
   const { organization } = useAuth();
   const queryClient = useQueryClient();
-  
+
+  // BLUP Import State
+  const [blupRegno, setBlupRegno] = useState('');
+  const [isLoadingBlup, setIsLoadingBlup] = useState(false);
+  const [blupError, setBlupError] = useState<string | null>(null);
+  const [blupSuccess, setBlupSuccess] = useState(false);
+
   const [formData, setFormData] = useState({
     // Basic Information
     name: horse.name,
@@ -36,11 +44,11 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
     weight: horse.weight?.toString() || '',
     description: horse.description,
     location: horse.location,
-    
+
     // Sales Information
     status: horse.status,
     price: horse.price?.toString() || '',
-    
+
     // Pedigree
     sire: horse.pedigree?.sire || '',
     dam: horse.pedigree?.dam || '',
@@ -56,10 +64,19 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
     damSireDam: horse.pedigree?.damSireDam || '',
     damDamSire: horse.pedigree?.damDamSire || '',
     damDamDam: horse.pedigree?.damDamDam || '',
-    
+
     // Training
     trainingLevel: horse.training.level,
     disciplines: horse.training.disciplines.join(', '),
+
+    // BLUP fields
+    regno: horse.regno || '',
+    chipNumber: horse.chipNumber || '',
+    wffsStatus: horse.wffsStatus?.toString() || '',
+    studBookNo: horse.studBookNo || '',
+    lifeNo: horse.lifeNo || '',
+    breeder: horse.breeder || '',
+    blupUrl: horse.blupUrl || '',
   });
 
   const handleInputChange = (name: string, value: string | boolean) => {
@@ -69,10 +86,87 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
     }));
   };
 
+  // Fetch horse data from BLUP
+  const handleFetchFromBlup = async () => {
+    // Validate registration number
+    const validation = blupService.validateRegno(blupRegno);
+    if (!validation.valid) {
+      setBlupError(validation.message || 'Invalid registration number');
+      setBlupSuccess(false);
+      return;
+    }
+
+    setIsLoadingBlup(true);
+    setBlupError(null);
+    setBlupSuccess(false);
+
+    try {
+      const blupData: BlupHorseData = await blupService.fetchHorseFromBlup(blupRegno);
+
+      // Update form with BLUP data
+      setFormData(prev => ({
+        ...prev,
+        name: blupData.name,
+        breed: blupData.breed,
+        birthYear: blupData.birthYear.toString(),
+        color: blupData.color,
+        gender: blupData.gender,
+        sire: blupData.pedigree?.sire || '',
+        dam: blupData.pedigree?.dam || '',
+        sireSire: blupData.pedigree?.sireSire || '',
+        sireDam: blupData.pedigree?.sireDam || '',
+        damSire: blupData.pedigree?.damSire || '',
+        damDam: blupData.pedigree?.damDam || '',
+        sireSireSire: blupData.pedigree?.sireSireSire || '',
+        sireSireDam: blupData.pedigree?.sireSireDam || '',
+        sireDamSire: blupData.pedigree?.sireDamSire || '',
+        sireDamDam: blupData.pedigree?.sireDamDam || '',
+        damSireSire: blupData.pedigree?.damSireSire || '',
+        damSireDam: blupData.pedigree?.damSireDam || '',
+        damDamSire: blupData.pedigree?.damDamSire || '',
+        damDamDam: blupData.pedigree?.damDamDam || '',
+        // BLUP fields (these won't be in initial formData but will be added)
+        regno: blupData.regno,
+        chipNumber: blupData.chipNumber || '',
+        wffsStatus: blupData.wffsStatus?.toString() || '',
+        studBookNo: blupData.studBookNo || '',
+        lifeNo: blupData.lifeNo || '',
+        breeder: blupData.breeder || '',
+        blupUrl: blupData.blupUrl || '',
+      }));
+
+      setBlupSuccess(true);
+      toast({
+        title: 'Horse data imported successfully!',
+        description: `${blupData.name} data has been loaded from BLUP. Review and save changes.`,
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch horse data';
+      setBlupError(errorMessage);
+      setBlupSuccess(false);
+      toast({
+        title: 'Failed to import horse data',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingBlup(false);
+    }
+  };
+
   // Update horse mutation
   const updateHorseMutation = useMutation({
     mutationFn: async () => {
-      const updatedHorse: Partial<Horse> = {
+      const updatedHorse: Partial<Horse> & {
+        regno?: string;
+        chipNumber?: string;
+        wffsStatus?: number;
+        studBookNo?: string;
+        lifeNo?: string;
+        breeder?: string;
+        blupUrl?: string;
+        lastBlupSync?: string;
+      } = {
         name: formData.name,
         breed: formData.breed,
         birthYear: parseInt(formData.birthYear),
@@ -103,7 +197,16 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
           level: formData.trainingLevel,
           disciplines: formData.disciplines.split(',').map(d => d.trim()).filter(d => d)
         },
-        location: formData.location
+        location: formData.location,
+        // BLUP fields - only if they exist in formData (TypeScript type widening)
+        ...(formData.regno && { regno: formData.regno }),
+        ...(formData.chipNumber && { chipNumber: formData.chipNumber }),
+        ...(formData.wffsStatus && { wffsStatus: parseInt(formData.wffsStatus) }),
+        ...(formData.studBookNo && { studBookNo: formData.studBookNo }),
+        ...(formData.lifeNo && { lifeNo: formData.lifeNo }),
+        ...(formData.breeder && { breeder: formData.breeder }),
+        ...(formData.blupUrl && { blupUrl: formData.blupUrl }),
+        ...(formData.regno && { lastBlupSync: new Date().toISOString() }),
       };
 
       return horseService.updateHorse(horse.id, updatedHorse);
@@ -148,6 +251,73 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
           <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+          {/* BLUP Import Section */}
+          <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-900">
+            <CardContent className="p-4">
+              <div className="flex items-start gap-2 mb-3">
+                <Download className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-blue-900 dark:text-blue-100">Update from BLUP System</h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                    Enter a registration number to update this horse with latest data from the BLUP system
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Input
+                    placeholder="e.g., 04201515"
+                    value={blupRegno}
+                    onChange={(e) => {
+                      setBlupRegno(e.target.value);
+                      setBlupError(null);
+                      setBlupSuccess(false);
+                    }}
+                    disabled={isLoadingBlup}
+                    className="bg-white dark:bg-gray-950"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  onClick={handleFetchFromBlup}
+                  disabled={isLoadingBlup || !blupRegno}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {isLoadingBlup ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Importing...
+                    </>
+                  ) : (
+                    <>
+                      <Download className="mr-2 h-4 w-4" />
+                      Import
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {/* Error Message */}
+              {blupError && (
+                <Alert variant="destructive" className="mt-3">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{blupError}</AlertDescription>
+                </Alert>
+              )}
+
+              {/* Success Message */}
+              {blupSuccess && (
+                <Alert className="mt-3 bg-green-50 border-green-200 text-green-900 dark:bg-green-950/20 dark:border-green-900 dark:text-green-100">
+                  <CheckCircle2 className="h-4 w-4" />
+                  <AlertDescription>
+                    Horse data updated successfully! Review the changes below and click "Update Horse" to save.
+                  </AlertDescription>
+                </Alert>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Basic Information */}
           <Card>
             <CardHeader>

@@ -142,6 +142,14 @@ export interface Database {
           updated_at: string
           user_id: string
           organization_id: string
+          regno: string | null
+          chip_number: string | null
+          wffs_status: number | null
+          stud_book_no: string | null
+          life_no: string | null
+          breeder: string | null
+          blup_url: string | null
+          last_blup_sync: string | null
         }
         Insert: {
           id?: string
@@ -180,6 +188,14 @@ export interface Database {
           updated_at?: string
           user_id: string
           organization_id: string
+          regno?: string | null
+          chip_number?: string | null
+          wffs_status?: number | null
+          stud_book_no?: string | null
+          life_no?: string | null
+          breeder?: string | null
+          blup_url?: string | null
+          last_blup_sync?: string | null
         }
         Update: {
           id?: string
@@ -218,6 +234,14 @@ export interface Database {
           updated_at?: string
           user_id?: string
           organization_id?: string
+          regno?: string | null
+          chip_number?: string | null
+          wffs_status?: number | null
+          stud_book_no?: string | null
+          life_no?: string | null
+          breeder?: string | null
+          blup_url?: string | null
+          last_blup_sync?: string | null
         }
       }
       horse_images: {
