@@ -88,7 +88,18 @@ const mapHorseRowToHorse = async (row: HorseRow): Promise<Horse> => {
       thumbnail: video.thumbnail || undefined
     })) || [],
     location: row.location,
-    dateAdded: row.date_added
+    dateAdded: row.date_added,
+    // BLUP fields
+    regno: row.regno || undefined,
+    chipNumber: row.chip_number || undefined,
+    wffsStatus: row.wffs_status !== null ? row.wffs_status : undefined,
+    studBookNo: row.stud_book_no || undefined,
+    lifeNo: row.life_no || undefined,
+    foreignNo: row.foreign_no || undefined,
+    owner: row.owner || undefined,
+    breeder: row.breeder || undefined,
+    blupUrl: row.blup_url || undefined,
+    lastBlupSync: row.last_blup_sync || undefined
   }
 }
 
