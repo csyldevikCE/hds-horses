@@ -3,7 +3,7 @@ import { shareService } from '@/services/shareService'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Loader2, Eye, Users, Clock, Globe, TrendingUp, MapPin } from 'lucide-react'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import {
   ComposableMap,
@@ -37,6 +37,9 @@ export const ShareLinkAnalytics = ({ shareLinkId, children }: ShareLinkAnalytics
               <TrendingUp className="h-5 w-5" />
               Link Analytics
             </DialogTitle>
+            <DialogDescription>
+              Detailed tracking and statistics for this share link
+            </DialogDescription>
           </DialogHeader>
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin" />
@@ -88,9 +91,9 @@ export const ShareLinkAnalytics = ({ shareLinkId, children }: ShareLinkAnalytics
             <TrendingUp className="h-5 w-5" />
             Link Analytics
           </DialogTitle>
-          <CardDescription>
+          <DialogDescription>
             Detailed tracking and statistics for this share link
-          </CardDescription>
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">
