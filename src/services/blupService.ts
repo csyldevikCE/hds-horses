@@ -6,9 +6,9 @@
  */
 
 // BLUP API Configuration
-// Use production API for real horse data (with www subdomain to avoid redirect)
-const BLUP_API_BASE_URL = 'https://www.blup.se/api/v1';
-const BLUP_API_TOKEN = '9f1a2b3c4d5e6f7890abc1234567890defabcdef1234567890abcdef12345678';
+// Use our Vercel serverless proxy to avoid CORS issues
+// The BLUP API doesn't include CORS headers, so direct browser requests fail
+const BLUP_PROXY_URL = '/api/blup-proxy';
 
 /**
  * BLUP API Response Types
@@ -164,9 +164,9 @@ export const fetchHorseFromBlup = async (regno: string): Promise<BlupHorseData> 
       throw new Error('Registration number is required');
     }
 
-    // Construct API URL
-    const url = `${BLUP_API_BASE_URL}/horses/${cleanRegno}?token=${BLUP_API_TOKEN}`;
-    console.log('[BLUP] Fetching from URL:', url);
+    // Construct proxy URL (our serverless function will add the token)
+    const url = `${BLUP_PROXY_URL}?regno=${cleanRegno}`;
+    console.log('[BLUP] Fetching from proxy:', url);
 
     // Fetch data from BLUP API
     const response = await fetch(url);
