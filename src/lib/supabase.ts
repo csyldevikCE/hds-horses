@@ -147,6 +147,8 @@ export interface Database {
           wffs_status: number | null
           stud_book_no: string | null
           life_no: string | null
+          foreign_no: string | null
+          owner: string | null
           breeder: string | null
           blup_url: string | null
           last_blup_sync: string | null
@@ -193,6 +195,8 @@ export interface Database {
           wffs_status?: number | null
           stud_book_no?: string | null
           life_no?: string | null
+          foreign_no?: string | null
+          owner?: string | null
           breeder?: string | null
           blup_url?: string | null
           last_blup_sync?: string | null
@@ -239,6 +243,8 @@ export interface Database {
           wffs_status?: number | null
           stud_book_no?: string | null
           life_no?: string | null
+          foreign_no?: string | null
+          owner?: string | null
           breeder?: string | null
           blup_url?: string | null
           last_blup_sync?: string | null

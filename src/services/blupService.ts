@@ -80,6 +80,8 @@ export interface BlupHorseData {
   wffsStatus?: number;
   studBookNo?: string;
   lifeNo?: string;
+  foreignNo?: string;
+  owner?: string;
   breeder?: string;
   blupUrl?: string;
   pedigree?: {
@@ -205,6 +207,8 @@ export const fetchHorseFromBlup = async (regno: string): Promise<BlupHorseData> 
       wffsStatus: data.wffs,
       studBookNo: data.stud_book_no || undefined,
       lifeNo: data.life_no || undefined,
+      foreignNo: data.foreign_no || undefined,
+      owner: data.owner || undefined,
       breeder: data.breeder || undefined,
       blupUrl: data.url || undefined,
       pedigree: transformGenealogy(data.genealogy),

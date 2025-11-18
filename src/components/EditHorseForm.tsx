@@ -75,6 +75,8 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
     wffsStatus: horse.wffsStatus?.toString() || '',
     studBookNo: horse.studBookNo || '',
     lifeNo: horse.lifeNo || '',
+    foreignNo: horse.foreignNo || '',
+    owner: horse.owner || '',
     breeder: horse.breeder || '',
     blupUrl: horse.blupUrl || '',
   });
@@ -131,6 +133,8 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
         wffsStatus: blupData.wffsStatus?.toString() || '',
         studBookNo: blupData.studBookNo || '',
         lifeNo: blupData.lifeNo || '',
+        foreignNo: blupData.foreignNo || '',
+        owner: blupData.owner || '',
         breeder: blupData.breeder || '',
         blupUrl: blupData.blupUrl || '',
       }));
@@ -163,6 +167,8 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
         wffsStatus?: number;
         studBookNo?: string;
         lifeNo?: string;
+        foreignNo?: string;
+        owner?: string;
         breeder?: string;
         blupUrl?: string;
         lastBlupSync?: string;
@@ -204,6 +210,8 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
         ...(formData.wffsStatus && { wffsStatus: parseInt(formData.wffsStatus) }),
         ...(formData.studBookNo && { studBookNo: formData.studBookNo }),
         ...(formData.lifeNo && { lifeNo: formData.lifeNo }),
+        ...(formData.foreignNo && { foreignNo: formData.foreignNo }),
+        ...(formData.owner && { owner: formData.owner }),
         ...(formData.breeder && { breeder: formData.breeder }),
         ...(formData.blupUrl && { blupUrl: formData.blupUrl }),
         ...(formData.regno && { lastBlupSync: new Date().toISOString() }),
@@ -625,7 +633,7 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <Label htmlFor="disciplines">Disciplines (comma-separated)</Label>
                 <Input
@@ -634,6 +642,98 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
                   onChange={(e) => handleInputChange('disciplines', e.target.value)}
                   placeholder="e.g., Dressage, Jumping, Trail"
                   required
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Registration Details (Optional) */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Registration Details (Optional)</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="regno">Registration Number</Label>
+                <Input
+                  id="regno"
+                  placeholder="e.g., 04204021"
+                  value={formData.regno}
+                  onChange={(e) => handleInputChange('regno', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="chipNumber">Microchip Number</Label>
+                <Input
+                  id="chipNumber"
+                  placeholder="e.g., 981100004755899"
+                  value={formData.chipNumber}
+                  onChange={(e) => handleInputChange('chipNumber', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="lifeNo">Life Number</Label>
+                <Input
+                  id="lifeNo"
+                  placeholder="e.g., 528003202010695"
+                  value={formData.lifeNo}
+                  onChange={(e) => handleInputChange('lifeNo', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="studBookNo">Studbook Number</Label>
+                <Input
+                  id="studBookNo"
+                  value={formData.studBookNo}
+                  onChange={(e) => handleInputChange('studBookNo', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="foreignNo">Foreign Registration</Label>
+                <Input
+                  id="foreignNo"
+                  placeholder="e.g., 528003202010695 Reg. A"
+                  value={formData.foreignNo}
+                  onChange={(e) => handleInputChange('foreignNo', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="wffsStatus">WFFS Status</Label>
+                <Select value={formData.wffsStatus} onValueChange={(value) => handleInputChange('wffsStatus', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="">Not tested</SelectItem>
+                    <SelectItem value="0">Clear (N/N)</SelectItem>
+                    <SelectItem value="1">Carrier (N/WFFS)</SelectItem>
+                    <SelectItem value="2">Affected (WFFS/WFFS)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="breeder">Breeder</Label>
+                <Input
+                  id="breeder"
+                  placeholder="e.g., N.V. de Nethe"
+                  value={formData.breeder}
+                  onChange={(e) => handleInputChange('breeder', e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="owner">Owner</Label>
+                <Input
+                  id="owner"
+                  placeholder="e.g., Stable Name AB"
+                  value={formData.owner}
+                  onChange={(e) => handleInputChange('owner', e.target.value)}
                 />
               </div>
             </CardContent>

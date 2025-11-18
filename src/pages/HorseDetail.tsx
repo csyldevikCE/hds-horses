@@ -253,6 +253,75 @@ const HorseDetail = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Registration Information */}
+            {(horse.regno || horse.chipNumber || horse.lifeNo || horse.studBookNo || horse.foreignNo || horse.owner || horse.breeder || horse.wffsStatus !== undefined) && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-primary" />
+                    Registration Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {horse.regno && (
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Registration Number</p>
+                        <p className="font-medium">{horse.regno}</p>
+                      </div>
+                    )}
+                    {horse.chipNumber && (
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Microchip Number</p>
+                        <p className="font-medium">{horse.chipNumber}</p>
+                      </div>
+                    )}
+                    {horse.lifeNo && (
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Life Number</p>
+                        <p className="font-medium">{horse.lifeNo}</p>
+                      </div>
+                    )}
+                    {horse.studBookNo && (
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Studbook Number</p>
+                        <p className="font-medium">{horse.studBookNo}</p>
+                      </div>
+                    )}
+                    {horse.foreignNo && (
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Foreign Registration</p>
+                        <p className="font-medium">{horse.foreignNo}</p>
+                      </div>
+                    )}
+                    {horse.owner && (
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Owner</p>
+                        <p className="font-medium">{horse.owner}</p>
+                      </div>
+                    )}
+                    {horse.breeder && (
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">Breeder</p>
+                        <p className="font-medium">{horse.breeder}</p>
+                      </div>
+                    )}
+                    {horse.wffsStatus !== undefined && horse.wffsStatus !== null && (
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">WFFS Status</p>
+                        <p className="font-medium">
+                          {horse.wffsStatus === 0 && 'Clear (N/N)'}
+                          {horse.wffsStatus === 1 && 'Carrier (N/WFFS)'}
+                          {horse.wffsStatus === 2 && 'Affected (WFFS/WFFS)'}
+                          {horse.wffsStatus !== 0 && horse.wffsStatus !== 1 && horse.wffsStatus !== 2 && 'Not tested'}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </TabsContent>
 
           {/* Gallery Tab */}

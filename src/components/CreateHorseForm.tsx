@@ -64,6 +64,8 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
     wffsStatus: '',
     studBookNo: '',
     lifeNo: '',
+    foreignNo: '',
+    owner: '',
     breeder: '',
     blupUrl: ''
   });
@@ -117,6 +119,8 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
         wffsStatus: blupData.wffsStatus?.toString() || '',
         studBookNo: blupData.studBookNo || '',
         lifeNo: blupData.lifeNo || '',
+        foreignNo: blupData.foreignNo || '',
+        owner: blupData.owner || '',
         breeder: blupData.breeder || '',
         blupUrl: blupData.blupUrl || '',
       }));
@@ -196,6 +200,8 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
       wffsStatus: '',
       studBookNo: '',
       lifeNo: '',
+      foreignNo: '',
+      owner: '',
       breeder: '',
       blupUrl: ''
     });
@@ -254,6 +260,8 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
       wffsStatus: formData.wffsStatus ? parseInt(formData.wffsStatus) : undefined,
       studBookNo: formData.studBookNo || undefined,
       lifeNo: formData.lifeNo || undefined,
+      foreignNo: formData.foreignNo || undefined,
+      owner: formData.owner || undefined,
       breeder: formData.breeder || undefined,
       blupUrl: formData.blupUrl || undefined,
       lastBlupSync: formData.regno ? new Date().toISOString() : undefined,
@@ -523,6 +531,91 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
                     placeholder="e.g., Dressage, Jumping, Trail (comma separated)"
                     value={formData.disciplines}
                     onChange={(e) => handleInputChange('disciplines', e.target.value)}
+                  />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Registration Details (Optional) */}
+          <Card>
+            <CardContent className="p-4">
+              <h3 className="font-semibold mb-4">Registration Details (Optional)</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="regno">Registration Number</Label>
+                  <Input
+                    id="regno"
+                    placeholder="e.g., 04204021"
+                    value={formData.regno}
+                    onChange={(e) => handleInputChange('regno', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="chipNumber">Microchip Number</Label>
+                  <Input
+                    id="chipNumber"
+                    placeholder="e.g., 981100004755899"
+                    value={formData.chipNumber}
+                    onChange={(e) => handleInputChange('chipNumber', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lifeNo">Life Number</Label>
+                  <Input
+                    id="lifeNo"
+                    placeholder="e.g., 528003202010695"
+                    value={formData.lifeNo}
+                    onChange={(e) => handleInputChange('lifeNo', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="studBookNo">Studbook Number</Label>
+                  <Input
+                    id="studBookNo"
+                    value={formData.studBookNo}
+                    onChange={(e) => handleInputChange('studBookNo', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="foreignNo">Foreign Registration</Label>
+                  <Input
+                    id="foreignNo"
+                    placeholder="e.g., 528003202010695 Reg. A"
+                    value={formData.foreignNo}
+                    onChange={(e) => handleInputChange('foreignNo', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="wffsStatus">WFFS Status</Label>
+                  <Select value={formData.wffsStatus} onValueChange={(value) => handleInputChange('wffsStatus', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Not tested</SelectItem>
+                      <SelectItem value="0">Clear (N/N)</SelectItem>
+                      <SelectItem value="1">Carrier (N/WFFS)</SelectItem>
+                      <SelectItem value="2">Affected (WFFS/WFFS)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="breeder">Breeder</Label>
+                  <Input
+                    id="breeder"
+                    placeholder="e.g., N.V. de Nethe"
+                    value={formData.breeder}
+                    onChange={(e) => handleInputChange('breeder', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="owner">Owner</Label>
+                  <Input
+                    id="owner"
+                    placeholder="e.g., Stable Name AB"
+                    value={formData.owner}
+                    onChange={(e) => handleInputChange('owner', e.target.value)}
                   />
                 </div>
               </div>

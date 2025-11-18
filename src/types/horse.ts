@@ -65,6 +65,8 @@ export interface Horse {
   wffsStatus?: number;
   studBookNo?: string;
   lifeNo?: string;
+  foreignNo?: string;
+  owner?: string;
   breeder?: string;
   blupUrl?: string;
   lastBlupSync?: string;
