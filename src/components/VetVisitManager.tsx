@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useToast } from '@/hooks/use-toast'
 import { Plus, Loader2, Stethoscope, Upload, X } from 'lucide-react'
@@ -195,6 +195,9 @@ export const VetVisitManager = ({ horseId }: VetVisitManagerProps) => {
             <Stethoscope className="h-5 w-5" />
             Record Veterinary Visit
           </DialogTitle>
+          <DialogDescription>
+            Document veterinary examinations, treatments, and follow-up care
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6">

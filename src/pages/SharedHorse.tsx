@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Heart, Loader2, Trophy, AlertTriangle, Lock, Eye, EyeOff, FileImage, Calendar, User, FileText, Download } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import logo from '@/assets/logo.png'
@@ -611,6 +611,9 @@ const SharedHorse = () => {
                     return xray?.body_part ? `X-Ray: ${xray.body_part}` : 'X-Ray Image'
                   })()}
                 </DialogTitle>
+                <DialogDescription>
+                  View and examine the X-ray image in detail
+                </DialogDescription>
               </DialogHeader>
               {viewingXRay && (() => {
                 const xray = horse.xrays.find(x => x.id === viewingXRay)

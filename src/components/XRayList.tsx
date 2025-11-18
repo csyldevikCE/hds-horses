@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { isAdmin } from '@/types/organization'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
@@ -278,6 +278,9 @@ export const XRayList = ({ horseId }: XRayListProps) => {
         <DialogContent onOpenAutoFocus={(e) => e.preventDefault()}>
           <DialogHeader>
             <DialogTitle>Edit X-Ray Information</DialogTitle>
+            <DialogDescription>
+              Update the date, body part, veterinarian, and clinical notes for this X-ray
+            </DialogDescription>
           </DialogHeader>
 
           <form
@@ -355,6 +358,9 @@ export const XRayList = ({ horseId }: XRayListProps) => {
                 return xray?.body_part ? `X-Ray: ${xray.body_part}` : 'X-Ray Image'
               })()}
             </DialogTitle>
+            <DialogDescription>
+              View and examine the X-ray image in detail
+            </DialogDescription>
           </DialogHeader>
           {viewingXRay && (() => {
             const xray = xrays.find(x => x.id === viewingXRay)

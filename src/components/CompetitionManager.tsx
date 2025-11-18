@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
 import { Plus, Loader2, Calendar, Trophy, Tag, Link2, FileText } from 'lucide-react'
 
@@ -115,6 +115,9 @@ export const CompetitionManager = ({ horseId }: CompetitionManagerProps) => {
             <Trophy className="h-5 w-5" />
             Add Competition Result
           </DialogTitle>
+          <DialogDescription>
+            Record show jumping, dressage, eventing, and other competition results
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">

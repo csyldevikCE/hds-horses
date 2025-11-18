@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { xrayService } from '@/services/xrayService'
 import { useAuth } from '@/contexts/AuthContext'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -172,6 +172,9 @@ export const XRayUpload = ({ horseId }: XRayUploadProps) => {
               Multiple files supported
             </span>
           </DialogTitle>
+          <DialogDescription>
+            Upload X-ray images in DICOM, JPEG, or PNG format. You can select multiple files at once
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
