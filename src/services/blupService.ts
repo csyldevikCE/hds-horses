@@ -6,7 +6,8 @@
  */
 
 // BLUP API Configuration
-const BLUP_API_BASE_URL = 'https://blup.staging.standoutapp.se/api/v1';
+// Use production API for real horse data
+const BLUP_API_BASE_URL = 'https://blup.se/api/v1';
 const BLUP_API_TOKEN = '9f1a2b3c4d5e6f7890abc1234567890defabcdef1234567890abcdef12345678';
 
 /**
@@ -165,18 +166,32 @@ export const fetchHorseFromBlup = async (regno: string): Promise<BlupHorseData> 
 
     // Construct API URL
     const url = `${BLUP_API_BASE_URL}/horses/${cleanRegno}?token=${BLUP_API_TOKEN}`;
+    console.log('[BLUP] Fetching from URL:', url);
 
     // Fetch data from BLUP API
     const response = await fetch(url);
+    console.log('[BLUP] Response status:', response.status, response.statusText);
 
     if (!response.ok) {
+      // Try to get error details from response body
+      let errorDetail = '';
+      try {
+        const errorData = await response.json();
+        errorDetail = JSON.stringify(errorData);
+        console.error('[BLUP] Error response data:', errorData);
+      } catch {
+        errorDetail = await response.text();
+        console.error('[BLUP] Error response text:', errorDetail);
+      }
+
       if (response.status === 404) {
         throw new Error(`Horse with registration number "${regno}" not found in BLUP system`);
       }
-      throw new Error(`BLUP API error: ${response.status} ${response.statusText}`);
+      throw new Error(`BLUP API error: ${response.status} ${response.statusText}${errorDetail ? ` - ${errorDetail}` : ''}`);
     }
 
     const data: BlupHorseResponse = await response.json();
+    console.log('[BLUP] Successfully fetched horse data:', data.name, data.regno);
 
     // Transform BLUP data to our format
     const transformedData: BlupHorseData = {
@@ -197,6 +212,7 @@ export const fetchHorseFromBlup = async (regno: string): Promise<BlupHorseData> 
 
     return transformedData;
   } catch (error) {
+    console.error('[BLUP] Error fetching horse data:', error);
     if (error instanceof Error) {
       throw error;
     }
