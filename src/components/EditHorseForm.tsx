@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Horse } from '@/types/horse';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -255,6 +255,9 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
             <Edit className="h-5 w-5" />
             Edit {horse.name}
           </DialogTitle>
+          <DialogDescription>
+            Update horse information, pedigree, training details, and registration data.
+          </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
