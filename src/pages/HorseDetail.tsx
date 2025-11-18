@@ -311,10 +311,10 @@ const HorseDetail = () => {
                       <div>
                         <p className="text-sm text-muted-foreground mb-1">WFFS Status</p>
                         <p className="font-medium">
-                          {horse.wffsStatus === 0 && 'Clear (N/N)'}
-                          {horse.wffsStatus === 1 && 'Carrier (N/WFFS)'}
-                          {horse.wffsStatus === 2 && 'Affected (WFFS/WFFS)'}
-                          {horse.wffsStatus !== 0 && horse.wffsStatus !== 1 && horse.wffsStatus !== 2 && 'Not tested'}
+                          {horse.wffsStatus === 0 ? 'Clear (N/N)' :
+                           horse.wffsStatus === 1 ? 'Carrier (N/WFFS)' :
+                           horse.wffsStatus === 2 ? 'Affected (WFFS/WFFS)' :
+                           'Not tested'}
                         </p>
                       </div>
                     )}
