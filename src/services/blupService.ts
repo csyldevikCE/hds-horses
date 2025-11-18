@@ -176,20 +176,27 @@ export const fetchHorseFromBlup = async (regno: string): Promise<BlupHorseData> 
 
     if (!response.ok) {
       // Try to get error details from response body
-      let errorDetail = '';
+      let errorMessage = '';
+
       try {
         const errorData = await response.json();
-        errorDetail = JSON.stringify(errorData);
         console.error('[BLUP] Error response data:', errorData);
-      } catch {
-        errorDetail = await response.text();
-        console.error('[BLUP] Error response text:', errorDetail);
+        errorMessage = errorData.message || errorData.error || '';
+      } catch (parseError) {
+        // JSON parsing failed, likely got HTML or plain text
+        console.error('[BLUP] Could not parse error response as JSON');
       }
 
       if (response.status === 404) {
-        throw new Error(`Horse with registration number "${regno}" not found in BLUP system`);
+        throw new Error(errorMessage || `Horse with registration number "${regno}" not found in BLUP system`);
       }
-      throw new Error(`BLUP API error: ${response.status} ${response.statusText}${errorDetail ? ` - ${errorDetail}` : ''}`);
+
+      if (response.status === 502 || response.status >= 500) {
+        // BLUP API is down
+        throw new Error(errorMessage || 'The BLUP system is temporarily unavailable. Please try again in a few minutes.');
+      }
+
+      throw new Error(errorMessage || `BLUP API error: ${response.status} ${response.statusText}`);
     }
 
     const data: BlupHorseResponse = await response.json();

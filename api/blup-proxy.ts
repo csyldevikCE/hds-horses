@@ -60,9 +60,20 @@ export default async function handler(
         });
       }
 
+      // Check if we got an HTML error page (Cloudflare error, API down, etc.)
+      const isHtmlError = errorText.trim().startsWith('<!DOCTYPE') || errorText.trim().startsWith('<html');
+
+      if (response.status >= 500) {
+        return res.status(502).json({
+          error: 'The BLUP system is temporarily unavailable',
+          message: 'The external BLUP API is currently experiencing issues. Please try again in a few minutes.',
+          status: response.status
+        });
+      }
+
       return res.status(response.status).json({
         error: `BLUP API error: ${response.status} ${response.statusText}`,
-        details: errorText
+        details: isHtmlError ? 'Server error (HTML response received)' : errorText
       });
     }
 
