@@ -207,7 +207,7 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
         // BLUP fields - only if they exist in formData (TypeScript type widening)
         ...(formData.regno && { regno: formData.regno }),
         ...(formData.chipNumber && { chipNumber: formData.chipNumber }),
-        ...(formData.wffsStatus && { wffsStatus: parseInt(formData.wffsStatus) }),
+        ...(formData.wffsStatus !== '' && { wffsStatus: parseInt(formData.wffsStatus) }),
         ...(formData.studBookNo && { studBookNo: formData.studBookNo }),
         ...(formData.lifeNo && { lifeNo: formData.lifeNo }),
         ...(formData.foreignNo && { foreignNo: formData.foreignNo }),
