@@ -6,8 +6,8 @@
  */
 
 // BLUP API Configuration
-// Use production API for real horse data
-const BLUP_API_BASE_URL = 'https://blup.se/api/v1';
+// Use production API for real horse data (with www subdomain to avoid redirect)
+const BLUP_API_BASE_URL = 'https://www.blup.se/api/v1';
 const BLUP_API_TOKEN = '9f1a2b3c4d5e6f7890abc1234567890defabcdef1234567890abcdef12345678';
 
 /**
