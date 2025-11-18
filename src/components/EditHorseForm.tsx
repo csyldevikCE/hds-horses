@@ -72,7 +72,7 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
     // BLUP fields
     regno: horse.regno || '',
     chipNumber: horse.chipNumber || '',
-    wffsStatus: horse.wffsStatus?.toString() || '',
+    wffsStatus: horse.wffsStatus !== undefined ? horse.wffsStatus.toString() : 'NOT_TESTED',
     studBookNo: horse.studBookNo || '',
     lifeNo: horse.lifeNo || '',
     foreignNo: horse.foreignNo || '',
@@ -130,7 +130,7 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
         // BLUP fields (these won't be in initial formData but will be added)
         regno: blupData.regno,
         chipNumber: blupData.chipNumber || '',
-        wffsStatus: blupData.wffsStatus?.toString() || '',
+        wffsStatus: blupData.wffsStatus !== undefined ? blupData.wffsStatus.toString() : 'NOT_TESTED',
         studBookNo: blupData.studBookNo || '',
         lifeNo: blupData.lifeNo || '',
         foreignNo: blupData.foreignNo || '',
@@ -207,7 +207,7 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
         // BLUP fields - only if they exist in formData (TypeScript type widening)
         ...(formData.regno && { regno: formData.regno }),
         ...(formData.chipNumber && { chipNumber: formData.chipNumber }),
-        ...(formData.wffsStatus !== '' && { wffsStatus: parseInt(formData.wffsStatus) }),
+        ...(formData.wffsStatus !== '' && formData.wffsStatus !== 'NOT_TESTED' && { wffsStatus: parseInt(formData.wffsStatus) }),
         ...(formData.studBookNo && { studBookNo: formData.studBookNo }),
         ...(formData.lifeNo && { lifeNo: formData.lifeNo }),
         ...(formData.foreignNo && { foreignNo: formData.foreignNo }),
@@ -712,7 +712,7 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Not tested</SelectItem>
+                    <SelectItem value="NOT_TESTED">Not tested</SelectItem>
                     <SelectItem value="0">Clear (N/N)</SelectItem>
                     <SelectItem value="1">Carrier (N/WFFS)</SelectItem>
                     <SelectItem value="2">Affected (WFFS/WFFS)</SelectItem>

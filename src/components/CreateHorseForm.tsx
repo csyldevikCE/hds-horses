@@ -61,7 +61,7 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
     // BLUP fields
     regno: '',
     chipNumber: '',
-    wffsStatus: '',
+    wffsStatus: 'NOT_TESTED',
     studBookNo: '',
     lifeNo: '',
     foreignNo: '',
@@ -116,7 +116,7 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
         // BLUP fields
         regno: blupData.regno,
         chipNumber: blupData.chipNumber || '',
-        wffsStatus: blupData.wffsStatus?.toString() || '',
+        wffsStatus: blupData.wffsStatus !== undefined ? blupData.wffsStatus.toString() : 'NOT_TESTED',
         studBookNo: blupData.studBookNo || '',
         lifeNo: blupData.lifeNo || '',
         foreignNo: blupData.foreignNo || '',
@@ -257,7 +257,7 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
       // BLUP fields
       regno: formData.regno || undefined,
       chipNumber: formData.chipNumber || undefined,
-      wffsStatus: formData.wffsStatus ? parseInt(formData.wffsStatus) : undefined,
+      wffsStatus: formData.wffsStatus && formData.wffsStatus !== 'NOT_TESTED' ? parseInt(formData.wffsStatus) : undefined,
       studBookNo: formData.studBookNo || undefined,
       lifeNo: formData.lifeNo || undefined,
       foreignNo: formData.foreignNo || undefined,
@@ -596,7 +596,7 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Not tested</SelectItem>
+                      <SelectItem value="NOT_TESTED">Not tested</SelectItem>
                       <SelectItem value="0">Clear (N/N)</SelectItem>
                       <SelectItem value="1">Carrier (N/WFFS)</SelectItem>
                       <SelectItem value="2">Affected (WFFS/WFFS)</SelectItem>

@@ -31,13 +31,14 @@ export default defineConfig(() => ({
     },
   },
   optimizeDeps: {
-    exclude: [
+    include: [
       '@cornerstonejs/core',
       '@cornerstonejs/tools',
-      'cornerstone-wado-image-loader',
-      '@kitware/vtk.js'
+      'cornerstone-wado-image-loader'
     ],
-    include: ['globalthis']
+    esbuildOptions: {
+      target: 'esnext'
+    }
   },
   build: {
     outDir: 'dist',
