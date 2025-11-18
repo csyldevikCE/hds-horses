@@ -34,8 +34,10 @@ export default defineConfig(() => ({
     exclude: [
       '@cornerstonejs/core',
       '@cornerstonejs/tools',
-      'cornerstone-wado-image-loader'
+      'cornerstone-wado-image-loader',
+      '@kitware/vtk.js'
     ],
+    include: ['globalthis']
   },
   build: {
     outDir: 'dist',
