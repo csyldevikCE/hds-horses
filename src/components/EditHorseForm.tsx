@@ -32,6 +32,7 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
   const [isLoadingBlup, setIsLoadingBlup] = useState(false);
   const [blupError, setBlupError] = useState<string | null>(null);
   const [blupSuccess, setBlupSuccess] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   // Initialize form data from horse prop
   const getInitialFormData = () => ({
@@ -84,16 +85,24 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
 
   const [formData, setFormData] = useState(getInitialFormData);
 
-  // Reset form when dialog opens
+  // Reset form when dialog opens (only on initial open, not on every state change)
   useEffect(() => {
-    if (open) {
+    if (open && !hasInitialized) {
+      // Only reset when dialog first opens, not on subsequent re-renders
+      console.log('[EditHorseForm] Initializing form data');
       setFormData(getInitialFormData());
       setBlupRegno('');
       setBlupError(null);
       setBlupSuccess(false);
+      setHasInitialized(true);
+    } else if (!open && hasInitialized) {
+      // Reset initialization flag when dialog closes
+      console.log('[EditHorseForm] Resetting initialization flag');
+      setHasInitialized(false);
     }
+    // Only depend on 'open' to avoid resetting when other state changes
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, hasInitialized]);
 
   const handleInputChange = (name: string, value: string | boolean) => {
     setFormData(prev => ({
@@ -263,11 +272,22 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(newOpen) => {
+      console.log('[EditHorseForm] Dialog onOpenChange called:', newOpen);
+      setOpen(newOpen);
+    }}>
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0">
+      <DialogContent
+        className="max-w-4xl max-h-[90vh] flex flex-col p-0"
+        onEscapeKeyDown={() => {
+          console.log('[EditHorseForm] Escape key pressed');
+        }}
+        onPointerDownOutside={() => {
+          console.log('[EditHorseForm] Click outside detected');
+        }}
+      >
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle className="flex items-center gap-2">
             <Edit className="h-5 w-5" />
