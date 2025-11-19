@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Horse } from '@/types/horse';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -33,7 +33,8 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
   const [blupError, setBlupError] = useState<string | null>(null);
   const [blupSuccess, setBlupSuccess] = useState(false);
 
-  const [formData, setFormData] = useState({
+  // Initialize form data from horse prop
+  const getInitialFormData = () => ({
     // Basic Information
     name: horse.name,
     breed: horse.breed,
@@ -81,6 +82,19 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
     blupUrl: horse.blupUrl || '',
   });
 
+  const [formData, setFormData] = useState(getInitialFormData);
+
+  // Reset form when dialog opens
+  useEffect(() => {
+    if (open) {
+      setFormData(getInitialFormData());
+      setBlupRegno('');
+      setBlupError(null);
+      setBlupSuccess(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   const handleInputChange = (name: string, value: string | boolean) => {
     setFormData(prev => ({
       ...prev,
@@ -104,10 +118,11 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
 
     try {
       const blupData: BlupHorseData = await blupService.fetchHorseFromBlup(blupRegno);
+      console.log('[EditHorseForm] BLUP data received:', blupData);
 
       // Update form with BLUP data
-      setFormData(prev => ({
-        ...prev,
+      const updatedFormData = {
+        ...formData,
         name: blupData.name,
         breed: blupData.breed,
         birthYear: blupData.birthYear.toString(),
@@ -127,7 +142,7 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
         damSireDam: blupData.pedigree?.damSireDam || '',
         damDamSire: blupData.pedigree?.damDamSire || '',
         damDamDam: blupData.pedigree?.damDamDam || '',
-        // BLUP fields (these won't be in initial formData but will be added)
+        // BLUP fields
         regno: blupData.regno,
         chipNumber: blupData.chipNumber || '',
         wffsStatus: blupData.wffsStatus !== undefined ? blupData.wffsStatus.toString() : 'NOT_TESTED',
@@ -137,7 +152,10 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
         owner: blupData.owner || '',
         breeder: blupData.breeder || '',
         blupUrl: blupData.blupUrl || '',
-      }));
+      };
+
+      console.log('[EditHorseForm] Setting form data to:', updatedFormData);
+      setFormData(updatedFormData);
 
       setBlupSuccess(true);
       toast({
@@ -230,7 +248,7 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
       });
       setOpen(false);
     },
-    onError: (error) => {
+    onError: () => {
       toast({
         title: "Error",
         description: "Failed to update horse. Please try again.",
