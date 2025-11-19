@@ -280,6 +280,17 @@ export const horseService = {
       training_level: updates.training?.level,
       training_disciplines: updates.training?.disciplines,
       location: updates.location,
+      // BLUP fields
+      regno: updates.regno !== undefined ? updates.regno : undefined,
+      chip_number: updates.chipNumber !== undefined ? updates.chipNumber : undefined,
+      wffs_status: updates.wffsStatus !== undefined ? updates.wffsStatus : undefined,
+      stud_book_no: updates.studBookNo !== undefined ? updates.studBookNo : undefined,
+      life_no: updates.lifeNo !== undefined ? updates.lifeNo : undefined,
+      foreign_no: updates.foreignNo !== undefined ? updates.foreignNo : undefined,
+      owner: updates.owner !== undefined ? updates.owner : undefined,
+      breeder: updates.breeder !== undefined ? updates.breeder : undefined,
+      blup_url: updates.blupUrl !== undefined ? updates.blupUrl : undefined,
+      last_blup_sync: updates.lastBlupSync !== undefined ? updates.lastBlupSync : undefined,
       updated_at: new Date().toISOString()
     }
 
