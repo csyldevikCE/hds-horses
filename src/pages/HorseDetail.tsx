@@ -22,7 +22,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, MapPin, Calendar, Info, CheckCircle, Edit, Share2, Trophy, Loader2, Ruler, DollarSign, GitBranch, Images, Syringe, Activity, Award, FileText } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Info, CheckCircle, Edit, Share2, Trophy, Loader2, Ruler, DollarSign, GitBranch, Images, Syringe, Activity, Award, FileText, ExternalLink } from 'lucide-react';
 
 const HorseDetail = () => {
   const { id } = useParams();
@@ -255,13 +255,31 @@ const HorseDetail = () => {
             </Card>
 
             {/* Registration Information */}
-            {(horse.regno || horse.chipNumber || horse.lifeNo || horse.studBookNo || horse.foreignNo || horse.owner || horse.breeder || horse.wffsStatus !== undefined) && (
+            {(horse.regno || horse.chipNumber || horse.lifeNo || horse.studBookNo || horse.foreignNo || horse.owner || horse.breeder || horse.wffsStatus !== undefined || horse.blupUrl) && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-primary" />
-                    Registration Information
-                  </CardTitle>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-primary" />
+                      Registration Information
+                    </CardTitle>
+                    {horse.blupUrl && (
+                      <a
+                        href={horse.blupUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline font-medium"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        View on BLUP
+                      </a>
+                    )}
+                  </div>
+                  {horse.lastBlupSync && (
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Last synced with BLUP: {new Date(horse.lastBlupSync).toLocaleDateString()} at {new Date(horse.lastBlupSync).toLocaleTimeString()}
+                    </p>
+                  )}
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -274,13 +292,13 @@ const HorseDetail = () => {
                     {horse.chipNumber && (
                       <div>
                         <p className="text-sm text-muted-foreground mb-1">Microchip Number</p>
-                        <p className="font-medium">{horse.chipNumber}</p>
+                        <p className="font-medium font-mono text-sm">{horse.chipNumber}</p>
                       </div>
                     )}
                     {horse.lifeNo && (
                       <div>
                         <p className="text-sm text-muted-foreground mb-1">Life Number</p>
-                        <p className="font-medium">{horse.lifeNo}</p>
+                        <p className="font-medium font-mono text-sm">{horse.lifeNo}</p>
                       </div>
                     )}
                     {horse.studBookNo && (
@@ -310,12 +328,12 @@ const HorseDetail = () => {
                     {horse.wffsStatus !== undefined && horse.wffsStatus !== null && (
                       <div>
                         <p className="text-sm text-muted-foreground mb-1">WFFS Status</p>
-                        <p className="font-medium">
+                        <Badge variant={horse.wffsStatus === 0 ? 'default' : horse.wffsStatus === 1 ? 'secondary' : 'destructive'} className="font-medium">
                           {horse.wffsStatus === 0 ? 'Clear (N/N)' :
                            horse.wffsStatus === 1 ? 'Carrier (N/WFFS)' :
                            horse.wffsStatus === 2 ? 'Affected (WFFS/WFFS)' :
                            'Not tested'}
-                        </p>
+                        </Badge>
                       </div>
                     )}
                   </div>
