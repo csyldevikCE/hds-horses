@@ -112,7 +112,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Wrapper with timeout to prevent hanging
   const fetchOrganizationDataWithTimeout = async (userId: string) => {
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Organization fetch timeout')), 15000) // 15 seconds
+      setTimeout(() => reject(new Error('Organization fetch timeout')), 30000) // 30 seconds
     })
 
     try {
@@ -121,11 +121,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         timeoutPromise
       ])
     } catch (error: any) {
-      console.error('Organization fetch timed out')
-      // Clear org data but DON'T prevent app from loading
-      setOrganization(null)
-      setOrganizationUser(null)
-      setUserRole(null)
+      console.warn('Organization fetch timed out - retrying once')
+      // Try one more time before giving up
+      try {
+        await fetchOrganizationData(userId)
+      } catch (retryError) {
+        console.error('Organization fetch failed after retry:', retryError)
+        // Don't clear org data if it already exists (prevents loss during token refresh)
+        // Only clear if we don't have organization data yet
+        if (!organization) {
+          setOrganization(null)
+          setOrganizationUser(null)
+          setUserRole(null)
+        }
+      }
     }
   }
 
@@ -192,6 +201,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } else if (event === 'TOKEN_REFRESHED') {
         setSession(session)
         setUser(session?.user ?? null)
+        // Re-fetch organization data after token refresh to ensure context stays valid
+        if (session?.user) {
+          await fetchOrganizationDataWithTimeout(session.user.id)
+        }
       }
     })
 
