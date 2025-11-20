@@ -135,22 +135,22 @@ export const HorseGallery = ({ horse }: HorseGalleryProps) => {
             
             {/* Main Video Player */}
             <Card className="overflow-hidden">
-              <div className="relative bg-black">
+              <div className="relative bg-black aspect-video">
                 <video
                   key={horse.videos[selectedVideoIndex]?.id}
                   controls
                   controlsList="nodownload"
-                  className="w-full max-h-[500px] md:max-h-[600px] object-contain mx-auto"
+                  className="w-full h-full object-contain"
                   poster={horse.videos[selectedVideoIndex]?.thumbnail}
                   preload="metadata"
                 >
                   <source src={horse.videos[selectedVideoIndex]?.url} type="video/mp4" />
                   Your browser does not support the video tag.
                 </video>
-                
+
                 {/* Video Counter */}
                 {horse.videos.length > 1 && (
-                  <div className="absolute bottom-2 right-2 bg-background/80 px-2 py-1 rounded text-sm">
+                  <div className="absolute bottom-2 right-2 bg-background/80 px-2 py-1 rounded text-sm pointer-events-none">
                     {selectedVideoIndex + 1} / {horse.videos.length}
                   </div>
                 )}
