@@ -6,25 +6,37 @@ type HorseRow = Database['public']['Tables']['horses']['Row']
 type HorseInsert = Database['public']['Tables']['horses']['Insert']
 type HorseUpdate = Database['public']['Tables']['horses']['Update']
 
+// Helper to add timeout to promises
+const withTimeout = <T>(promise: Promise<T>, ms: number, errorMsg: string): Promise<T> => {
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error(errorMsg)), ms)
+  )
+  return Promise.race([promise, timeout])
+}
+
 // Convert database row to Horse interface
 const mapHorseRowToHorse = async (row: HorseRow): Promise<Horse> => {
-  // Fetch related data
-  const [imagesResult, videosResult, competitionsResult] = await Promise.all([
-    supabase
-      .from('horse_images')
-      .select('*')
-      .eq('horse_id', row.id)
-      .order('is_primary', { ascending: false }),
-    supabase
-      .from('horse_videos')
-      .select('*')
-      .eq('horse_id', row.id),
-    supabase
-      .from('competitions')
-      .select('*')
-      .eq('horse_id', row.id)
-      .order('date', { ascending: false })
-  ])
+  // Fetch related data with timeout protection (10 seconds)
+  const [imagesResult, videosResult, competitionsResult] = await withTimeout(
+    Promise.all([
+      supabase
+        .from('horse_images')
+        .select('*')
+        .eq('horse_id', row.id)
+        .order('is_primary', { ascending: false }),
+      supabase
+        .from('horse_videos')
+        .select('*')
+        .eq('horse_id', row.id),
+      supabase
+        .from('competitions')
+        .select('*')
+        .eq('horse_id', row.id)
+        .order('date', { ascending: false })
+    ]),
+    10000,
+    'Timeout fetching horse related data'
+  )
 
 
 
@@ -334,15 +346,51 @@ export const horseService = {
     return mapHorseRowToHorse(data)
   },
 
-  // Delete a horse
+  // Delete a horse and all related data
   async deleteHorse(id: string): Promise<void> {
-    // Delete related records first
+    // First, get all vet_visits for this horse to delete their documents
+    const { data: vetVisits } = await supabase
+      .from('vet_visits')
+      .select('id')
+      .eq('horse_id', id)
+
+    // Delete vet_visit_documents for all vet visits of this horse
+    if (vetVisits && vetVisits.length > 0) {
+      const vetVisitIds = vetVisits.map(v => v.id)
+      await supabase
+        .from('vet_visit_documents')
+        .delete()
+        .in('vet_visit_id', vetVisitIds)
+    }
+
+    // Get all share_links to delete their views
+    const { data: shareLinks } = await supabase
+      .from('share_links')
+      .select('id')
+      .eq('horse_id', id)
+
+    // Delete share_link_views for all share links of this horse
+    if (shareLinks && shareLinks.length > 0) {
+      const shareLinkIds = shareLinks.map(s => s.id)
+      await supabase
+        .from('share_link_views')
+        .delete()
+        .in('share_link_id', shareLinkIds)
+    }
+
+    // Delete all directly related records in parallel
     await Promise.all([
       supabase.from('horse_images').delete().eq('horse_id', id),
       supabase.from('horse_videos').delete().eq('horse_id', id),
-      supabase.from('competitions').delete().eq('horse_id', id)
+      supabase.from('competitions').delete().eq('horse_id', id),
+      supabase.from('vaccinations').delete().eq('horse_id', id),
+      supabase.from('vet_visits').delete().eq('horse_id', id),
+      supabase.from('horse_xrays').delete().eq('horse_id', id),
+      supabase.from('veterinary_documents').delete().eq('horse_id', id),
+      supabase.from('share_links').delete().eq('horse_id', id),
     ])
 
+    // Finally delete the horse itself
     const { error } = await supabase
       .from('horses')
       .delete()
@@ -353,7 +401,7 @@ export const horseService = {
 
   // Add image to horse
   async addHorseImage(horseId: string, image: { url: string; caption?: string; isPrimary: boolean }): Promise<void> {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('horse_images')
       .insert({
         horse_id: horseId,
@@ -361,7 +409,6 @@ export const horseService = {
         caption: image.caption || null,
         is_primary: image.isPrimary
       })
-      .select()
 
     if (error) throw error
   },

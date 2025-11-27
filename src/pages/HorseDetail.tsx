@@ -33,6 +33,8 @@ const HorseDetail = () => {
     queryKey: ['horse', id],
     queryFn: () => horseService.getHorse(id!),
     enabled: !!id,
+    retry: 2,
+    staleTime: 30000, // 30 seconds
   });
 
   if (isLoading) {

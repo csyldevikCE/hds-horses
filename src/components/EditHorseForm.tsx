@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Horse } from '@/types/horse';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,7 +16,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { horseService } from '@/services/horseService';
 import { blupService, BlupHorseData } from '@/services/blupService';
-import { Edit, Loader2, Download, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Edit, Loader2, Download, AlertCircle, CheckCircle2, Trash2 } from 'lucide-react';
 
 interface EditHorseFormProps {
   horse: Horse;
@@ -23,9 +25,11 @@ interface EditHorseFormProps {
 
 export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
   const [open, setOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const { toast } = useToast();
   const { organization } = useAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // BLUP Import State
   const [blupRegno, setBlupRegno] = useState('');
@@ -266,9 +270,36 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
     }
   });
 
+  // Delete horse mutation
+  const deleteHorseMutation = useMutation({
+    mutationFn: () => horseService.deleteHorse(horse.id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['horses', organization?.id] });
+      toast({
+        title: "Horse Deleted",
+        description: `${horse.name} has been permanently deleted.`,
+      });
+      setOpen(false);
+      setShowDeleteConfirm(false);
+      navigate('/');
+    },
+    onError: (error) => {
+      console.error('Error deleting horse:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete horse. Please try again.",
+        variant: "destructive",
+      });
+    }
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateHorseMutation.mutate();
+  };
+
+  const handleDelete = () => {
+    deleteHorseMutation.mutate();
   };
 
   return (
@@ -793,24 +824,72 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
             </CardContent>
           </Card>
 
-          <div className="flex justify-end gap-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
+          <div className="flex justify-between gap-4 pt-4 border-t">
+            <Button
+              type="button"
+              variant="destructive"
+              onClick={() => setShowDeleteConfirm(true)}
+              disabled={deleteHorseMutation.isPending}
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Horse
             </Button>
-            <Button type="submit" disabled={updateHorseMutation.isPending}>
-              {updateHorseMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                'Update Horse'
-              )}
-            </Button>
+            <div className="flex gap-2">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updateHorseMutation.isPending}>
+                {updateHorseMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  'Update Horse'
+                )}
+              </Button>
+            </div>
           </div>
           </div>
         </form>
       </DialogContent>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure you want to delete {horse.name}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the horse and all associated data including:
+              <ul className="list-disc list-inside mt-2 space-y-1">
+                <li>Images and videos</li>
+                <li>Competition results</li>
+                <li>Vaccination records</li>
+                <li>Veterinary visits and documents</li>
+                <li>X-ray records</li>
+                <li>Share links</li>
+              </ul>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteHorseMutation.isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleteHorseMutation.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteHorseMutation.isPending ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete Horse'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 };
