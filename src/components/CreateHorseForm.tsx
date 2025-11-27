@@ -145,7 +145,7 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
   };
 
   const createHorseMutation = useMutation({
-    mutationFn: (horseData: any) => horseService.createHorse(horseData, user?.id || ''),
+    mutationFn: (horseData: any) => horseService.createHorse(horseData, user?.id || '', organization?.id || ''),
     onSuccess: () => {
       // Invalidate horses list with CORRECT organization ID
       queryClient.invalidateQueries({ queryKey: ['horses', organization?.id] });
@@ -157,9 +157,10 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
       resetForm();
     },
     onError: (error) => {
+      console.error('Error creating horse:', error);
       toast({
         title: "Error creating horse",
-        description: "There was an error creating the horse. Please try again.",
+        description: error instanceof Error ? error.message : "There was an error creating the horse. Please try again.",
         variant: "destructive",
       });
     },
@@ -233,6 +234,11 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
       price: formData.price ? parseFloat(formData.price) : undefined,
       status: formData.status as 'Available' | 'Sold' | 'Reserved' | 'Not for Sale',
       description: formData.description,
+      health: {
+        vaccinations: false,
+        coggins: false,
+        lastVetCheck: new Date().toISOString().split('T')[0]
+      },
       pedigree: formData.sire || formData.dam ? {
         sire: formData.sire,
         dam: formData.dam,
