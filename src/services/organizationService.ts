@@ -1,5 +1,5 @@
 import { supabase } from '@/lib/supabase';
-import { Organization, OrganizationUser, UserWithRole, UserRole } from '@/types/organization';
+import { Organization, OrganizationUser, OrganizationContact, UserWithRole, UserRole } from '@/types/organization';
 import { createInvitation } from './invitationService';
 
 /**
@@ -20,16 +20,16 @@ export const getOrganizationById = async (organizationId: string): Promise<Organ
 };
 
 /**
- * Update organization details (name)
+ * Update organization details
  */
 export const updateOrganization = async (
   organizationId: string,
-  updates: { name: string }
+  updates: Partial<Omit<Organization, 'id' | 'created_by' | 'created_at' | 'updated_at'>>
 ): Promise<Organization> => {
   const { data, error } = await supabase
     .from('organizations')
     .update({
-      name: updates.name,
+      ...updates,
       updated_at: new Date().toISOString(),
     })
     .eq('id', organizationId)
@@ -328,4 +328,137 @@ export const getUserMembership = async (
   }
 
   return data;
+};
+
+// =============================================================================
+// ORGANIZATION CONTACTS
+// =============================================================================
+
+/**
+ * Get organization contacts
+ */
+export const getOrganizationContacts = async (
+  organizationId: string
+): Promise<OrganizationContact[]> => {
+  const { data, error } = await supabase
+    .from('organization_contacts')
+    .select('*')
+    .eq('organization_id', organizationId)
+    .order('is_primary', { ascending: false })
+    .order('name', { ascending: true });
+
+  if (error) {
+    throw new Error(`Failed to fetch organization contacts: ${error.message}`);
+  }
+
+  return data || [];
+};
+
+/**
+ * Add a contact person to organization
+ */
+export const addOrganizationContact = async (
+  organizationId: string,
+  contact: Omit<OrganizationContact, 'id' | 'organization_id' | 'created_at' | 'updated_at'>
+): Promise<OrganizationContact> => {
+  // If this is set as primary, unset other primary contacts first
+  if (contact.is_primary) {
+    await supabase
+      .from('organization_contacts')
+      .update({ is_primary: false })
+      .eq('organization_id', organizationId);
+  }
+
+  const { data, error } = await supabase
+    .from('organization_contacts')
+    .insert({
+      organization_id: organizationId,
+      name: contact.name,
+      title: contact.title || null,
+      email: contact.email || null,
+      phone: contact.phone || null,
+      is_primary: contact.is_primary
+    })
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to add organization contact: ${error.message}`);
+  }
+
+  return data;
+};
+
+/**
+ * Update a contact person
+ */
+export const updateOrganizationContact = async (
+  contactId: string,
+  organizationId: string,
+  updates: Partial<Omit<OrganizationContact, 'id' | 'organization_id' | 'created_at' | 'updated_at'>>
+): Promise<OrganizationContact> => {
+  // If setting as primary, unset other primary contacts first
+  if (updates.is_primary) {
+    await supabase
+      .from('organization_contacts')
+      .update({ is_primary: false })
+      .eq('organization_id', organizationId)
+      .neq('id', contactId);
+  }
+
+  const { data, error } = await supabase
+    .from('organization_contacts')
+    .update(updates)
+    .eq('id', contactId)
+    .select()
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to update organization contact: ${error.message}`);
+  }
+
+  return data;
+};
+
+/**
+ * Delete a contact person
+ */
+export const deleteOrganizationContact = async (contactId: string): Promise<void> => {
+  const { error } = await supabase
+    .from('organization_contacts')
+    .delete()
+    .eq('id', contactId);
+
+  if (error) {
+    throw new Error(`Failed to delete organization contact: ${error.message}`);
+  }
+};
+
+/**
+ * Get organization with contacts (for shared links)
+ */
+export const getOrganizationWithContacts = async (
+  organizationId: string
+): Promise<{ organization: Organization; contacts: OrganizationContact[] } | null> => {
+  const [orgResult, contactsResult] = await Promise.all([
+    supabase
+      .from('organizations')
+      .select('*')
+      .eq('id', organizationId)
+      .single(),
+    supabase
+      .from('organization_contacts')
+      .select('*')
+      .eq('organization_id', organizationId)
+      .order('is_primary', { ascending: false })
+  ]);
+
+  if (orgResult.error) {
+    return null;
+  }
+
+  return {
+    organization: orgResult.data,
+    contacts: contactsResult.data || []
+  };
 };

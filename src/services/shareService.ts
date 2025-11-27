@@ -1,6 +1,8 @@
 import { supabase } from '@/lib/supabase'
 import { horseService } from './horseService'
+import { getOrganizationWithContacts } from './organizationService'
 import { Horse } from '@/types/horse'
+import { Organization, OrganizationContact } from '@/types/organization'
 import bcrypt from 'bcryptjs'
 
 export type ShareLinkType = 'standard' | 'one_time' | 'password_protected'
@@ -99,6 +101,28 @@ export interface SharedHorseData {
     veterinarian_name: string | null
     notes: string | null
     created_at: string
+  }[]
+  organization?: {
+    name: string
+    email?: string
+    phone?: string
+    website?: string
+    address_line1?: string
+    address_line2?: string
+    city?: string
+    state?: string
+    postal_code?: string
+    country?: string
+    description?: string
+    logo_url?: string
+  }
+  contacts?: {
+    id: string
+    name: string
+    title?: string
+    email?: string
+    phone?: string
+    is_primary: boolean
   }[]
 }
 
@@ -378,6 +402,33 @@ export const shareService = {
 
         sharedData.xrays = xraysWithSignedUrls
       }
+    }
+
+    // Always include organization contact information on shared links
+    const orgData = await getOrganizationWithContacts(shareLink.organization_id)
+    if (orgData) {
+      sharedData.organization = {
+        name: orgData.organization.name,
+        email: orgData.organization.email || undefined,
+        phone: orgData.organization.phone || undefined,
+        website: orgData.organization.website || undefined,
+        address_line1: orgData.organization.address_line1 || undefined,
+        address_line2: orgData.organization.address_line2 || undefined,
+        city: orgData.organization.city || undefined,
+        state: orgData.organization.state || undefined,
+        postal_code: orgData.organization.postal_code || undefined,
+        country: orgData.organization.country || undefined,
+        description: orgData.organization.description || undefined,
+        logo_url: orgData.organization.logo_url || undefined,
+      }
+      sharedData.contacts = orgData.contacts.map(c => ({
+        id: c.id,
+        name: c.name,
+        title: c.title || undefined,
+        email: c.email || undefined,
+        phone: c.phone || undefined,
+        is_primary: c.is_primary
+      }))
     }
 
     return sharedData

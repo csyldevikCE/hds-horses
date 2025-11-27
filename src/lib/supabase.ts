@@ -56,6 +56,17 @@ export interface Database {
           created_by: string
           created_at: string
           updated_at: string
+          email: string | null
+          phone: string | null
+          website: string | null
+          address_line1: string | null
+          address_line2: string | null
+          city: string | null
+          state: string | null
+          postal_code: string | null
+          country: string | null
+          description: string | null
+          logo_url: string | null
         }
         Insert: {
           id?: string
@@ -63,11 +74,68 @@ export interface Database {
           created_by: string
           created_at?: string
           updated_at?: string
+          email?: string | null
+          phone?: string | null
+          website?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          state?: string | null
+          postal_code?: string | null
+          country?: string | null
+          description?: string | null
+          logo_url?: string | null
         }
         Update: {
           id?: string
           name?: string
           created_by?: string
+          created_at?: string
+          updated_at?: string
+          email?: string | null
+          phone?: string | null
+          website?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          city?: string | null
+          state?: string | null
+          postal_code?: string | null
+          country?: string | null
+          description?: string | null
+          logo_url?: string | null
+        }
+      }
+      organization_contacts: {
+        Row: {
+          id: string
+          organization_id: string
+          name: string
+          title: string | null
+          email: string | null
+          phone: string | null
+          is_primary: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          organization_id: string
+          name: string
+          title?: string | null
+          email?: string | null
+          phone?: string | null
+          is_primary?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          organization_id?: string
+          name?: string
+          title?: string | null
+          email?: string | null
+          phone?: string | null
+          is_primary?: boolean
           created_at?: string
           updated_at?: string
         }

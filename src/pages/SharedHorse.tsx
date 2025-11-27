@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Heart, Loader2, Trophy, AlertTriangle, Lock, Eye, EyeOff, FileImage, Calendar, User, FileText, Download } from 'lucide-react'
+import { Heart, Loader2, Trophy, AlertTriangle, Lock, Eye, EyeOff, FileImage, Calendar, User, FileText, Download, Building2, Mail, Phone, Globe, MapPin, UserCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import logo from '@/assets/logo.png'
 
@@ -599,6 +599,120 @@ const SharedHorse = () => {
               </Card>
             )}
         </div>
+
+        {/* Contact Information */}
+        {(horse.organization || (horse.contacts && horse.contacts.length > 0)) && (
+          <div className="mt-8 pt-8 border-t">
+            <h2 className="text-2xl font-bold mb-6 text-center">Contact Information</h2>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {/* Organization Info */}
+              {horse.organization && (
+                <Card className="shadow-card">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Building2 className="h-5 w-5" />
+                      {horse.organization.name}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {horse.organization.description && (
+                      <p className="text-sm text-muted-foreground">{horse.organization.description}</p>
+                    )}
+
+                    {horse.organization.email && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <a href={`mailto:${horse.organization.email}`} className="text-blue-600 hover:underline">
+                          {horse.organization.email}
+                        </a>
+                      </div>
+                    )}
+
+                    {horse.organization.phone && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <a href={`tel:${horse.organization.phone}`} className="text-blue-600 hover:underline">
+                          {horse.organization.phone}
+                        </a>
+                      </div>
+                    )}
+
+                    {horse.organization.website && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Globe className="h-4 w-4 text-muted-foreground" />
+                        <a
+                          href={horse.organization.website}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          {horse.organization.website.replace(/^https?:\/\//, '')}
+                        </a>
+                      </div>
+                    )}
+
+                    {(horse.organization.address_line1 || horse.organization.city) && (
+                      <div className="flex items-start gap-2 text-sm">
+                        <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+                        <div>
+                          {horse.organization.address_line1 && <div>{horse.organization.address_line1}</div>}
+                          {horse.organization.address_line2 && <div>{horse.organization.address_line2}</div>}
+                          <div>
+                            {[
+                              horse.organization.city,
+                              horse.organization.state,
+                              horse.organization.postal_code
+                            ].filter(Boolean).join(', ')}
+                          </div>
+                          {horse.organization.country && <div>{horse.organization.country}</div>}
+                        </div>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Contact Persons */}
+              {horse.contacts && horse.contacts.length > 0 && horse.contacts.map((contact) => (
+                <Card key={contact.id} className="shadow-card">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <UserCircle className="h-5 w-5" />
+                      {contact.name}
+                      {contact.is_primary && (
+                        <Badge className="ml-2 bg-green-100 text-green-700 hover:bg-green-100">
+                          Primary
+                        </Badge>
+                      )}
+                    </CardTitle>
+                    {contact.title && (
+                      <p className="text-sm text-muted-foreground">{contact.title}</p>
+                    )}
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {contact.email && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mail className="h-4 w-4 text-muted-foreground" />
+                        <a href={`mailto:${contact.email}`} className="text-blue-600 hover:underline">
+                          {contact.email}
+                        </a>
+                      </div>
+                    )}
+
+                    {contact.phone && (
+                      <div className="flex items-center gap-2 text-sm">
+                        <Phone className="h-4 w-4 text-muted-foreground" />
+                        <a href={`tel:${contact.phone}`} className="text-blue-600 hover:underline">
+                          {contact.phone}
+                        </a>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* X-Ray Viewer Dialog */}
         {horse.xrays && horse.xrays.length > 0 && (

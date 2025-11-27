@@ -8,6 +8,30 @@ export interface Organization {
   created_by: string;
   created_at: string;
   updated_at: string;
+  // Contact information
+  email?: string;
+  phone?: string;
+  website?: string;
+  address_line1?: string;
+  address_line2?: string;
+  city?: string;
+  state?: string;
+  postal_code?: string;
+  country?: string;
+  description?: string;
+  logo_url?: string;
+}
+
+export interface OrganizationContact {
+  id: string;
+  organization_id: string;
+  name: string;
+  title?: string;
+  email?: string;
+  phone?: string;
+  is_primary: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface OrganizationUser {
