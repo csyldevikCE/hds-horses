@@ -29,7 +29,7 @@ const HorseDetail = () => {
   const { userRole } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
 
-  const { data: horse, isLoading, isFetching, error } = useQuery({
+  const { data: horse, isLoading, error } = useQuery({
     queryKey: ['horse', id],
     queryFn: () => horseService.getHorse(id!),
     enabled: !!id,
@@ -37,10 +37,10 @@ const HorseDetail = () => {
     staleTime: 30000, // 30 seconds
   });
 
-  // Only show loading if query is enabled and actively fetching
-  const isActuallyLoading = !!id && (isLoading || isFetching) && !horse;
+  // Only show loading on initial load (no cached data yet), not on background refetches
+  const isInitialLoading = isLoading && !horse;
 
-  if (isActuallyLoading) {
+  if (isInitialLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">

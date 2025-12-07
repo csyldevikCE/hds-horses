@@ -22,15 +22,16 @@ const Index = () => {
 
   const { user, organization, userRole, organizationLoading } = useAuth();
 
-  const { data: horses = [], isLoading, isFetching, error } = useQuery({
+  const { data: horses = [], isLoading, error } = useQuery({
     queryKey: ['horses', organization?.id],
     queryFn: () => horseService.getHorses(organization?.id || ''),
     enabled: !!organization?.id,
   });
 
-  // Only show loading if we're actually fetching (query is enabled and running)
-  // isLoading is true even for disabled queries, so we check isFetching instead
-  const isActuallyLoading = !!organization?.id && (isLoading || isFetching);
+  // Only show loading on initial load, not on background refetches
+  // isLoading is true only when there's no cached data AND query is fetching
+  // This prevents showing spinner on tab focus refetches
+  const isInitialLoading = isLoading && !error;
 
   const breeds = ['all', ...new Set(horses.map(horse => horse.breed))];
   const statuses = ['all', ...new Set(horses.map(horse => horse.status))];
@@ -246,7 +247,7 @@ const Index = () => {
         </Card>
 
         {/* Horse Grid */}
-        {(isActuallyLoading || organizationLoading) ? (
+        {(isInitialLoading || organizationLoading) ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-16 md:py-24">
               <Loader2 className="h-12 w-12 md:h-16 md:w-16 text-primary mb-4 animate-spin" />
