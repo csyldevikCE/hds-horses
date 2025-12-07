@@ -20,13 +20,17 @@ const Index = () => {
   const [selectedAge, setSelectedAge] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
 
-  const { user, organization, userRole } = useAuth();
+  const { user, organization, userRole, organizationLoading } = useAuth();
 
-  const { data: horses = [], isLoading, error } = useQuery({
+  const { data: horses = [], isLoading, isFetching, error } = useQuery({
     queryKey: ['horses', organization?.id],
     queryFn: () => horseService.getHorses(organization?.id || ''),
     enabled: !!organization?.id,
   });
+
+  // Only show loading if we're actually fetching (query is enabled and running)
+  // isLoading is true even for disabled queries, so we check isFetching instead
+  const isActuallyLoading = !!organization?.id && (isLoading || isFetching);
 
   const breeds = ['all', ...new Set(horses.map(horse => horse.breed))];
   const statuses = ['all', ...new Set(horses.map(horse => horse.status))];
@@ -78,8 +82,8 @@ const Index = () => {
       </header>
 
       <div className="container mx-auto px-4 py-6 md:py-8 space-y-6">
-        {/* No Organization Warning */}
-        {!organization && (
+        {/* No Organization Warning - only show after loading is complete */}
+        {!organizationLoading && !organization && (
           <Card className="border-yellow-200 bg-yellow-50">
             <CardContent className="p-4 md:p-6">
               <h3 className="font-semibold text-yellow-900 mb-2">No Organization Found</h3>
@@ -242,11 +246,13 @@ const Index = () => {
         </Card>
 
         {/* Horse Grid */}
-        {isLoading ? (
+        {(isActuallyLoading || organizationLoading) ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-16 md:py-24">
               <Loader2 className="h-12 w-12 md:h-16 md:w-16 text-primary mb-4 animate-spin" />
-              <h3 className="text-lg md:text-xl font-semibold mb-2">Loading horses...</h3>
+              <h3 className="text-lg md:text-xl font-semibold mb-2">
+                {organizationLoading ? 'Loading your stable...' : 'Loading horses...'}
+              </h3>
               <p className="text-sm text-muted-foreground">Please wait</p>
             </CardContent>
           </Card>

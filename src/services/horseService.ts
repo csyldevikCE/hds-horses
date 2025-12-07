@@ -7,36 +7,51 @@ type HorseInsert = Database['public']['Tables']['horses']['Insert']
 type HorseUpdate = Database['public']['Tables']['horses']['Update']
 
 // Helper to add timeout to promises
-const withTimeout = <T>(promise: Promise<T>, ms: number, errorMsg: string): Promise<T> => {
+const withTimeout = <T>(promise: PromiseLike<T>, ms: number, errorMsg: string): Promise<T> => {
   const timeout = new Promise<never>((_, reject) =>
     setTimeout(() => reject(new Error(errorMsg)), ms)
   )
-  return Promise.race([promise, timeout])
+  return Promise.race([Promise.resolve(promise), timeout])
 }
 
 // Convert database row to Horse interface
 const mapHorseRowToHorse = async (row: HorseRow): Promise<Horse> => {
-  // Fetch related data with timeout protection (10 seconds)
-  const [imagesResult, videosResult, competitionsResult] = await withTimeout(
-    Promise.all([
-      supabase
-        .from('horse_images')
-        .select('*')
-        .eq('horse_id', row.id)
-        .order('is_primary', { ascending: false }),
-      supabase
-        .from('horse_videos')
-        .select('*')
-        .eq('horse_id', row.id),
-      supabase
-        .from('competitions')
-        .select('*')
-        .eq('horse_id', row.id)
-        .order('date', { ascending: false })
-    ]),
-    10000,
-    'Timeout fetching horse related data'
-  )
+  // Fetch related data with timeout protection (8 seconds)
+  // Use Promise.allSettled to prevent one failure from blocking others
+  let imagesResult: { data: any[] | null; error: any } = { data: [], error: null }
+  let videosResult: { data: any[] | null; error: any } = { data: [], error: null }
+  let competitionsResult: { data: any[] | null; error: any } = { data: [], error: null }
+
+  try {
+    const results = await withTimeout(
+      Promise.allSettled([
+        supabase
+          .from('horse_images')
+          .select('*')
+          .eq('horse_id', row.id)
+          .order('is_primary', { ascending: false }),
+        supabase
+          .from('horse_videos')
+          .select('*')
+          .eq('horse_id', row.id),
+        supabase
+          .from('competitions')
+          .select('*')
+          .eq('horse_id', row.id)
+          .order('date', { ascending: false })
+      ]),
+      8000,
+      'Timeout fetching horse related data'
+    )
+
+    // Extract results safely
+    if (results[0].status === 'fulfilled') imagesResult = results[0].value
+    if (results[1].status === 'fulfilled') videosResult = results[1].value
+    if (results[2].status === 'fulfilled') competitionsResult = results[2].value
+  } catch (error) {
+    // On timeout or error, continue with empty arrays - horse data is still valid
+    console.warn(`Failed to fetch related data for horse ${row.id}:`, error)
+  }
 
 
 
@@ -161,25 +176,91 @@ const mapHorseToInsert = (
 export const horseService = {
   // Get all horses for the organization (RLS will enforce access)
   async getHorses(organizationId: string): Promise<Horse[]> {
-    const { data, error } = await supabase
+    // Add timeout to the main query (15 seconds)
+    const queryPromise = supabase
       .from('horses')
       .select('*')
       .eq('organization_id', organizationId)
       .order('updated_at', { ascending: false })
+      .then(result => result)
+
+    const { data, error } = await withTimeout(
+      queryPromise,
+      15000,
+      'Timeout fetching horses list'
+    )
 
     if (error) throw error
+    if (!data || data.length === 0) return []
 
-    const horses = await Promise.all(data.map(mapHorseRowToHorse))
+    // Use Promise.allSettled to prevent one horse from blocking the entire list
+    // Process in smaller batches to avoid overwhelming the connection
+    const BATCH_SIZE = 5
+    const horses: Horse[] = []
+
+    for (let i = 0; i < data.length; i += BATCH_SIZE) {
+      const batch = data.slice(i, i + BATCH_SIZE)
+      const results = await Promise.allSettled(batch.map(mapHorseRowToHorse))
+
+      for (let j = 0; j < results.length; j++) {
+        const result = results[j]
+        if (result.status === 'fulfilled') {
+          horses.push(result.value)
+        } else {
+          // If mapping fails, create a minimal horse object from the row data
+          console.warn(`Failed to fully load horse ${batch[j].id}:`, result.reason)
+          const row = batch[j]
+          horses.push({
+            id: row.id,
+            name: row.name,
+            breed: row.breed,
+            age: calculateAge(row.birth_year),
+            birthYear: row.birth_year,
+            color: row.color,
+            gender: row.gender,
+            height: row.height,
+            weight: row.weight || undefined,
+            price: row.price || undefined,
+            status: row.status,
+            description: row.description,
+            pedigree: undefined,
+            health: {
+              vaccinations: row.health_vaccinations,
+              coggins: row.health_coggins,
+              lastVetCheck: row.health_last_vet_check
+            },
+            training: {
+              level: row.training_level,
+              disciplines: row.training_disciplines
+            },
+            competitions: [],
+            images: [],
+            videos: [],
+            location: row.location,
+            dateAdded: row.date_added,
+          })
+        }
+      }
+    }
+
     return horses
   },
 
   // Get a single horse by ID
   async getHorse(id: string): Promise<Horse | null> {
-    const { data, error } = await supabase
+    // Add timeout to the query (10 seconds)
+    const queryPromise = supabase
       .from('horses')
       .select('*')
       .eq('id', id)
       .single()
+      .then(result => result)
+
+    const { data, error } = await withTimeout(
+      queryPromise,
+      10000,
+      'Timeout fetching horse details'
+    )
 
     if (error) {
       if (error.code === 'PGRST116') return null // No rows returned

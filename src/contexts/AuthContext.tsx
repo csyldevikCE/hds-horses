@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react'
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
 import { User, Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { Organization, OrganizationUser, UserRole } from '@/types/organization'
@@ -10,6 +10,7 @@ interface AuthContextType {
   organizationUser: OrganizationUser | null
   userRole: UserRole | null
   loading: boolean
+  organizationLoading: boolean
   signIn: (email: string, password: string) => Promise<{ error: any }>
   signUp: (
     email: string,
@@ -45,10 +46,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [organizationUser, setOrganizationUser] = useState<OrganizationUser | null>(null)
   const [userRole, setUserRole] = useState<UserRole | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isInitialized, setIsInitialized] = useState(false)
+  const [organizationLoading, setOrganizationLoading] = useState(true)
+  // Use ref instead of state to avoid stale closures in the auth listener
+  const isInitializedRef = useRef(false)
 
   // Fetch organization and role data for the current user
   const fetchOrganizationData = async (userId: string) => {
+    setOrganizationLoading(true)
     try {
       // Fetch user's organization membership
       const { data: membershipData, error: membershipError } = await supabase
@@ -100,6 +104,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setOrganization(null)
       setOrganizationUser(null)
       setUserRole(null)
+    } finally {
+      setOrganizationLoading(false)
     }
   }
 
@@ -121,7 +127,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         timeoutPromise
       ])
     } catch (error: any) {
-      console.warn('Organization fetch timed out - retrying once')
+      console.warn('Organization fetch timed out or failed - retrying once:', error.message)
       // Try one more time before giving up
       try {
         await fetchOrganizationData(userId)
@@ -134,11 +140,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setOrganizationUser(null)
           setUserRole(null)
         }
+        // CRITICAL: Always set organizationLoading to false to prevent infinite loading
+        setOrganizationLoading(false)
       }
     }
   }
 
   useEffect(() => {
+    // Prevent double initialization in React StrictMode
+    if (isInitializedRef.current) {
+      return
+    }
+
     // Get initial session
     const initializeAuth = async () => {
       try {
@@ -158,14 +171,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (session?.user) {
           // Fetch org in background, don't block the UI
           await fetchOrganizationDataWithTimeout(session.user.id)
+        } else {
+          // No user, so no organization to load
+          setOrganizationLoading(false)
         }
 
         // Mark as initialized AFTER everything completes
-        setIsInitialized(true)
+        isInitializedRef.current = true
       } catch (error) {
         console.error('Error initializing auth:', error)
         setLoading(false)
-        setIsInitialized(true)
+        setOrganizationLoading(false)
+        isInitializedRef.current = true
       }
     }
 
@@ -181,7 +198,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       // Only handle events after initialization is complete
-      if (!isInitialized) {
+      if (!isInitializedRef.current) {
         return
       }
 
@@ -209,7 +226,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     })
 
     return () => subscription.unsubscribe()
-  }, [isInitialized])
+  }, []) // Empty dependency array - runs once on mount
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -368,6 +385,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     organizationUser,
     userRole,
     loading,
+    organizationLoading,
     signIn,
     signUp,
     signOut,
