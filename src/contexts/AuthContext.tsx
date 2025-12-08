@@ -216,12 +216,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setOrganizationUser(null)
         setUserRole(null)
       } else if (event === 'TOKEN_REFRESHED') {
+        // Just update session/user, don't refetch org data - it hasn't changed
         setSession(session)
         setUser(session?.user ?? null)
-        // Re-fetch organization data after token refresh to ensure context stays valid
-        if (session?.user) {
-          await fetchOrganizationDataWithTimeout(session.user.id)
-        }
+        // No need to refetch organization - it doesn't change on token refresh
       }
     })
 
