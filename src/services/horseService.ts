@@ -16,40 +16,51 @@ const withTimeout = <T>(promise: PromiseLike<T>, ms: number, errorMsg: string): 
 
 // Convert database row to Horse interface
 const mapHorseRowToHorse = async (row: HorseRow): Promise<Horse> => {
-  // Fetch related data with timeout protection (8 seconds)
-  // Use Promise.allSettled to prevent one failure from blocking others
+  // Fetch related data - each query has its own timeout (5 seconds)
+  // Use Promise.allSettled so one failure doesn't block others
   let imagesResult: { data: any[] | null; error: any } = { data: [], error: null }
   let videosResult: { data: any[] | null; error: any } = { data: [], error: null }
   let competitionsResult: { data: any[] | null; error: any } = { data: [], error: null }
 
   try {
-    const results = await withTimeout(
-      Promise.allSettled([
+    const results = await Promise.allSettled([
+      withTimeout(
         supabase
           .from('horse_images')
           .select('*')
           .eq('horse_id', row.id)
-          .order('is_primary', { ascending: false }),
+          .order('is_primary', { ascending: false })
+          .then(r => r),
+        5000,
+        'Timeout fetching images'
+      ),
+      withTimeout(
         supabase
           .from('horse_videos')
           .select('*')
-          .eq('horse_id', row.id),
+          .eq('horse_id', row.id)
+          .then(r => r),
+        5000,
+        'Timeout fetching videos'
+      ),
+      withTimeout(
         supabase
           .from('competitions')
           .select('*')
           .eq('horse_id', row.id)
           .order('date', { ascending: false })
-      ]),
-      8000,
-      'Timeout fetching horse related data'
-    )
+          .then(r => r),
+        5000,
+        'Timeout fetching competitions'
+      )
+    ])
 
     // Extract results safely
     if (results[0].status === 'fulfilled') imagesResult = results[0].value
     if (results[1].status === 'fulfilled') videosResult = results[1].value
     if (results[2].status === 'fulfilled') competitionsResult = results[2].value
   } catch (error) {
-    // On timeout or error, continue with empty arrays - horse data is still valid
+    // On error, continue with empty arrays - horse data is still valid
     console.warn(`Failed to fetch related data for horse ${row.id}:`, error)
   }
 
