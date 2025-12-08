@@ -47,10 +47,10 @@ export const VetVisitList = ({ horseId }: VetVisitListProps) => {
         description: 'The veterinary visit has been removed.',
       })
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
         title: 'Error deleting visit',
-        description: error.message || 'Failed to delete visit. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to delete visit. Please try again.',
         variant: 'destructive',
       })
     },

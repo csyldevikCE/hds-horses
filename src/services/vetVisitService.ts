@@ -96,40 +96,34 @@ export const DOCUMENT_TYPES = [
 ] as const
 
 export const vetVisitService = {
-  // Get all vet visits for a horse
+  // Get all vet visits for a horse - uses JOIN to avoid N+1 queries
   async getVetVisits(horseId: string): Promise<VetVisit[]> {
     const { data: visits, error } = await supabase
       .from('vet_visits')
-      .select('*')
+      .select(`
+        *,
+        vet_visit_documents (*)
+      `)
       .eq('horse_id', horseId)
       .order('visit_date', { ascending: false })
 
     if (error) throw error
 
-    // Fetch documents for each visit
-    const visitsWithDocuments = await Promise.all(
-      (visits || []).map(async (visit) => {
-        const { data: documents } = await supabase
-          .from('vet_visit_documents')
-          .select('*')
-          .eq('vet_visit_id', visit.id)
-          .order('created_at', { ascending: false })
-
-        return {
-          ...visit,
-          documents: documents || [],
-        }
-      })
-    )
-
-    return visitsWithDocuments
+    // Map the nested documents to the expected format
+    return (visits || []).map((visit) => ({
+      ...visit,
+      documents: visit.vet_visit_documents || [],
+    }))
   },
 
-  // Get a single vet visit
+  // Get a single vet visit - uses JOIN to fetch documents in one query
   async getVetVisit(id: string): Promise<VetVisit | null> {
     const { data: visit, error } = await supabase
       .from('vet_visits')
-      .select('*')
+      .select(`
+        *,
+        vet_visit_documents (*)
+      `)
       .eq('id', id)
       .single()
 
@@ -138,24 +132,20 @@ export const vetVisitService = {
       throw error
     }
 
-    // Fetch documents
-    const { data: documents } = await supabase
-      .from('vet_visit_documents')
-      .select('*')
-      .eq('vet_visit_id', visit.id)
-      .order('created_at', { ascending: false })
-
     return {
       ...visit,
-      documents: documents || [],
+      documents: visit.vet_visit_documents || [],
     }
   },
 
-  // Get the most recent vet visit for a horse
+  // Get the most recent vet visit for a horse - uses JOIN
   async getLatestVetVisit(horseId: string): Promise<VetVisit | null> {
     const { data: visit, error } = await supabase
       .from('vet_visits')
-      .select('*')
+      .select(`
+        *,
+        vet_visit_documents (*)
+      `)
       .eq('horse_id', horseId)
       .order('visit_date', { ascending: false })
       .limit(1)
@@ -164,15 +154,9 @@ export const vetVisitService = {
     if (error) throw error
     if (!visit) return null
 
-    // Fetch documents
-    const { data: documents } = await supabase
-      .from('vet_visit_documents')
-      .select('*')
-      .eq('vet_visit_id', visit.id)
-
     return {
       ...visit,
-      documents: documents || [],
+      documents: visit.vet_visit_documents || [],
     }
   },
 
@@ -230,20 +214,17 @@ export const vetVisitService = {
       .from('vet_visits')
       .update(updateData)
       .eq('id', id)
-      .select()
+      .select(`
+        *,
+        vet_visit_documents (*)
+      `)
       .single()
 
     if (error) throw error
 
-    // Fetch documents
-    const { data: documents } = await supabase
-      .from('vet_visit_documents')
-      .select('*')
-      .eq('vet_visit_id', data.id)
-
     return {
       ...data,
-      documents: documents || [],
+      documents: data.vet_visit_documents || [],
     }
   },
 

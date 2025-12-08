@@ -29,16 +29,13 @@ const HorseDetail = () => {
   const { userRole } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
 
-  const { data: horse, status, error, fetchStatus } = useQuery({
+  const { data: horse, status, error } = useQuery({
     queryKey: ['horse', id],
     queryFn: () => horseService.getHorse(id!),
     enabled: !!id,
     retry: 2,
     staleTime: 30000, // 30 seconds
   });
-
-  // Debug: log query state
-  console.log('HorseDetail query state:', { id, status, fetchStatus, hasHorse: !!horse, error });
 
   // Show loading only when query is pending (no data yet) and actively fetching
   const isInitialLoading = status === 'pending';
@@ -121,6 +118,8 @@ const HorseDetail = () => {
           <img
             src={primaryImage.url}
             alt={horse.name}
+            loading="lazy"
+            decoding="async"
             className="w-full h-full object-cover"
           />
         ) : (

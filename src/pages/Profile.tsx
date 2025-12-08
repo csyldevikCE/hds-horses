@@ -121,7 +121,7 @@ const Profile = () => {
       })
 
       setMembers(membersWithEmails)
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading members:', error)
       // Try alternative approach - get users from organization_users directly
       try {
@@ -142,7 +142,7 @@ const Profile = () => {
         }))
 
         setMembers(membersList)
-      } catch (fallbackError: any) {
+      } catch (fallbackError) {
         toast({
           title: 'Error',
           description: 'Failed to load team members',
@@ -162,7 +162,7 @@ const Profile = () => {
     try {
       const contactsList = await getOrganizationContacts(organization.id)
       setContacts(contactsList)
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Error',
         description: 'Failed to load contacts',
@@ -191,10 +191,10 @@ const Profile = () => {
         title: 'Success',
         description: 'Profile updated successfully'
       })
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Failed to update profile',
         variant: 'destructive'
       })
     } finally {
@@ -228,10 +228,10 @@ const Profile = () => {
         title: 'Success',
         description: 'Organization updated successfully'
       })
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Failed to update organization',
         variant: 'destructive'
       })
     } finally {
@@ -293,10 +293,10 @@ const Profile = () => {
 
       setIsContactDialogOpen(false)
       loadContacts()
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Failed to save contact',
         variant: 'destructive'
       })
     } finally {
@@ -313,10 +313,10 @@ const Profile = () => {
         description: 'Contact deleted successfully'
       })
       loadContacts()
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Failed to delete contact',
         variant: 'destructive'
       })
     }
@@ -371,10 +371,10 @@ const Profile = () => {
       setInviteEmail('')
       setIsInviteDialogOpen(false)
       loadMembers()
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Failed to invite user',
         variant: 'destructive'
       })
     } finally {
@@ -400,10 +400,10 @@ const Profile = () => {
       })
 
       loadMembers()
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Failed to change user role',
         variant: 'destructive'
       })
     }
@@ -435,10 +435,10 @@ const Profile = () => {
       })
 
       loadMembers()
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Failed to remove user',
         variant: 'destructive'
       })
     }

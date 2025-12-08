@@ -52,10 +52,11 @@ export const HorseGallery = ({ horse }: HorseGalleryProps) => {
             <img
               src={selectedImage?.url}
               alt={selectedImage?.caption || horse.name}
+              loading="lazy"
+              decoding="async"
               className="w-full max-h-[500px] md:max-h-[600px] object-contain cursor-pointer mx-auto"
               onClick={() => setIsFullscreen(true)}
               onError={(e) => {
-                console.error('Image failed to load:', selectedImage?.url);
                 e.currentTarget.style.display = 'none';
                 e.currentTarget.nextElementSibling?.classList.remove('hidden');
               }}
@@ -64,7 +65,6 @@ export const HorseGallery = ({ horse }: HorseGalleryProps) => {
               <div className="text-center">
                 <div className="text-4xl mb-2">🖼️</div>
                 <p className="text-muted-foreground">Image failed to load</p>
-                <p className="text-sm text-muted-foreground">URL: {selectedImage?.url}</p>
               </div>
             </div>
             
@@ -113,14 +113,16 @@ export const HorseGallery = ({ horse }: HorseGalleryProps) => {
                 key={image.id}
                 onClick={() => setSelectedImageIndex(index)}
                 className={`relative overflow-hidden rounded-lg border-2 transition-all ${
-                  index === selectedImageIndex 
-                    ? 'border-horse-brown shadow-md' 
+                  index === selectedImageIndex
+                    ? 'border-horse-brown shadow-md'
                     : 'border-transparent hover:border-border'
                 }`}
               >
                 <img
                   src={image.url}
                   alt={image.caption || `${horse.name} ${index + 1}`}
+                  loading="lazy"
+                  decoding="async"
                   className="w-full h-16 object-cover"
                 />
               </button>

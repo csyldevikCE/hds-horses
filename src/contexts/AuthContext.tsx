@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react'
-import { User, Session } from '@supabase/supabase-js'
+import { User, Session, AuthError } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { Organization, OrganizationUser, UserRole } from '@/types/organization'
 
@@ -11,7 +11,7 @@ interface AuthContextType {
   userRole: UserRole | null
   loading: boolean
   organizationLoading: boolean
-  signIn: (email: string, password: string) => Promise<{ error: any }>
+  signIn: (email: string, password: string) => Promise<{ error: AuthError | null }>
   signUp: (
     email: string,
     password: string,
@@ -19,9 +19,9 @@ interface AuthContextType {
     lastName: string,
     organizationName: string | null,
     inviteToken?: string
-  ) => Promise<{ error: any }>
+  ) => Promise<{ error: Error | AuthError | null }>
   signOut: () => Promise<void>
-  resetPassword: (email: string) => Promise<{ error: any }>
+  resetPassword: (email: string) => Promise<{ error: AuthError | null }>
   refreshOrganization: () => Promise<void>
 }
 
@@ -51,21 +51,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const isInitializedRef = useRef(false)
 
   // Fetch organization and role data for the current user
+  // Uses a single JOIN query for better performance
   const fetchOrganizationData = async (userId: string, skipLoadingState = false) => {
     // Only show loading if we don't have org data yet (prevents flicker on refetch)
     if (!skipLoadingState && !organization) {
       setOrganizationLoading(true)
     }
     try {
-      // Fetch user's organization membership
+      // Fetch membership AND organization in a single query using JOIN
       const { data: membershipData, error: membershipError } = await supabase
         .from('organization_users')
-        .select('*')
+        .select(`
+          *,
+          organizations (*)
+        `)
         .eq('user_id', userId)
         .limit(1)
 
       if (membershipError) {
-        console.error('Failed to fetch organization membership:', membershipError)
         setOrganization(null)
         setOrganizationUser(null)
         setUserRole(null)
@@ -80,30 +83,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return
       }
 
+      // Extract organization from the joined data
+      const org = membership.organizations as Organization | null
+
       setOrganizationUser(membership)
       setUserRole(membership.role)
-
-      // Fetch organization details
-      const { data: orgData, error: orgError } = await supabase
-        .from('organizations')
-        .select('*')
-        .eq('id', membership.organization_id)
-        .limit(1)
-
-      if (orgError) {
-        console.error('Failed to fetch organization:', orgError)
-        setOrganization(null)
-        return
-      }
-
-      const org = orgData?.[0]
-      if (org) {
-        setOrganization(org)
-      } else {
-        setOrganization(null)
-      }
-    } catch (error: any) {
-      console.error('Error fetching organization data:', error)
+      setOrganization(org)
+    } catch {
       setOrganization(null)
       setOrganizationUser(null)
       setUserRole(null)
@@ -121,7 +107,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Wrapper with timeout to prevent hanging
   const fetchOrganizationDataWithTimeout = async (userId: string) => {
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Organization fetch timeout')), 30000) // 30 seconds
+      setTimeout(() => reject(new Error('Organization fetch timeout')), 10000) // 10 seconds
     })
 
     try {
@@ -129,13 +115,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         fetchOrganizationData(userId),
         timeoutPromise
       ])
-    } catch (error: any) {
-      console.warn('Organization fetch timed out or failed - retrying once:', error.message)
+    } catch {
       // Try one more time before giving up
       try {
         await fetchOrganizationData(userId)
-      } catch (retryError) {
-        console.error('Organization fetch failed after retry:', retryError)
+      } catch {
         // Don't clear org data if it already exists (prevents loss during token refresh)
         // Only clear if we don't have organization data yet
         if (!organization) {
@@ -158,11 +142,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Get initial session
     const initializeAuth = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession()
-
-        if (error) {
-          console.error('Failed to get session:', error)
-        }
+        const { data: { session } } = await supabase.auth.getSession()
 
         setSession(session)
         setUser(session?.user ?? null)
@@ -181,8 +161,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         // Mark as initialized AFTER everything completes
         isInitializedRef.current = true
-      } catch (error) {
-        console.error('Error initializing auth:', error)
+      } catch {
         setLoading(false)
         setOrganizationLoading(false)
         isInitializedRef.current = true
@@ -227,6 +206,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     })
 
     return () => subscription.unsubscribe()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Empty dependency array - runs once on mount
 
   const signIn = async (email: string, password: string) => {
@@ -257,18 +237,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     try {
       // Step 2: Create/update the user profile with first and last name
-      const { error: profileError } = await supabase
+      // Profile creation failure is non-critical, continue with signup
+      await supabase
         .from('profiles')
         .upsert({
           id: authData.user.id,
           first_name: firstName,
           last_name: lastName,
         })
-
-      if (profileError) {
-        console.error('Failed to create profile:', profileError)
-        // Don't fail signup if profile creation fails, just log it
-      }
 
       // Step 3: Handle invitation or create new organization
       if (inviteToken) {
@@ -304,19 +280,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           return { error: membershipError }
         }
 
-        // Mark invitation as used
-        const { error: updateInviteError } = await supabase
+        // Mark invitation as used (failure is non-critical)
+        await supabase
           .from('invitations')
           .update({
             used_at: new Date().toISOString(),
             used_by: authData.user.id,
           })
           .eq('id', invitation.id)
-
-        if (updateInviteError) {
-          console.error('Failed to mark invitation as used:', updateInviteError)
-          // Don't fail signup if this fails
-        }
 
         // Refresh organization data
         await fetchOrganizationData(authData.user.id)

@@ -55,10 +55,10 @@ export const VaccinationLog = ({ horseId }: VaccinationLogProps) => {
         description: 'The vaccination record has been removed.',
       })
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
         title: 'Error deleting vaccination',
-        description: error.message || 'Failed to delete vaccination. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to delete vaccination. Please try again.',
         variant: 'destructive',
       })
     },

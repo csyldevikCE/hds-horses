@@ -45,6 +45,7 @@ const SHAREABLE_FIELDS: { value: ShareableField; label: string; description: str
 export const ShareHorse = ({ horse, children }: ShareHorseProps) => {
   const [open, setOpen] = useState(false)
   const [copied, setCopied] = useState<string | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [editingLink, setEditingLink] = useState<any | null>(null)
 
   // Form state
@@ -75,6 +76,7 @@ export const ShareHorse = ({ horse, children }: ShareHorseProps) => {
     refetchOnMount: true,
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const horseShareLinks = shareLinks.filter((link: any) => link.horse_id === horse.id)
 
   // Calculate expiry date
@@ -115,10 +117,10 @@ export const ShareHorse = ({ horse, children }: ShareHorseProps) => {
         description: `Share link for ${recipientName} is now active.`,
       })
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
         title: "Error creating share link",
-        description: error.message || "Failed to create share link. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to create share link. Please try again.",
         variant: "destructive",
       })
     },
@@ -176,16 +178,17 @@ export const ShareHorse = ({ horse, children }: ShareHorseProps) => {
         description: "The share link has been updated successfully.",
       })
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
         title: "Error updating share link",
-        description: error.message || "Failed to update share link. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to update share link. Please try again.",
         variant: "destructive",
       })
     },
   })
 
   // Start editing a link
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const startEdit = (link: any) => {
     setEditingLink(link)
     setRecipientName(link.recipient_name)
@@ -530,6 +533,7 @@ export const ShareHorse = ({ horse, children }: ShareHorseProps) => {
                 </p>
               ) : (
                 <div className="space-y-4">
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {horseShareLinks.map((shareLink: any) => {
                     const status = shareService.getShareLinkStatus(shareLink)
                     const timeRemaining = shareService.getTimeRemaining(shareLink.expires_at)

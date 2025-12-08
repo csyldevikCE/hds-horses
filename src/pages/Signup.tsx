@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
@@ -25,20 +25,16 @@ const Signup = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [invitation, setInvitation] = useState<any>(null)
   const [loadingInvitation, setLoadingInvitation] = useState(false)
 
   const { signUp } = useAuth()
   const navigate = useNavigate()
 
-  // Load invitation if token exists
-  useEffect(() => {
-    if (inviteToken) {
-      loadInvitation()
-    }
-  }, [inviteToken])
+  const loadInvitation = useCallback(async () => {
+    if (!inviteToken) return
 
-  const loadInvitation = async () => {
     setLoadingInvitation(true)
     try {
       const { data, error } = await supabase
@@ -68,12 +64,19 @@ const Signup = () => {
 
       setInvitation(data)
       setEmail(data.email) // Pre-fill email from invitation
-    } catch (err) {
+    } catch {
       setError('Failed to load invitation')
     } finally {
       setLoadingInvitation(false)
     }
-  }
+  }, [inviteToken])
+
+  // Load invitation if token exists
+  useEffect(() => {
+    if (inviteToken) {
+      loadInvitation()
+    }
+  }, [inviteToken, loadInvitation])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

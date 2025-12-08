@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -45,7 +45,7 @@ export const ProfileDialog = ({ children }: ProfileDialogProps) => {
 
 
   // Load user profile
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     if (!user?.id) return
 
     try {
@@ -66,21 +66,21 @@ export const ProfileDialog = ({ children }: ProfileDialogProps) => {
         setLastName(data.last_name || '')
       }
       setProfileLoaded(true)
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading profile:', error)
       setProfileLoaded(true)
     }
-  }
+  }, [user?.id])
 
   // Load profile when dialog opens
   useEffect(() => {
     if (open && user && !profileLoaded) {
       loadProfile()
     }
-  }, [open, user])
+  }, [open, user, profileLoaded, loadProfile])
 
   // Load organization members
-  const loadMembers = async () => {
+  const loadMembers = useCallback(async () => {
     if (!organization?.id) {
       return
     }
@@ -139,7 +139,7 @@ export const ProfileDialog = ({ children }: ProfileDialogProps) => {
       })
 
       setMembers(membersList)
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error loading members:', error)
       toast({
         title: 'Error',
@@ -149,7 +149,7 @@ export const ProfileDialog = ({ children }: ProfileDialogProps) => {
     } finally {
       setIsLoadingMembers(false)
     }
-  }
+  }, [organization?.id, user?.id, user?.email, toast])
 
   // Update profile
   const handleUpdateProfile = async () => {
@@ -180,10 +180,10 @@ export const ProfileDialog = ({ children }: ProfileDialogProps) => {
 
       // Dispatch custom event to notify UserProfile to refresh
       window.dispatchEvent(new CustomEvent('profile-updated'))
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Failed to update profile',
         variant: 'destructive'
       })
     } finally {
@@ -274,11 +274,11 @@ export const ProfileDialog = ({ children }: ProfileDialogProps) => {
       setInviteEmail('')
       setInviteRole('read_only')
       setIsInviteDialogOpen(false)
-    } catch (error: any) {
+    } catch (error) {
       console.error('Invitation error:', error)
       toast({
         title: 'Error',
-        description: error.message || 'Failed to create invitation',
+        description: error instanceof Error ? error.message : 'Failed to create invitation',
         variant: 'destructive'
       })
     } finally {
@@ -304,10 +304,10 @@ export const ProfileDialog = ({ children }: ProfileDialogProps) => {
       })
 
       loadMembers()
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: 'Error',
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Failed to change user role',
         variant: 'destructive'
       })
     }
@@ -369,11 +369,11 @@ export const ProfileDialog = ({ children }: ProfileDialogProps) => {
       })
 
       loadMembers()
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error removing user:', error)
       toast({
         title: 'Error',
-        description: error.message || 'Failed to remove user from organization',
+        description: error instanceof Error ? error.message : 'Failed to remove user from organization',
         variant: 'destructive'
       })
     }
@@ -384,7 +384,7 @@ export const ProfileDialog = ({ children }: ProfileDialogProps) => {
     if (activeTab === 'organization' && open) {
       loadMembers()
     }
-  }, [activeTab, open])
+  }, [activeTab, open, loadMembers])
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

@@ -146,9 +146,11 @@ export interface UpdateShareLinkParams {
 }
 
 export const shareService = {
-  // Generate a unique token for sharing
+  // Generate a cryptographically secure token for sharing
   generateToken(): string {
-    return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+    const array = new Uint8Array(32)
+    crypto.getRandomValues(array)
+    return Array.from(array, (byte) => byte.toString(16).padStart(2, '0')).join('')
   },
 
   // Hash password for password-protected links
@@ -214,6 +216,7 @@ export const shareService = {
     const { shareLinkId, recipientName, expiresAt, sharedFields } = params
 
     // Build update object with only provided fields
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const updates: any = {}
     if (recipientName !== undefined) updates.recipient_name = recipientName
     if (expiresAt !== undefined) updates.expires_at = expiresAt
@@ -232,32 +235,20 @@ export const shareService = {
 
   // Get a shared horse by token (without password verification)
   async getSharedHorseMetadata(token: string): Promise<ShareLink | null> {
-    console.log('📡 Calling Supabase for share_links with token:', token)
-
     const { data: shareLink, error: shareError } = await supabase
       .from('share_links')
       .select('*')
       .eq('token', token)
       .single()
 
-    console.log('📡 Supabase response:', { data: shareLink, error: shareError })
-
     if (shareError) {
-      console.error('❌ Supabase error details:', {
-        message: shareError.message,
-        details: shareError.details,
-        hint: shareError.hint,
-        code: shareError.code
-      })
-      throw new Error(`Share link not found: ${shareError.message}`)
-    }
-
-    if (!shareLink) {
-      console.error('❌ No share link data returned (but no error)')
       throw new Error('Share link not found')
     }
 
-    console.log('✅ Share link found:', shareLink)
+    if (!shareLink) {
+      throw new Error('Share link not found')
+    }
+
     return shareLink
   },
 

@@ -32,7 +32,9 @@ export const DicomViewer = ({ fileUrl, format = 'dicom', className = '' }: Dicom
   const [isReady, setIsReady] = useState(false)
   const [currentTool, setCurrentTool] = useState('Zoom')
   const [cornerstoneReady, setCornerstoneReady] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const renderingEngineRef = useRef<any>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const toolGroupRef = useRef<any>(null)
 
   // Use useMemo to ensure these IDs are only created once per component instance
@@ -113,9 +115,11 @@ export const DicomViewer = ({ fileUrl, format = 'dicom', className = '' }: Dicom
                       getCanvas: () => canvas,
                       voiLUTFunction: 'LINEAR',
                       numberOfComponents: 4,
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
                       dataType: 'Uint8Array' as any,
                     }
 
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     resolve(cornerstoneImage as any)
                   } else {
                     reject(new Error('Could not get canvas context'))
@@ -242,35 +246,32 @@ export const DicomViewer = ({ fileUrl, format = 'dicom', className = '' }: Dicom
         console.log('Image format:', format)
         console.log('File URL:', fileUrl)
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const viewport = renderingEngine.getViewport(viewportId) as any
 
         try {
           await viewport.setStack([imageId], 0)
-          console.log('Image stack set successfully')
-        } catch (stackErr: any) {
-          console.error('Error setting stack:', stackErr)
-          throw new Error(`Failed to load image: ${stackErr.message || 'Unknown error'}`)
+        } catch (stackErr) {
+          const message = stackErr instanceof Error ? stackErr.message : 'Unknown error'
+          throw new Error(`Failed to load image: ${message}`)
         }
 
         if (!isMounted) return
 
         try {
           viewport.render()
-          console.log('Viewport rendered successfully')
-        } catch (renderErr: any) {
-          console.error('Error rendering viewport:', renderErr)
-          throw new Error(`Failed to render image: ${renderErr.message || 'Unknown error'}`)
+        } catch (renderErr) {
+          const message = renderErr instanceof Error ? renderErr.message : 'Unknown error'
+          throw new Error(`Failed to render image: ${message}`)
         }
 
         setLoading(false)
         setIsReady(true)
-        console.log('DICOM loaded successfully')
 
-      } catch (err: any) {
-        console.error('Error loading DICOM:', err)
-        console.error('Error stack:', err.stack)
+      } catch (err) {
         if (isMounted) {
-          setError(err.message || 'Failed to load DICOM file')
+          const message = err instanceof Error ? err.message : 'Failed to load DICOM file'
+          setError(message)
           setLoading(false)
         }
       }

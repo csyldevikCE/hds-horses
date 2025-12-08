@@ -114,10 +114,10 @@ export const VaccinationManager = ({ horseId }: VaccinationManagerProps) => {
         description: 'The vaccination has been added to the horse\'s health records.',
       })
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
         title: 'Error recording vaccination',
-        description: error.message || 'Failed to record vaccination. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to record vaccination. Please try again.',
         variant: 'destructive',
       })
     },

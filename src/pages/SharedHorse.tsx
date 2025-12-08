@@ -27,21 +27,7 @@ const SharedHorse = () => {
   // First, get the share link metadata to check if password is required
   const { data: shareLink, isLoading: isLoadingMetadata, error: metadataError } = useQuery({
     queryKey: ['share-link-metadata', token],
-    queryFn: async () => {
-      console.log('🔍 Fetching share link metadata for token:', token)
-      try {
-        const result = await shareService.getSharedHorseMetadata(token!)
-        console.log('✅ Share link metadata result:', result)
-        return result
-      } catch (err: any) {
-        console.error('❌ Error fetching share link metadata:', {
-          message: err.message,
-          error: err,
-          token
-        })
-        throw err
-      }
-    },
+    queryFn: () => shareService.getSharedHorseMetadata(token!),
     enabled: !!token,
     retry: false,
   })
@@ -49,17 +35,7 @@ const SharedHorse = () => {
   // Then, get the horse data (with password if needed)
   const { data: horse, isLoading, error, refetch } = useQuery({
     queryKey: ['shared-horse', token, password],
-    queryFn: async () => {
-      console.log('Fetching horse data for token:', token)
-      try {
-        const result = await shareService.getSharedHorse(token!, password || undefined)
-        console.log('Horse data result:', result)
-        return result
-      } catch (err) {
-        console.error('Error fetching horse data:', err)
-        throw err
-      }
-    },
+    queryFn: () => shareService.getSharedHorse(token!, password || undefined),
     enabled: !!token && (shareLink?.link_type !== 'password_protected' || (shareLink?.link_type === 'password_protected' && passwordAttempted)),
     retry: false,
   })
@@ -72,34 +48,34 @@ const SharedHorse = () => {
   }
 
   // Log view when horse is successfully loaded
+  // Uses server-side Edge Function for GDPR-compliant geolocation (no third-party US services)
   useEffect(() => {
     if (horse && shareLink && !viewLogged) {
       const logViewWithGeo = async () => {
         try {
-          // Get user agent and referer
-          const userAgent = navigator.userAgent
-          const referer = document.referrer || undefined
+          const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 
-          // Get IP and geolocation data from ipapi.co (free tier)
-          // This is a client-side approach - in production, you'd use a server-side API
-          const geoResponse = await fetch('https://ipapi.co/json/')
-          const geoData = await geoResponse.json()
+          // Call Edge Function - geolocation is determined server-side from request headers
+          // IP is anonymized (last octet removed) for GDPR compliance
+          const response = await fetch(`${supabaseUrl}/functions/v1/log-share-view`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              shareLinkId: shareLink.id,
+              userAgent: navigator.userAgent,
+              referer: document.referrer || undefined,
+            }),
+          })
 
-          // Log the view with geolocation data
-          await shareService.logViewWithGeo(
-            shareLink.id,
-            geoData.ip || undefined,
-            userAgent,
-            referer,
-            geoData.country_name || undefined,
-            geoData.city || undefined,
-            geoData.region || undefined
-          )
+          if (!response.ok) {
+            throw new Error('Failed to log view')
+          }
 
           setViewLogged(true)
         } catch (error) {
-          console.error('Error logging view with geolocation:', error)
-          // Fallback: log without geo data
+          // Fallback: log without geo data using direct service call
           shareService.logView(shareLink.id, undefined, navigator.userAgent, document.referrer || undefined)
           setViewLogged(true)
         }

@@ -67,6 +67,7 @@ export const XRayList = ({ horseId }: XRayListProps) => {
   }, [xrays])
 
   // Helper to get the display URL (signed URL for uploads, direct URL for external links)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const getDisplayUrl = (xray: any): string => {
     if (xray.file_type === 'upload') {
       return signedUrls[xray.id] || ''
@@ -119,6 +120,7 @@ export const XRayList = ({ horseId }: XRayListProps) => {
     },
   })
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleEdit = (xray: any) => {
     setEditingXRay(xray.id)
     setEditDateTaken(xray.date_taken || '')

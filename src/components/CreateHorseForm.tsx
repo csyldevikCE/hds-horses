@@ -145,6 +145,7 @@ export const CreateHorseForm = ({ children }: CreateHorseFormProps) => {
   };
 
   const createHorseMutation = useMutation({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     mutationFn: (horseData: any) => horseService.createHorse(horseData, user?.id || '', organization?.id || ''),
     onSuccess: () => {
       // Invalidate horses list with CORRECT organization ID

@@ -168,11 +168,9 @@ export const fetchHorseFromBlup = async (regno: string): Promise<BlupHorseData> 
 
     // Construct proxy URL (our serverless function will add the token)
     const url = `${BLUP_PROXY_URL}?regno=${cleanRegno}`;
-    console.log('[BLUP] Fetching from proxy:', url);
 
     // Fetch data from BLUP API
     const response = await fetch(url);
-    console.log('[BLUP] Response status:', response.status, response.statusText);
 
     if (!response.ok) {
       // Try to get error details from response body
@@ -180,11 +178,9 @@ export const fetchHorseFromBlup = async (regno: string): Promise<BlupHorseData> 
 
       try {
         const errorData = await response.json();
-        console.error('[BLUP] Error response data:', errorData);
         errorMessage = errorData.message || errorData.error || '';
-      } catch (parseError) {
+      } catch {
         // JSON parsing failed, likely got HTML or plain text
-        console.error('[BLUP] Could not parse error response as JSON');
       }
 
       if (response.status === 404) {
@@ -200,7 +196,6 @@ export const fetchHorseFromBlup = async (regno: string): Promise<BlupHorseData> 
     }
 
     const data: BlupHorseResponse = await response.json();
-    console.log('[BLUP] Successfully fetched horse data:', data.name, data.regno);
 
     // Transform BLUP data to our format
     const transformedData: BlupHorseData = {
@@ -223,7 +218,6 @@ export const fetchHorseFromBlup = async (regno: string): Promise<BlupHorseData> 
 
     return transformedData;
   } catch (error) {
-    console.error('[BLUP] Error fetching horse data:', error);
     if (error instanceof Error) {
       throw error;
     }

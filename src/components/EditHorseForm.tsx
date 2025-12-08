@@ -93,7 +93,6 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
   useEffect(() => {
     if (open && !hasInitialized) {
       // Only reset when dialog first opens, not on subsequent re-renders
-      console.log('[EditHorseForm] Initializing form data');
       setFormData(getInitialFormData());
       setBlupRegno('');
       setBlupError(null);
@@ -101,7 +100,6 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
       setHasInitialized(true);
     } else if (!open && hasInitialized) {
       // Reset initialization flag when dialog closes
-      console.log('[EditHorseForm] Resetting initialization flag');
       setHasInitialized(false);
     }
     // Only depend on 'open' to avoid resetting when other state changes
@@ -131,7 +129,6 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
 
     try {
       const blupData: BlupHorseData = await blupService.fetchHorseFromBlup(blupRegno);
-      console.log('[EditHorseForm] BLUP data received:', blupData);
 
       // Update form with BLUP data
       const updatedFormData = {
@@ -167,9 +164,7 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
         blupUrl: blupData.blupUrl || '',
       };
 
-      console.log('[EditHorseForm] Setting form data to:', updatedFormData);
       setFormData(updatedFormData);
-
       setBlupSuccess(true);
       toast({
         title: 'Horse data imported successfully!',
@@ -303,22 +298,11 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(newOpen) => {
-      console.log('[EditHorseForm] Dialog onOpenChange called:', newOpen);
-      setOpen(newOpen);
-    }}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent
-        className="max-w-4xl max-h-[90vh] flex flex-col p-0"
-        onEscapeKeyDown={() => {
-          console.log('[EditHorseForm] Escape key pressed');
-        }}
-        onPointerDownOutside={() => {
-          console.log('[EditHorseForm] Click outside detected');
-        }}
-      >
+      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0">
         <DialogHeader className="px-6 pt-6 pb-4 border-b">
           <DialogTitle className="flex items-center gap-2">
             <Edit className="h-5 w-5" />
@@ -819,7 +803,7 @@ export const EditHorseForm = ({ horse, children }: EditHorseFormProps) => {
             <CardContent>
               <MediaUpload 
                 horseId={horse.id}
-                onMediaAdd={(files) => console.log('Updated media files:', files)} 
+                onMediaAdd={() => {}}
               />
             </CardContent>
           </Card>

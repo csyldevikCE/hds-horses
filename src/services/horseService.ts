@@ -18,8 +18,11 @@ const withTimeout = <T>(promise: PromiseLike<T>, ms: number, errorMsg: string): 
 const mapHorseRowToHorse = async (row: HorseRow): Promise<Horse> => {
   // Fetch related data - each query has its own timeout (5 seconds)
   // Use Promise.allSettled so one failure doesn't block others
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let imagesResult: { data: any[] | null; error: any } = { data: [], error: null }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let videosResult: { data: any[] | null; error: any } = { data: [], error: null }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let competitionsResult: { data: any[] | null; error: any } = { data: [], error: null }
 
   try {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import {
@@ -21,7 +21,7 @@ const UserProfile = () => {
   const [profile, setProfile] = useState<{ first_name: string | null; last_name: string | null } | null>(null)
 
   // Load user profile
-  const loadProfile = async () => {
+  const loadProfile = useCallback(async () => {
     if (!user?.id) return
 
     try {
@@ -34,14 +34,14 @@ const UserProfile = () => {
       if (!error && data) {
         setProfile(data)
       }
-    } catch (error) {
+    } catch {
       // Silently fail - will use email fallback
     }
-  }
+  }, [user?.id])
 
   useEffect(() => {
     loadProfile()
-  }, [user?.id])
+  }, [loadProfile])
 
   // Refresh profile when it's updated
   useEffect(() => {
@@ -51,7 +51,7 @@ const UserProfile = () => {
 
     window.addEventListener('profile-updated', handleProfileUpdate)
     return () => window.removeEventListener('profile-updated', handleProfileUpdate)
-  }, [user?.id])
+  }, [loadProfile])
 
   const handleSignOut = async () => {
     try {

@@ -296,6 +296,7 @@ export const ShareLinkAnalytics = ({ shareLinkId, children }: ShareLinkAnalytics
                 </p>
               ) : (
                 <div className="space-y-3">
+                  {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
                   {analytics.views.slice(0, 10).map((view: any) => {
                     const isNewIP = view.ip_address &&
                       analytics.ipFirstSeen[view.ip_address] === view.viewed_at
@@ -361,6 +362,7 @@ export const ShareLinkAnalytics = ({ shareLinkId, children }: ShareLinkAnalytics
                     .sort((a, b) => new Date(b[1]).getTime() - new Date(a[1]).getTime())
                     .map(([ip, firstSeen]) => {
                       const viewCount = analytics.views.filter(
+                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
                         (v: any) => v.ip_address === ip
                       ).length
 

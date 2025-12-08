@@ -163,10 +163,10 @@ export const VetVisitManager = ({ horseId }: VetVisitManagerProps) => {
         description: 'The veterinary visit has been added to the health records.',
       })
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
         title: 'Error recording visit',
-        description: error.message || 'Failed to record visit. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to record visit. Please try again.',
         variant: 'destructive',
       })
     },

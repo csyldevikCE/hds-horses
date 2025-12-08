@@ -74,10 +74,10 @@ export const CompetitionManager = ({ horseId }: CompetitionManagerProps) => {
         description: 'The competition result has been added successfully.',
       })
     },
-    onError: (error: any) => {
+    onError: (error) => {
       toast({
         title: 'Error adding competition',
-        description: error.message || 'Failed to add competition. Please try again.',
+        description: error instanceof Error ? error.message : 'Failed to add competition. Please try again.',
         variant: 'destructive',
       })
     },
