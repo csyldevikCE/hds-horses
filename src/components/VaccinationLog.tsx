@@ -48,7 +48,7 @@ export const VaccinationLog = ({ horseId }: VaccinationLogProps) => {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['vaccinations', horseId] })
       await queryClient.invalidateQueries({ queryKey: ['fei-compliance', horseId] })
-      await queryClient.invalidateQueries({ queryKey: ['horse', horseId] })
+      queryClient.invalidateQueries({ queryKey: ['horse', horseId] })
 
       toast({
         title: 'Vaccination deleted',

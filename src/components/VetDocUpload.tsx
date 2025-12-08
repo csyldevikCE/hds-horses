@@ -90,7 +90,7 @@ export const VetDocUpload = ({ horseId }: VetDocUploadProps) => {
       })
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['horse', horseId] })
+      queryClient.invalidateQueries({ queryKey: ['horse', horseId] })
       await queryClient.invalidateQueries({ queryKey: ['vet-documents', horseId] })
 
       toast({

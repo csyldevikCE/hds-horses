@@ -153,7 +153,7 @@ export const VetVisitManager = ({ horseId }: VetVisitManagerProps) => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['vet-visits', horseId] })
-      await queryClient.invalidateQueries({ queryKey: ['horse', horseId] })
+      queryClient.invalidateQueries({ queryKey: ['horse', horseId] })
 
       resetForm()
       setOpen(false)

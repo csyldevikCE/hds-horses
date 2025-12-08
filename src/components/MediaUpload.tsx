@@ -55,7 +55,7 @@ export const MediaUpload = ({ onMediaAdd, horseId }: MediaUploadProps) => {
           }
           
           // Invalidate specific horse data
-          await queryClient.invalidateQueries({ queryKey: ['horse', horseId] });
+          queryClient.invalidateQueries({ queryKey: ['horse', horseId] });
           // Note: horses list will refetch naturally when user navigates back (staleTime handles this)
 
           toast({

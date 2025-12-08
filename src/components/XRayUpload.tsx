@@ -92,7 +92,7 @@ export const XRayUpload = ({ horseId }: XRayUploadProps) => {
       }
     },
     onSuccess: async (data) => {
-      await queryClient.invalidateQueries({ queryKey: ['horse', horseId] })
+      queryClient.invalidateQueries({ queryKey: ['horse', horseId] })
       await queryClient.invalidateQueries({ queryKey: ['horse-xrays', horseId] })
 
       const count = Array.isArray(data) ? data.length : 1

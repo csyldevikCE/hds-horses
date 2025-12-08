@@ -55,8 +55,9 @@ export const CompetitionManager = ({ horseId }: CompetitionManagerProps) => {
       if (error) throw error
       return result
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['horse', horseId] })
+    onSuccess: () => {
+      // Invalidate in background - don't await to prevent blocking if query hangs
+      queryClient.invalidateQueries({ queryKey: ['horse', horseId] })
 
       setOpen(false)
       setFormData({

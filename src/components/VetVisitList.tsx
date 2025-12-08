@@ -40,7 +40,7 @@ export const VetVisitList = ({ horseId }: VetVisitListProps) => {
     mutationFn: (id: string) => vetVisitService.deleteVetVisit(id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['vet-visits', horseId] })
-      await queryClient.invalidateQueries({ queryKey: ['horse', horseId] })
+      queryClient.invalidateQueries({ queryKey: ['horse', horseId] })
 
       toast({
         title: 'Visit deleted',

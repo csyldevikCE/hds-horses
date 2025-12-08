@@ -104,7 +104,7 @@ export const VaccinationManager = ({ horseId }: VaccinationManagerProps) => {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ['vaccinations', horseId] })
-      await queryClient.invalidateQueries({ queryKey: ['horse', horseId] })
+      queryClient.invalidateQueries({ queryKey: ['horse', horseId] })
 
       resetForm()
       setOpen(false)
