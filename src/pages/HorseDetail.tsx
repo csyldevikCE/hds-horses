@@ -29,7 +29,7 @@ const HorseDetail = () => {
   const { userRole } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
 
-  const { data: horse, isLoading, error } = useQuery({
+  const { data: horse, status, error, fetchStatus } = useQuery({
     queryKey: ['horse', id],
     queryFn: () => horseService.getHorse(id!),
     enabled: !!id,
@@ -37,8 +37,11 @@ const HorseDetail = () => {
     staleTime: 30000, // 30 seconds
   });
 
-  // Only show loading on initial load (no cached data yet), not on background refetches
-  const isInitialLoading = isLoading && !horse;
+  // Debug: log query state
+  console.log('HorseDetail query state:', { id, status, fetchStatus, hasHorse: !!horse, error });
+
+  // Show loading only when query is pending (no data yet) and actively fetching
+  const isInitialLoading = status === 'pending';
 
   if (isInitialLoading) {
     return (
