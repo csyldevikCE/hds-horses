@@ -21,13 +21,11 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Re-enabled after fixing query key mismatches
-      refetchOnWindowFocus: true, // Refetch when window regains focus (good for data freshness)
+      refetchOnWindowFocus: false, // Disable refetch on tab focus - was causing infinite loading loops
       refetchOnMount: true, // Refetch stale data on component mount
       refetchOnReconnect: true, // Refetch when reconnecting to internet
-      staleTime: 2 * 60 * 1000, // Consider data stale after 2 minutes (was 5, now more aggressive)
+      staleTime: 5 * 60 * 1000, // Consider data stale after 5 minutes
       retry: 1, // Only retry failed requests once
-      // Note: With correct query keys and invalidations, refetching now works properly
     },
   },
 });
