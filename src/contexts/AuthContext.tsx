@@ -51,8 +51,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const isInitializedRef = useRef(false)
 
   // Fetch organization and role data for the current user
-  const fetchOrganizationData = async (userId: string) => {
-    setOrganizationLoading(true)
+  const fetchOrganizationData = async (userId: string, skipLoadingState = false) => {
+    // Only show loading if we don't have org data yet (prevents flicker on refetch)
+    if (!skipLoadingState && !organization) {
+      setOrganizationLoading(true)
+    }
     try {
       // Fetch user's organization membership
       const { data: membershipData, error: membershipError } = await supabase

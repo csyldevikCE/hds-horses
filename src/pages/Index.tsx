@@ -247,7 +247,8 @@ const Index = () => {
         </Card>
 
         {/* Horse Grid */}
-        {(isInitialLoading || organizationLoading) ? (
+        {/* Only show loading if we don't have data yet - prevents flicker on refetches */}
+        {(isInitialLoading || (organizationLoading && !organization)) ? (
           <Card>
             <CardContent className="flex flex-col items-center justify-center py-16 md:py-24">
               <Loader2 className="h-12 w-12 md:h-16 md:w-16 text-primary mb-4 animate-spin" />
