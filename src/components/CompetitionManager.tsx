@@ -38,7 +38,9 @@ export const CompetitionManager = ({ horseId }: CompetitionManagerProps) => {
 
   const addCompetitionMutation = useMutation({
     mutationFn: async (data: CompetitionFormData) => {
-      const { data: result, error } = await supabase
+      // Don't use .select().single() - we don't need the returned data
+      // and it can cause hangs if there are RLS timing issues
+      const { error } = await supabase
         .from('competitions')
         .insert({
           horse_id: horseId,
@@ -49,11 +51,8 @@ export const CompetitionManager = ({ horseId }: CompetitionManagerProps) => {
           notes: data.notes || null,
           equipe_link: data.equipeLink || null,
         })
-        .select()
-        .single()
 
       if (error) throw error
-      return result
     },
     onSuccess: () => {
       // Invalidate in background - don't await to prevent blocking if query hangs
