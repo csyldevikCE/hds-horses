@@ -38,9 +38,9 @@ export const CompetitionManager = ({ horseId }: CompetitionManagerProps) => {
 
   const addCompetitionMutation = useMutation({
     mutationFn: async (data: CompetitionFormData) => {
-      // Don't use .select().single() - we don't need the returned data
-      // and it can cause hangs if there are RLS timing issues
-      const { error } = await supabase
+      console.log('[CompetitionManager] Starting insert with data:', { horseId, ...data })
+
+      const { error, status, statusText } = await supabase
         .from('competitions')
         .insert({
           horse_id: horseId,
@@ -52,9 +52,17 @@ export const CompetitionManager = ({ horseId }: CompetitionManagerProps) => {
           equipe_link: data.equipeLink || null,
         })
 
-      if (error) throw error
+      console.log('[CompetitionManager] Insert response:', { error, status, statusText })
+
+      if (error) {
+        console.error('[CompetitionManager] Insert error:', error)
+        throw error
+      }
+
+      console.log('[CompetitionManager] Insert successful')
     },
     onSuccess: () => {
+      console.log('[CompetitionManager] onSuccess called')
       // Invalidate in background - don't await to prevent blocking if query hangs
       queryClient.invalidateQueries({ queryKey: ['horse', horseId] })
 
@@ -74,6 +82,7 @@ export const CompetitionManager = ({ horseId }: CompetitionManagerProps) => {
       })
     },
     onError: (error) => {
+      console.error('[CompetitionManager] onError called:', error)
       toast({
         title: 'Error adding competition',
         description: error instanceof Error ? error.message : 'Failed to add competition. Please try again.',
