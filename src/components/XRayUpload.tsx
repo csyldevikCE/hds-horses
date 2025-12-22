@@ -91,9 +91,10 @@ export const XRayUpload = ({ horseId }: XRayUploadProps) => {
         })
       }
     },
-    onSuccess: async (data) => {
+    onSuccess: (data) => {
+      // Removed await - let queries refetch in background (PERF-006)
       queryClient.invalidateQueries({ queryKey: ['horse', horseId] })
-      await queryClient.invalidateQueries({ queryKey: ['horse-xrays', horseId] })
+      queryClient.invalidateQueries({ queryKey: ['horse-xrays', horseId] })
 
       const count = Array.isArray(data) ? data.length : 1
       toast({

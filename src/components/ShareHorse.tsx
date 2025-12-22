@@ -69,11 +69,11 @@ export const ShareHorse = ({ horse, children }: ShareHorseProps) => {
   const queryClient = useQueryClient()
 
   // Get existing share links for this organization
+  // Removed refetchOnMount - global staleTime handles freshness (PERF-005)
   const { data: shareLinks = [], isLoading } = useQuery({
     queryKey: ['share-links', organization?.id],
     queryFn: () => shareService.getOrganizationShareLinks(organization?.id || ''),
     enabled: !!organization?.id,
-    refetchOnMount: true,
   })
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

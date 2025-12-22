@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { shareService } from '@/services/shareService'
+import { checkRateLimit, formatRetryTime } from '@/services/rateLimitService'
 import { HorseGallery } from '@/components/HorseGallery'
 import { PedigreeTree } from '@/components/PedigreeTree'
 import { DicomViewer } from '@/components/DicomViewer'
@@ -21,8 +22,10 @@ const SharedHorse = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [passwordAttempted, setPasswordAttempted] = useState(false)
   const [passwordError, setPasswordError] = useState('')
+  const [rateLimitError, setRateLimitError] = useState('')
   const [viewLogged, setViewLogged] = useState(false)
   const [viewingXRay, setViewingXRay] = useState<string | null>(null)
+  const rateLimitCheckedRef = useRef(false)
 
   // First, get the share link metadata to check if password is required
   const { data: shareLink, isLoading: isLoadingMetadata, error: metadataError } = useQuery({
@@ -40,10 +43,22 @@ const SharedHorse = () => {
     retry: false,
   })
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setPasswordAttempted(true)
     setPasswordError('')
+    setRateLimitError('')
+
+    // Check rate limit using the share link token as identifier
+    if (token) {
+      const rateCheck = await checkRateLimit('share_link_password', token)
+      if (!rateCheck.allowed) {
+        const retryTime = formatRetryTime(rateCheck.retryAfter || 3600)
+        setRateLimitError(`Too many password attempts. Please try again in ${retryTime}.`)
+        return
+      }
+    }
+
+    setPasswordAttempted(true)
     refetch()
   }
 
@@ -177,7 +192,12 @@ const SharedHorse = () => {
                     )}
                   </Button>
                 </div>
-                {hasError && (
+                {rateLimitError && (
+                  <p className="text-sm text-red-500">
+                    {rateLimitError}
+                  </p>
+                )}
+                {hasError && !rateLimitError && (
                   <p className="text-sm text-red-500">
                     Incorrect password. Please try again.
                   </p>

@@ -29,17 +29,18 @@ export const VetVisitList = ({ horseId }: VetVisitListProps) => {
   const queryClient = useQueryClient()
 
   // Fetch all vet visits for this horse
+  // Removed refetchOnMount - global staleTime handles freshness (PERF-005)
   const { data: vetVisits = [], isLoading } = useQuery({
     queryKey: ['vet-visits', horseId],
     queryFn: () => vetVisitService.getVetVisits(horseId),
-    refetchOnMount: true,
   })
 
   // Delete vet visit mutation
   const deleteVetVisitMutation = useMutation({
     mutationFn: (id: string) => vetVisitService.deleteVetVisit(id),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['vet-visits', horseId] })
+    onSuccess: () => {
+      // Removed await - let queries refetch in background (PERF-006)
+      queryClient.invalidateQueries({ queryKey: ['vet-visits', horseId] })
       queryClient.invalidateQueries({ queryKey: ['horse', horseId] })
 
       toast({

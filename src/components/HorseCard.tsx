@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Horse } from '@/types/horse';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +9,8 @@ interface HorseCardProps {
   horse: Horse;
 }
 
-export const HorseCard = ({ horse }: HorseCardProps) => {
+// Wrapped with React.memo to prevent unnecessary re-renders (PERF-004)
+export const HorseCard = memo(function HorseCard({ horse }: HorseCardProps) {
   const navigate = useNavigate();
   const primaryImage = horse.images.find(img => img.isPrimary) || horse.images[0];
 
@@ -111,4 +113,4 @@ export const HorseCard = ({ horse }: HorseCardProps) => {
       </CardContent>
     </Card>
   );
-};
+});

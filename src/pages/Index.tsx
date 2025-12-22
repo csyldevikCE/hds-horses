@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { horseService } from '@/services/horseService';
@@ -33,29 +33,47 @@ const Index = () => {
   // This prevents showing spinner on tab focus refetches
   const isInitialLoading = isLoading && !error;
 
-  const breeds = ['all', ...new Set(horses.map(horse => horse.breed))];
-  const statuses = ['all', ...new Set(horses.map(horse => horse.status))];
-  const ages = ['all', ...new Set(horses.map(horse => horse.age.toString()))].sort((a, b) => {
-    if (a === 'all') return -1;
-    if (b === 'all') return 1;
-    return Number(a) - Number(b);
-  });
+  // Memoize filter options (PERF-004)
+  const breeds = useMemo(
+    () => ['all', ...new Set(horses.map(horse => horse.breed))],
+    [horses]
+  );
 
-  const filteredHorses = horses.filter(horse => {
-    const matchesSearch = horse.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         horse.breed.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         horse.color.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesBreed = selectedBreed === 'all' || horse.breed === selectedBreed;
-    const matchesStatus = selectedStatus === 'all' || horse.status === selectedStatus;
-    const matchesAge = selectedAge === 'all' || horse.age.toString() === selectedAge;
+  const statuses = useMemo(
+    () => ['all', ...new Set(horses.map(horse => horse.status))],
+    [horses]
+  );
 
-    return matchesSearch && matchesBreed && matchesStatus && matchesAge;
-  });
+  const ages = useMemo(
+    () => ['all', ...new Set(horses.map(horse => horse.age.toString()))].sort((a, b) => {
+      if (a === 'all') return -1;
+      if (b === 'all') return 1;
+      return Number(a) - Number(b);
+    }),
+    [horses]
+  );
 
-  // Calculate stats
-  const availableCount = horses.filter(h => h.status === 'Available').length;
-  const avgAge = horses.length > 0 ? Math.round(horses.reduce((sum, h) => sum + h.age, 0) / horses.length) : 0;
-  const breedsCount = new Set(horses.map(h => h.breed)).size;
+  // Memoize filtered horses
+  const filteredHorses = useMemo(() => {
+    const searchLower = searchTerm.toLowerCase();
+    return horses.filter(horse => {
+      const matchesSearch = horse.name.toLowerCase().includes(searchLower) ||
+                           horse.breed.toLowerCase().includes(searchLower) ||
+                           horse.color.toLowerCase().includes(searchLower);
+      const matchesBreed = selectedBreed === 'all' || horse.breed === selectedBreed;
+      const matchesStatus = selectedStatus === 'all' || horse.status === selectedStatus;
+      const matchesAge = selectedAge === 'all' || horse.age.toString() === selectedAge;
+
+      return matchesSearch && matchesBreed && matchesStatus && matchesAge;
+    });
+  }, [horses, searchTerm, selectedBreed, selectedStatus, selectedAge]);
+
+  // Memoize stats calculations (PERF-004)
+  const { availableCount, avgAge, breedsCount } = useMemo(() => ({
+    availableCount: horses.filter(h => h.status === 'Available').length,
+    avgAge: horses.length > 0 ? Math.round(horses.reduce((sum, h) => sum + h.age, 0) / horses.length) : 0,
+    breedsCount: new Set(horses.map(h => h.breed)).size
+  }), [horses]);
 
   return (
     <div className="min-h-screen bg-background">

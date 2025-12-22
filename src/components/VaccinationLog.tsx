@@ -29,25 +29,26 @@ export const VaccinationLog = ({ horseId }: VaccinationLogProps) => {
   const queryClient = useQueryClient()
 
   // Fetch all vaccinations for this horse
+  // Removed refetchOnMount - global staleTime handles freshness (PERF-005)
   const { data: vaccinations = [], isLoading } = useQuery({
     queryKey: ['vaccinations', horseId],
     queryFn: () => vaccinationService.getVaccinations(horseId),
-    refetchOnMount: true,
   })
 
   // Fetch FEI compliance status
+  // Removed refetchOnMount - global staleTime handles freshness (PERF-005)
   const { data: feiStatus } = useQuery({
     queryKey: ['fei-compliance', horseId],
     queryFn: () => vaccinationService.getFEIInfluenzaComplianceStatus(horseId),
-    refetchOnMount: true,
   })
 
   // Delete vaccination mutation
   const deleteVaccinationMutation = useMutation({
     mutationFn: (id: string) => vaccinationService.deleteVaccination(id),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['vaccinations', horseId] })
-      await queryClient.invalidateQueries({ queryKey: ['fei-compliance', horseId] })
+    onSuccess: () => {
+      // Removed await - let queries refetch in background (PERF-006)
+      queryClient.invalidateQueries({ queryKey: ['vaccinations', horseId] })
+      queryClient.invalidateQueries({ queryKey: ['fei-compliance', horseId] })
       queryClient.invalidateQueries({ queryKey: ['horse', horseId] })
 
       toast({

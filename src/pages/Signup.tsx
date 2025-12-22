@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useNavigate, Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { supabase } from '@/lib/supabase'
@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Eye, EyeOff, Loader2, Users } from 'lucide-react'
+import { checkRateLimit, getClientIP, formatRetryTime } from '@/services/rateLimitService'
+import { validatePassword, checkPasswordRequirements, getPasswordStrength } from '@/lib/validation'
 import logo from '@/assets/logo.png'
 
 const Signup = () => {
@@ -28,6 +30,7 @@ const Signup = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [invitation, setInvitation] = useState<any>(null)
   const [loadingInvitation, setLoadingInvitation] = useState(false)
+  const clientIPRef = useRef<string | null>(null)
 
   const { signUp } = useAuth()
   const navigate = useNavigate()
@@ -97,14 +100,29 @@ const Signup = () => {
       return
     }
 
-    // Validate password strength
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long')
+    // Validate password strength (SEC-004)
+    const passwordErrors = validatePassword(password)
+    if (passwordErrors) {
+      setError(passwordErrors[0]) // Show first error
       setLoading(false)
       return
     }
 
     try {
+      // Get client IP for rate limiting (cached after first fetch)
+      if (!clientIPRef.current) {
+        clientIPRef.current = await getClientIP()
+      }
+
+      // Check rate limit before attempting signup
+      const rateCheck = await checkRateLimit('signup', clientIPRef.current)
+      if (!rateCheck.allowed) {
+        const retryTime = formatRetryTime(rateCheck.retryAfter || 3600)
+        setError(`Too many signup attempts. Please try again in ${retryTime}.`)
+        setLoading(false)
+        return
+      }
+
       const orgName = invitation ? null : organizationName.trim()
       const { error } = await signUp(email, password, firstName, lastName, orgName, inviteToken || undefined)
 
@@ -254,7 +272,36 @@ const Signup = () => {
                   )}
                 </Button>
               </div>
-              <p className="text-xs text-gray-500">Must be at least 6 characters</p>
+              {/* Password strength indicator */}
+              {password && (
+                <div className="space-y-2">
+                  <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                    <div
+                      className={`h-full transition-all duration-300 ${
+                        getPasswordStrength(password) < 40
+                          ? 'bg-red-500'
+                          : getPasswordStrength(password) < 80
+                          ? 'bg-yellow-500'
+                          : 'bg-green-500'
+                      }`}
+                      style={{ width: `${getPasswordStrength(password)}%` }}
+                    />
+                  </div>
+                  <ul className="text-xs space-y-0.5">
+                    {checkPasswordRequirements(password).map((req) => (
+                      <li
+                        key={req.label}
+                        className={req.met ? 'text-green-600' : 'text-gray-500'}
+                      >
+                        {req.met ? '\u2713' : '\u2022'} {req.label}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {!password && (
+                <p className="text-xs text-gray-500">Must meet all security requirements</p>
+              )}
             </div>
             
             <div className="space-y-2">

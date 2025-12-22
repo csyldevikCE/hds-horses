@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useToast } from '@/hooks/use-toast'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { checkRateLimit, getClientIP, formatRetryTime } from '@/services/rateLimitService'
 import logo from '@/assets/logo.png'
 
 const Login = () => {
@@ -16,7 +17,8 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  
+  const clientIPRef = useRef<string | null>(null)
+
   const { signIn } = useAuth()
   const navigate = useNavigate()
   const { toast } = useToast()
@@ -27,8 +29,22 @@ const Login = () => {
     setError('')
 
     try {
+      // Get client IP for rate limiting (cached after first fetch)
+      if (!clientIPRef.current) {
+        clientIPRef.current = await getClientIP()
+      }
+
+      // Check rate limit before attempting login
+      const rateCheck = await checkRateLimit('login', clientIPRef.current)
+      if (!rateCheck.allowed) {
+        const retryTime = formatRetryTime(rateCheck.retryAfter || 900)
+        setError(`Too many login attempts. Please try again in ${retryTime}.`)
+        setLoading(false)
+        return
+      }
+
       const { error } = await signIn(email, password)
-      
+
       if (error) {
         setError(error.message)
       } else {
