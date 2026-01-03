@@ -29,7 +29,7 @@ const HorseDetail = () => {
   const { userRole } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
 
-  const { data: horse, status, error } = useQuery({
+  const { data: horse, status, error, refetch } = useQuery({
     queryKey: ['horse', id],
     queryFn: () => horseService.getHorse(id!),
     enabled: !!id,
@@ -51,7 +51,28 @@ const HorseDetail = () => {
     );
   }
 
-  if (error || !horse) {
+  // Show error with retry option (timeout, network issues, etc.)
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Error loading horse</h1>
+          <p className="text-muted-foreground mb-4">
+            There was a problem loading this horse. Please try again.
+          </p>
+          <div className="flex gap-3 justify-center">
+            <Button onClick={() => refetch()}>Try Again</Button>
+            <Link to="/">
+              <Button variant="outline">Return to Inventory</Button>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Horse not found (no error but null result)
+  if (!horse) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">

@@ -214,7 +214,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     })
 
-    return () => subscription.unsubscribe()
+    // Refresh session when tab becomes visible again
+    // This ensures we have a fresh token after being in background
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && isInitializedRef.current) {
+        // Silently refresh the session to ensure we have a valid token
+        supabase.auth.getSession().then(({ data: { session: refreshedSession } }) => {
+          if (refreshedSession) {
+            setSession(refreshedSession)
+            setUser(refreshedSession.user)
+          }
+        })
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      subscription.unsubscribe()
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []) // Empty dependency array - runs once on mount
 
