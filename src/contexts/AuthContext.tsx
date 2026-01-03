@@ -49,12 +49,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [organizationLoading, setOrganizationLoading] = useState(true)
   // Use ref instead of state to avoid stale closures in the auth listener
   const isInitializedRef = useRef(false)
+  // Track latest organization value to avoid stale closure in auth listener
+  const organizationRef = useRef<Organization | null>(null)
+
+  // Keep ref in sync with state for use in closures
+  useEffect(() => {
+    organizationRef.current = organization
+  }, [organization])
 
   // Fetch organization and role data for the current user
   // Uses a single JOIN query for better performance
   const fetchOrganizationData = async (userId: string, skipLoadingState = false) => {
     // Only show loading if we don't have org data yet (prevents flicker on refetch)
-    if (!skipLoadingState && !organization) {
+    // Use ref to avoid stale closure issue in auth listener
+    if (!skipLoadingState && !organizationRef.current) {
       setOrganizationLoading(true)
     }
     try {
@@ -122,7 +130,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } catch {
         // Don't clear org data if it already exists (prevents loss during token refresh)
         // Only clear if we don't have organization data yet
-        if (!organization) {
+        // Use ref to avoid stale closure issue
+        if (!organizationRef.current) {
           setOrganization(null)
           setOrganizationUser(null)
           setUserRole(null)

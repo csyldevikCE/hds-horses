@@ -30,7 +30,8 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   }
 
   // Show loading while checking organization membership
-  if (organizationLoading) {
+  // Only show loading if we don't have cached organization data yet
+  if (organizationLoading && !organization) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 to-blue-50">
         <div className="flex flex-col items-center space-y-4">
