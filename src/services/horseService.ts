@@ -6,17 +6,19 @@ type HorseRow = Database['public']['Tables']['horses']['Row']
 type HorseInsert = Database['public']['Tables']['horses']['Insert']
 type HorseUpdate = Database['public']['Tables']['horses']['Update']
 
-// Helper to add timeout to promises
-const withTimeout = <T>(promise: PromiseLike<T>, ms: number, errorMsg: string): Promise<T> => {
-  const timeout = new Promise<never>((_, reject) =>
-    setTimeout(() => reject(new Error(errorMsg)), ms)
-  )
-  return Promise.race([Promise.resolve(promise), timeout])
+// Helper to create an AbortController with timeout
+const createTimeoutController = (ms: number): { controller: AbortController; cleanup: () => void } => {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), ms)
+  return {
+    controller,
+    cleanup: () => clearTimeout(timeoutId)
+  }
 }
 
 // Convert database row to Horse interface
 const mapHorseRowToHorse = async (row: HorseRow): Promise<Horse> => {
-  // Fetch related data - each query has its own timeout (5 seconds)
+  // Fetch related data with AbortController for proper cancellation (5 seconds each)
   // Use Promise.allSettled so one failure doesn't block others
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let imagesResult: { data: any[] | null; error: any } = { data: [], error: null }
@@ -25,37 +27,30 @@ const mapHorseRowToHorse = async (row: HorseRow): Promise<Horse> => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let competitionsResult: { data: any[] | null; error: any } = { data: [], error: null }
 
+  // Create separate abort controllers for each query
+  const imageCtrl = createTimeoutController(5000)
+  const videoCtrl = createTimeoutController(5000)
+  const compCtrl = createTimeoutController(5000)
+
   try {
     const results = await Promise.allSettled([
-      withTimeout(
-        supabase
-          .from('horse_images')
-          .select('*')
-          .eq('horse_id', row.id)
-          .order('is_primary', { ascending: false })
-          .then(r => r),
-        5000,
-        'Timeout fetching images'
-      ),
-      withTimeout(
-        supabase
-          .from('horse_videos')
-          .select('*')
-          .eq('horse_id', row.id)
-          .then(r => r),
-        5000,
-        'Timeout fetching videos'
-      ),
-      withTimeout(
-        supabase
-          .from('competitions')
-          .select('*')
-          .eq('horse_id', row.id)
-          .order('date', { ascending: false })
-          .then(r => r),
-        5000,
-        'Timeout fetching competitions'
-      )
+      supabase
+        .from('horse_images')
+        .select('*')
+        .eq('horse_id', row.id)
+        .order('is_primary', { ascending: false })
+        .abortSignal(imageCtrl.controller.signal),
+      supabase
+        .from('horse_videos')
+        .select('*')
+        .eq('horse_id', row.id)
+        .abortSignal(videoCtrl.controller.signal),
+      supabase
+        .from('competitions')
+        .select('*')
+        .eq('horse_id', row.id)
+        .order('date', { ascending: false })
+        .abortSignal(compCtrl.controller.signal)
     ])
 
     // Extract results safely
@@ -65,6 +60,11 @@ const mapHorseRowToHorse = async (row: HorseRow): Promise<Horse> => {
   } catch (error) {
     // On error, continue with empty arrays - horse data is still valid
     console.warn(`Failed to fetch related data for horse ${row.id}:`, error)
+  } finally {
+    // Clean up all timeouts
+    imageCtrl.cleanup()
+    videoCtrl.cleanup()
+    compCtrl.cleanup()
   }
 
 
@@ -190,21 +190,30 @@ const mapHorseToInsert = (
 export const horseService = {
   // Get all horses for the organization (RLS will enforce access)
   async getHorses(organizationId: string): Promise<Horse[]> {
-    // Add timeout to the main query (15 seconds)
-    const queryPromise = supabase
-      .from('horses')
-      .select('*')
-      .eq('organization_id', organizationId)
-      .order('updated_at', { ascending: false })
-      .then(result => result)
+    // Use AbortController to properly cancel stuck requests (15 seconds)
+    const { controller, cleanup } = createTimeoutController(15000)
 
-    const { data, error } = await withTimeout(
-      queryPromise,
-      15000,
-      'Timeout fetching horses list'
-    )
+    let data: HorseRow[] | null = null
+    try {
+      const result = await supabase
+        .from('horses')
+        .select('*')
+        .eq('organization_id', organizationId)
+        .order('updated_at', { ascending: false })
+        .abortSignal(controller.signal)
 
-    if (error) throw error
+      cleanup()
+
+      if (result.error) throw result.error
+      data = result.data
+    } catch (err) {
+      cleanup()
+      if (err instanceof Error && err.name === 'AbortError') {
+        throw new Error('Request timed out - please try again')
+      }
+      throw err
+    }
+
     if (!data || data.length === 0) return []
 
     // Use Promise.allSettled to prevent one horse from blocking the entire list
@@ -262,26 +271,33 @@ export const horseService = {
 
   // Get a single horse by ID
   async getHorse(id: string): Promise<Horse | null> {
-    // Add timeout to the query (10 seconds)
-    const queryPromise = supabase
-      .from('horses')
-      .select('*')
-      .eq('id', id)
-      .single()
-      .then(result => result)
+    // Use AbortController to properly cancel stuck requests (10 seconds)
+    const { controller, cleanup } = createTimeoutController(10000)
 
-    const { data, error } = await withTimeout(
-      queryPromise,
-      10000,
-      'Timeout fetching horse details'
-    )
+    try {
+      const { data, error } = await supabase
+        .from('horses')
+        .select('*')
+        .eq('id', id)
+        .abortSignal(controller.signal)
+        .single()
 
-    if (error) {
-      if (error.code === 'PGRST116') return null // No rows returned
-      throw error
+      cleanup() // Clear timeout if request succeeded
+
+      if (error) {
+        if (error.code === 'PGRST116') return null // No rows returned
+        throw error
+      }
+
+      return mapHorseRowToHorse(data)
+    } catch (err) {
+      cleanup()
+      // Convert abort error to a more descriptive error
+      if (err instanceof Error && err.name === 'AbortError') {
+        throw new Error('Request timed out - please try again')
+      }
+      throw err
     }
-
-    return mapHorseRowToHorse(data)
   },
 
   // Create a new horse
